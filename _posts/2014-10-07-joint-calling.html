@@ -68,7 +68,7 @@ excerpt: !ruby/object:Hpricot::Doc
 <p><a href="http://i.imgur.com/ddsRkkd.png"><br />
   <img src="http://i.imgur.com/ddsRkkd.png" width="650" alt="Incremental joint calling: GATK HaplotypeCaller, FreeBayes, Platypus, samtools" /><br />
 </a></p>
-<p> Overall, there is not a large difference in sensitivity and precision for the four methods, giving us four high-quality options for performing joint variant calling on germline samples. The post-calling filters provide similar levels of false positives to enable comparisons of sensitivity. Notably, samtools new calling method is now as good as other approaches, in contrast with <a href="http://bcbio.wordpress.com/2013/02/06/an-automated-ensemble-method-for-combining-and-evaluating-genomic-variants-from-multiple-callers/">previous evaluations</a>, demonstrating the value of continuing to improve open source tools and having updated benchmarks to reflect these improvements. </p>
+<p> Overall, there is not a large difference in sensitivity and precision for the four methods, giving us four high-quality options for performing joint variant calling on germline samples. The post-calling filters provide similar levels of false positives to enable comparisons of sensitivity. Notably, samtools new calling method is now as good as other approaches, in contrast with <a href="http://bcb.io/2013/02/06/an-automated-ensemble-method-for-combining-and-evaluating-genomic-variants-from-multiple-callers/">previous evaluations</a>, demonstrating the value of continuing to improve open source tools and having updated benchmarks to reflect these improvements. </p>
 <p> Improving sensitivity and precision is always an ongoing process and this evaluation identifies some areas to focus on for future work: </p>
 <ul class="org-ul">
 <li>Platypus SNP and indel calling is slightly less sensitive than other approaches. We worked on <a href="https://github.com/chapmanb/bcbio-nextgen/blob/9320479d8f21677b61ed1274b4da23d569c686ae/bcbio/variation/platypus.py#L29">Platypus calling parameters</a> and <a href="https://github.com/chapmanb/bcbio-nextgen/blob/9320479d8f21677b61ed1274b4da23d569c686ae/bcbio/variation/vfilter.py#L180">post-call filtering</a> to increase sensitivity from the defaults without introducing a large number of false positives, but welcome suggestions for more improvements.
@@ -99,20 +99,24 @@ excerpt: !ruby/object:Hpricot::Doc
 <h2 id="sec-6">Reproducing and extending the analysis</h2>
 <div class="outline-text-2" id="text-6">
 <p> All variant callers and calling methods validated here are available for running in <a href="https://github.com/chapmanb/bcbio-nextgen">bcbio-nextgen</a>. bcbio automatically installs the generalized joint calling implementation, and it is also available as a java executable at <a href="https://github.com/chapmanb/bcbio.variation.recall">bcbio.variation.recall</a>. All tools are freely available, open source and community developed and we welcome your feedback and contributions. </p>
-<p> The documentation contains <a href="https://bcbio-nextgen.readthedocs.org/en/latest/contents/testing.html#whole-genome-trio-50x">full instructions for running the joint analysis</a>. This is an extended version of <a href="http://bcbio.wordpress.com/2014/05/12/wgs-trio-variant-evaluation/">previous work on validation of trio calling</a> and uses the same input dataset with a bcbio configuration that includes single, pooled and joint calling: </p>
-<p>[sourcecode language="text" title=""]<br />
-mkdir -p NA12878-trio-eval/config NA12878-trio-eval/input NA12878-trio-eval/work-joint<br />
-cd NA12878-trio-eval/config<br />
-cd ../input<br />
-wget https://raw.github.com/chapmanb/bcbio-nextgen/master/config/examples/NA12878-trio-wgs-validate-getdata.sh<br />
-bash NA12878-trio-wgs-validate-getdata.sh<br />
-wget https://raw.github.com/chapmanb/bcbio-nextgen/master/config/examples/NA12878-trio-wgs-joint.yaml<br />
-cd ../work_joint<br />
-bcbio_nextgen.py ../config/NA12878-trio-wgs-joint.yaml -n 16<br />
-[/sourcecode]<br /></p>
+<p> The documentation contains <a href="https://bcbio-nextgen.readthedocs.org/en/latest/contents/testing.html#whole-genome-trio-50x">full instructions for running the joint analysis</a>. This is an extended version of <a href="http://bcb.io/2014/05/12/wgs-trio-variant-evaluation/">previous work on validation of trio calling</a> and uses the same input dataset with a bcbio configuration that includes single, pooled and joint calling: </p>
+
+
+{% highlight bash %}
+mkdir -p NA12878-trio-eval/config NA12878-trio-eval/input NA12878-trio-eval/work-joint
+cd NA12878-trio-eval/config
+cd ../input
+wget https://raw.github.com/chapmanb/bcbio-nextgen/master/config/examples/NA12878-trio-wgs-validate-getdata.sh
+bash NA12878-trio-wgs-validate-getdata.sh
+wget https://raw.github.com/chapmanb/bcbio-nextgen/master/config/examples/NA12878-trio-wgs-joint.yaml
+cd ../work_joint
+bcbio_nextgen.py ../config/NA12878-trio-wgs-joint.yaml -n 16
+{% endhighlight %}
+
+
 <p> Having a general joint calling implementation with good sensitivity and precision is a starting point for more research and development. To build off this work we plan to: </p>
 <ul class="org-ul">
-<li>Provide better <a href="http://bcbio.wordpress.com/2013/10/21/updated-comparison-of-variant-detection-methods-ensemble-freebayes-and-minimal-bam-preparation-pipelines/">ensemble calling methods</a> that scale to large multi-sample calling projects.
+<li>Provide better <a href="http://bcb.io/2013/10/21/updated-comparison-of-variant-detection-methods-ensemble-freebayes-and-minimal-bam-preparation-pipelines/">ensemble calling methods</a> that scale to large multi-sample calling projects.
 </li>
 <li>Work with FreeBayes, Platypus and samtools tool authors to provide support for gVCF style files to avoid the need to have BAM files present during joint calling, and to improve sensitivity and precision during recalling-based joint approaches.
 </li>

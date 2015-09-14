@@ -4,7 +4,7 @@ layout: page
 
 [Blue Collar Bioinformatics (bcbio)](https://bcbio-nextgen.readthedocs.org/en/latest/)
 is community-developed
-[validated variant calling, RNA-seq and small RNA analysis](https://bcbio-nextgen.readthedocs.org/en/latest/contents/pipelines.html).
+[variant calling, RNA-seq and small RNA analysis](https://bcbio-nextgen.readthedocs.org/en/latest/contents/pipelines.html).
 Rapid improvements in high throughput sequencing and associated analysis tools
 requires continuous validation, benchmarking and tuning of analysis
 infrastructure. All of this development work is pre-competitive and shared
@@ -16,8 +16,8 @@ and contribute to treatments.
 This blog contains articles related to bcbio development, validation and the
 open source bioinformatics community:
 
-- Validated variant calling for [germline populations](http://localhost:4000/tags/#germline) and
-  [somatic cancer samples](http://localhost:4000/tags/#cancer)
+- Validated variant calling for [germline populations]({{ site.url }}/tags/#germline) and
+  [somatic cancer samples]({{ site.url }}/tags/#cancer)
 - Valiation of multiple variant types, including
   [single nucleotide polymorphisms (SNPs) and small insertions/deletions]({{ site.url }}/tags/#small-variants)
   and [larger structural rearrangements]({{ site.url  }}/tags/#structural-variation)

@@ -57,7 +57,7 @@ def _filter_related(self, inital_dict, overrep_thresh, related_max):<br />
     return final_dict<br />
 [/sourcecode]</p>
 <p>
-The filtered list is grouped using a generalized version of the <code>examine_paralogs</code> function used in an earlier post to group together <a href="http://bcbio.wordpress.com/2009/01/31/location-and-duplication-information-from-ensembl/">location and duplication information</a>. Sets combine any groups with overlapping articles:</p>
+The filtered list is grouped using a generalized version of the <code>examine_paralogs</code> function used in an earlier post to group together <a href="http://bcb.io/2009/01/31/location-and-duplication-information-from-ensembl/">location and duplication information</a>. Sets combine any groups with overlapping articles:</p>
 <p>[sourcecode language="python"]<br />
 def _groups_from_related_dict(self, related_dict):<br />
     cur_groups = []<br />

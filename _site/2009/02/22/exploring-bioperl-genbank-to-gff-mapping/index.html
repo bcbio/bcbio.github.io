@@ -184,7 +184,7 @@ This maps directly to the corresponding feature in the original GenBank table:</
 </pre>
 <p></p>
 <p>
-This is a nice one-to-one mapping of the GenBank feature table. The ontology for mapping feature keys to the sequence ontology terms was discussed in more detail in an earlier <a href="http://bcbio.wordpress.com/2008/12/14/standard-ontologies-in-biosql/">post on BioSQL ontologies</a>. Here, the qualifier names map to uppercase standard keys where possible (Note, DBxref) and all lowercase names where they do not characterize a standard term. For BioSQL, these GFF lines would map directly into the <code>seqfeature</code> table, with a dictionary to provide the back and forth mapping between standard terms and qualifier names.</p>
+This is a nice one-to-one mapping of the GenBank feature table. The ontology for mapping feature keys to the sequence ontology terms was discussed in more detail in an earlier <a href="http://bcb.io/2008/12/14/standard-ontologies-in-biosql/">post on BioSQL ontologies</a>. Here, the qualifier names map to uppercase standard keys where possible (Note, DBxref) and all lowercase names where they do not characterize a standard term. For BioSQL, these GFF lines would map directly into the <code>seqfeature</code> table, with a dictionary to provide the back and forth mapping between standard terms and qualifier names.</p>
 <p>
 The less straightforward part of the mapping involves the high level annotations which describe the entire sequence. This corresponds to the header section in the GenBank file and maps to several specialized tables in the BioSQL schema. Here is a summary of the current mappings in BioPerl GFF:</p>
 <table border="1">

@@ -152,7 +152,7 @@ Understanding the evolutionary history of a gene family may provide some insight
 </li>
 </ul>
 <p>
-By expanding on work done in an <a href="http://bcbio.wordpress.com/2008/12/28/comparative-genomics-information-retrieval-from-ensembl/">earlier post</a>, we will identify co-located and duplicated genes using information from the <a href="http://www.ensembl.org/">Ensembl</a> genome browser.</p>
+By expanding on work done in an <a href="http://bcb.io/2008/12/28/comparative-genomics-information-retrieval-from-ensembl/">earlier post</a>, we will identify co-located and duplicated genes using information from the <a href="http://www.ensembl.org/">Ensembl</a> genome browser.</p>
 <p>
 Using our previous method of screen scraping with <a href="http://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a>, we extend our Ensembl REST-like class to include two new functions. Location is represented as a list of chromosome name, start and end, and parsed from the Gene Summary page:</p>
 <p>[sourcecode language="python"]<br />
@@ -234,7 +234,7 @@ def examine_location(loc_info, ensembl_to_uniprot, distance_thresh):<br />
     return examine_paralogs(loc_close, ensembl_to_uniprot)<br />
 [/sourcecode]</p>
 <p>
-The <a href="http://github.com/chapmanb/bcbb/blob/507cbb02c3531dddef67fd25087b3954f51e9d25/classify/loc_dup_cluster.py">full script</a> takes a file input with each line being a uniprot ID and gene name, and also requires a UniProt shelve database like we <a href="http://bcbio.wordpress.com/2009/01/10/extracting-protein-characteristics-for-an-interpro-domain/">developed earlier</a>. This shelve database provides the base ID to ensembl ID mappings and organism information, which can be parsed from UniProt XML files.</p>
+The <a href="http://github.com/chapmanb/bcbb/blob/507cbb02c3531dddef67fd25087b3954f51e9d25/classify/loc_dup_cluster.py">full script</a> takes a file input with each line being a uniprot ID and gene name, and also requires a UniProt shelve database like we <a href="http://bcb.io/2009/01/10/extracting-protein-characteristics-for-an-interpro-domain/">developed earlier</a>. This shelve database provides the base ID to ensembl ID mappings and organism information, which can be parsed from UniProt XML files.</p>
 <p>
 The resulting co-location and duplication groups are sets of genes which may share an intriguing evolutionary history. The paralogs have been computationally determined to be evolutionarily related based on sequence similarity and the composition of their <a href="http://www.ensembl.org/info/docs/compara/homology_method.html">gene family tree</a>. The co-located genes may be co-selected during evolution, be the result of localized gene duplication obscured by extensive sequence change, or simply be close together based on chance. Further examination of your gene family in light of this information can help determine which of these hypotheses to favor.</p>
 

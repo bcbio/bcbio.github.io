@@ -152,11 +152,11 @@ An immediate goal when investigating a protein of interest is to identify relate
 <li>Search for proteins determined to have similar functionality, using the literature.</li>
 </ul>
 <p>
-Here we will automate the literature-functionality approach using <a href="http://www.zemanta.com/">Zemanta</a>. Previously, we talked about how well Zemanta <a href="http://bcbio.wordpress.com/2009/01/04/extracting-keywords-from-biological-text-using-zemanta/">extracted biological information from gene descriptions</a>. This can be used to classify <a href="http://www.uniprot.org/">UniProt</a> descriptions and find proteins with similar functionality to a target of interest.</p>
+Here we will automate the literature-functionality approach using <a href="http://www.zemanta.com/">Zemanta</a>. Previously, we talked about how well Zemanta <a href="http://bcb.io/2009/01/04/extracting-keywords-from-biological-text-using-zemanta/">extracted biological information from gene descriptions</a>. This can be used to classify <a href="http://www.uniprot.org/">UniProt</a> descriptions and find proteins with similar functionality to a target of interest.</p>
 <p>
 In this example, we will look for proteins similar to a <a href="http://www.uniprot.org/uniprot/P30658">Polycomb chromatin remodeling protein</a> in Mouse. As our base, we build a query of all mouse proteins in UniProt classified as repressors: <code>organism:"Mus musculus [10090]" AND keyword:"Repressor [678]"</code>. This provides 350 records, which can be downloaded using the UniProt web interface as a tab delimited file.</p>
 <p>
-Next, Zemanta is used to extract keywords linked to either Wikipedia or <a href="http://www.freebase.com/">Freebase</a>. Starting with <a href="http://bcbio.wordpress.com/2009/01/10/extracting-protein-characteristics-for-an-interpro-domain/">our UniProt XML retriever</a>, we get the functional descriptions:</p>
+Next, Zemanta is used to extract keywords linked to either Wikipedia or <a href="http://www.freebase.com/">Freebase</a>. Starting with <a href="http://bcb.io/2009/01/10/extracting-protein-characteristics-for-an-interpro-domain/">our UniProt XML retriever</a>, we get the functional descriptions:</p>
 <p>[sourcecode language="python"]<br />
 def get_description_terms(retriever, cur_id, api_key):<br />
     metadata = retriever.get_xml_metadata(cur_id)<br />
