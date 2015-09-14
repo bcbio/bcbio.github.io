@@ -1,0 +1,60 @@
+---
+layout: post
+title: Standard Ontologies in BioSQL
+date: 2008-12-14 21:40:55.000000000 -05:00
+categories:
+- how-to
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p> A recent <a href="http://lists.open-bio.org/pipermail/biosql-l/2008-November/001412.html">thread</a> by Peter on the BioSQL mailing list initiated some thinking about formalizing ontologies and terms in <a href="http://www.biosql.org/wiki/Main_Page">BioSQL</a>. The current ad-hoc solution is that <a href="http://bioperl.org">BioPerl</a>, <a href="http://biopython.org">Biopython</a> and <a href="http://biojava.org"> BioJava</a> attempt to use the same naming schemes. The worry is that this is not documented, no one is likely in a big hurry to document it, and we are essentially inventing another ontology. </p>
+<p> The BioSQL methodology of storing key/value pair information on items can be mapped to RDF triples as:<br />
+<table border="1">
+<tr>
+<th>BioSQL</th>
+<th>RDF</th>
+</tr>
+<tr>
+<td>Bioentry or Feature</td>
+<td>  Subject</td>
+</tr>
+<tr>
+<td>Ontology           </td>
+<td>  Namespace of predicate</td>
+</tr>
+<tr>
+<td>Term               </td>
+<td>  Predicate term, relative to namespace </td>
+</tr>
+<tr>
+<td>Value              </td>
+<td>  Object</td>
+</tr>
+</table>
+<p> 
+<p> Thus, a nice place to look for ontologies is in standards intended for RDF.  Greg Tyrelle thought this same way a while ago and came up with a XSLT to <a href="http://wiki.nodalpoint.org/semweb_hacks">transform GenBank XML to RDF</a>, using primarily the <a href="http://www.dublincore.org/">Dublin Core</a> vocabulary. On the biology side, the <a href="http://www.sequenceontology.org/">Sequence Ontology project</a> provides an ontology meant for describing biological sequences. This includes a <a href="http://www.sequenceontology.org/so_mappings.shtml">mapping</a>  to GenBank feature table names. </p>
+<p> Using these as a starting point, I generated a mapping of GenBank names to names in the Dublin Core and SO ontologies. This is meant as a basis for standardizing and documenting naming in BioSQL. The mapping file thus far covers almost all of the header and feature keys, and more than half of the qualifier keys:
+<ul>
+<li><a href="http://github.com/chapmanb/bcbb/raw/master/biosql_ontologies/genbank_ontology_map.txt"> Tab delimited mapping file</a></li>
+<li>All of the python code that does the mapping and pulls  information from associated files is available: <a href="http://github.com/chapmanb/bcbb/tree/master">github repository</a>. </li>
+</ul>
+<p>  I would welcome suggestions for missing GenBank terms, as well as corrections on the terms mapped by hand. </p>
+<p>  Some notes on the mapping:
+<ul>
+<li> Cross references to other identifiers are mapped with the Dublin Core term 'relation'. These can occur in many places in the GenBank format. Using a single term allows them to be flattened, with mapping values in form of 'database:identifier.' This is consistent with the GenBank /db_xref qualifier. </li>
+<li> Multiple names or descriptions of an item, also stored in multiple places in GenBank files, receive the Dublin Core term 'alternative.' </li>
+<li> Organism and taxonomy ontologies are a whole project onto themselves, so I didn't try to tackle them here. </li>
+</ul>
+<p>  Some other useful links for biological ontology mapping:
+<ul>
+<li> <a href="http://www.gopubmed.org">GoPubMed</a>, which uses the Dublin Core and <a href="http://prismstandard.org">Prism Standard</a> vocabularies:  <a href="http://www.gopubmed.org/GoMeshPubMed/gomeshpubmed/Search/RDF?q=18463287&amp;type=RdfExportAll">Example record</a> </li>
+<li>UniProt RDF, which uses primarily its own ontology: <a href="http://www.uniprot.org/uniprot/Q21307.rdf">Example record</a> </li>
+<li><a href="http://www.ncbi.nlm.nih.gov/collab/FT/index.html">GenBank feature table</a> </li>
+</ul>

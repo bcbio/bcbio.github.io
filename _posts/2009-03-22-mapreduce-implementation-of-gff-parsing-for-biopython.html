@@ -1,0 +1,108 @@
+---
+layout: post
+title: MapReduce implementation of GFF parsing for Biopython
+date: 2009-03-22 10:59:46.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _oembed_862c753e613a866a55d145f14f743d57: ! '{{unknown}}'
+  _oembed_5c7bc2396cda752f72d85dbfc6601b0d: ! '{{unknown}}'
+  _oembed_53ca05555ae16b90b96a8ca7ff51f5d1: ! '{{unknown}}'
+  _oembed_01149a8e04e3cd6b0442755530c6407d: ! '{{unknown}}'
+  _oembed_279d709f2fb13c7db81ab2882fd9d794: ! '{{unknown}}'
+  _oembed_896b627b45acbd53b93796f3e58fd7b4: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+I previously wrote up details about <a href="http://bcbio.wordpress.com/2009/03/08/initial-gff-parser-for-biopython/">starting a GFF parser for Biopython</a>. In addition to incorporating suggestions received on the <a href="http://biopython.org/wiki/Mailing_lists">Biopython mailing list</a>, it has been redesigned for parallel computation using <a href="http://discoproject.org/">Disco</a>. Disco is an implementation of the distributed <a href="http://en.wikipedia.org/wiki/MapReduce">MapReduce</a> framework in Erlang and Python. The code is available from the <a href="http://github.com/chapmanb/bcbb/tree/be2f4f1714b67aa8e428b747c74c81cdd0451072/gff">git repository</a>; this post describes the impetus and design behind the MapReduce revision.</p>
+<p>
+The scale of biological analyses is growing quickly thanks to new sequencing technologies. Bioinformatics programmers will need to learn techniques to rapidly analyze extremely large data sets. My coding toolbox has expanded to tackle these problems in two ways. The first is exploring programming languages designed for speed and parallelism, like <a href="http://en.wikipedia.org/wiki/Haskell_(programming_language)">Haskell</a>. Additionally, I have been learning general techniques for parallelizing programs. Both require re-thinking code design to take advantage of increasingly available multi-processor and clustered architectures.</p>
+<p>
+The MapReduce framework, originally proposed by Google, exemplifies the idea of redesigning code to analyze large data sets in parallel. In short, the programmer writes two functions: map and reduce. The map function handles the raw parsing work; for instance, it parses a line of GFF text and structures the details of interest. The reduce function combines the results from the map parsing, making them available for additional processing outside of the parallel part of the job. Several implementations of MapReduce have become popularly used. Apache's <a href="http://hadoop.apache.org/core/">Hadoop</a> is a mature Java implementation with an underlying distributed file system. Here we utilize Disco, an implementation in Erlang and Python from <a href="http://research.nokia.com/">Nokia Research Center</a>.</p>
+<p>
+The MapReduce GFF parser consists of <a href="http://github.com/chapmanb/bcbb/blob/be2f4f1714b67aa8e428b747c74c81cdd0451072/gff/BCBio/GFF/GFFParser.py">two standalone functions</a>. The map function takes a line of GFF text and first determines if we should parse it based on a set of limits. This allows the user to only pull items of interest from the GFF file, saving memory and time:</p>
+<p>[sourcecode language="python"]<br />
+def _gff_line_map(line, params):<br />
+    strand_map = {'+' : 1, '-' : -1, '?' : None, None: None}<br />
+    line = line.strip()<br />
+    if line[0] != "#":<br />
+        parts = line.split('\t')<br />
+        should_do = True<br />
+        if params.limit_info:<br />
+            for limit_name, limit_values in params.limit_info.items():<br />
+                cur_id = tuple([parts[i] for i in<br />
+                    params.filter_info[limit_name]])<br />
+                if cur_id not in limit_values:<br />
+                    should_do = False<br />
+                    break<br />
+[/sourcecode]</p>
+<p>
+If the GFF line is to be parsed, we use it to build a dictionary with all the details. Additionally, the line is classified as a top level annotation, a standard flat feature with a location, or part of a parent/child nested feature. The results are returned as a dictionary. For the disco parallel implementation, we use <a href="http://www.json.org/">JSON</a> to convert the dictionary into a flattened string:</p>
+<p>[sourcecode language="python"]<br />
+        if should_do:<br />
+            assert len(parts) == 9, line<br />
+            gff_parts = [(None if p == '.' else p) for p in parts]<br />
+            gff_info = dict()<br />
+            # collect all of the base qualifiers for this item<br />
+            quals = collections.defaultdict(list)<br />
+            if gff_parts[1]:<br />
+                quals["source"].append(gff_parts[1])<br />
+            if gff_parts[5]:<br />
+                quals["score"].append(gff_parts[5])<br />
+            if gff_parts[7]:<br />
+                quals["phase"].append(gff_parts[7])<br />
+            for key, val in [a.split('=') for a in gff_parts[8].split(';')]:<br />
+                quals[key].extend(val.split(','))<br />
+            gff_info['quals'] = dict(quals)<br />
+            gff_info['rec_id'] = gff_parts[0]<br />
+            # if we are describing a location, then we are a feature<br />
+            if gff_parts[3] and gff_parts[4]:<br />
+                gff_info['location'] = [int(gff_parts[3]) - 1,<br />
+                        int(gff_parts[4])]<br />
+                gff_info['type'] = gff_parts[2]<br />
+                gff_info['id'] = quals.get('ID', [''])[0]<br />
+                gff_info['strand'] = strand_map[gff_parts[6]]<br />
+                # Handle flat features<br />
+                if not gff_info['id']:<br />
+                    final_key = 'feature'<br />
+                # features that have parents need to link so we can pick up<br />
+                # the relationship<br />
+                elif gff_info['quals'].has_key('Parent'):<br />
+                    final_key = 'child'<br />
+                # top level features<br />
+                else:<br />
+                    final_key = 'parent'<br />
+            # otherwise, associate these annotations with the full record<br />
+            else:<br />
+                final_key = 'annotation'<br />
+            return [(final_key, (simplejson.dumps(gff_info) if params.jsonify<br />
+                else gff_info))]<br />
+[/sourcecode]</p>
+<p>
+The advantage of this distinct map function is that it can be run in parallel for any line in the file. To condense the results back into a synchronous world, the reduce function takes the results of the map function and combines them into a dictionary of results:</p>
+<p>[sourcecode language="python"]<br />
+def _gff_line_reduce(map_results, out, params):<br />
+    final_items = dict()<br />
+    for gff_type, final_val in map_results:<br />
+        send_val = (simplejson.loads(final_val) if params.jsonify else<br />
+                final_val)<br />
+        try:<br />
+            final_items[gff_type].append(send_val)<br />
+        except KeyError:<br />
+            final_items[gff_type] = [send_val]<br />
+    for key, vals in final_items.items():<br />
+        out.add(key, (simplejson.dumps(vals) if params.jsonify else vals))<br />
+[/sourcecode]</p>
+<p>Finally, the dictionaries of GFF information are converted into Biopython SeqFeatures and attached to SeqRecord objects; the standard object interface is identical to that used for GenBank feature files.</p>
+<p>
+Re-writing the code sped it up by a roughly calculated 10% for single processor work. Splitting up parsing and object creation allowed me to apply some simple speed ups which contributed to this improvement. The hidden advantage of learning new programming frameworks is that it encourages you to think about familiar problems in different ways.</p>
+<p>
+This implementation is designed to work both in parallel using Disco, and locally on a standard machine. Practically, this means that Disco is not required unless you care about parallelizing the code. Parallel coding may also not be the right approach for a particular problem. For small files, it is more efficient to run the code locally and avoid the overhead involved with making it parallel.</p>
+<p>
+When you suddenly need to apply your small GFF parsing script to many gigabytes of result data the code will scale accordingly by incorporating Disco. To look at the practical numbers related to this scaling, I plan to follow up on this post with tests <a href="http://discoproject.org/doc/start/ec2setup.html#ec2setup">using Disco on Amazon's Elastic Compute Cloud</a>.</p>

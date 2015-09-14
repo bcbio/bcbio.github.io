@@ -1,0 +1,63 @@
+---
+layout: post
+title: Initial GFF parser for Biopython
+date: 2009-03-08 11:01:54.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- open-source
+status: publish
+type: post
+published: true
+meta:
+  _oembed_a958d157490fe09ed98eb2e4a639189c: ! '{{unknown}}'
+  _oembed_74f19abc49d03822765ca1454cbb6bab: ! '{{unknown}}'
+  _oembed_71b7ac3cd9b3e70d746716d64c577262: ! '{{unknown}}'
+  _oembed_83687650be606946885b9ef4a38ae768: ! '{{unknown}}'
+  _oembed_d49c6bfc628b50cfb9f5d1df6805b684: ! '{{unknown}}'
+  _oembed_da331cf387f61b9ea5db36cb758bb128: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+Generic feature format (<a href="http://www.sequenceontology.org/gff3.shtml">GFF</a>) is a nice plain text file format for storing annotations on biological sequences, and would be very useful tied in with the <a href="http://www.biosql.org/wiki/Main_Page">BioSQL</a> relational database. Two weeks ago, I detailed <a href="http://bcbio.wordpress.com/2009/02/22/exploring-bioperl-genbank-to-gff-mapping/">the Bioperl GenBank to GFF mapping</a>, which provided some introductory background to the problem. Here I'm continuing to explore GFF and BioSQL together, but from the opposite direction.</p>
+<p>
+I implemented an initial pass at a python GFF parser that will hopefully eventually be included in <a href="http://biopython.org/wiki/Main_Page">Biopython</a>. You can find the current code in the <a href="http://github.com/chapmanb/bcbb/tree/1a00b56fd8344c297314574622e080a9d3326d8d/gff">git repository</a>. I'd be very happy to have others help with development, provide usage feedback and pass along difficult GFF files for testing.</p>
+<h3><strong>Implementation</strong></h3>
+<p>
+GFF parsing is a little tricker to fit into the <a href="http://www.biopython.org/wiki/SeqIO">Biopython SeqIO</a> system than other sequence file formats. Formats like GenBank or UniProt contain a sequence and its features combined into a single record. This allows parsers to iterate over files one at a time, returning generic sequence objects from each record. This scales with large files so your memory and processor worries are bounded by the most complicated record in the file.</p>
+<p>
+In contrast, GFF files are separate from the primary sequences and do not have any guarantees about annotations for a record being grouped together. To be sure you've picked up all features for a record, you need to parse the entire GFF file. For large real-life files this becomes a problem as all of the features being added will rapidly fill up available memory.</p>
+<p>
+To solve these problems, GFF parsing is implemented here as a feature addition module with filtering. This means that you first use standard Biopython SeqIO to parse the base sequence records, and then use the GFF class to add features to these initial records. The addition function has an option argument allowing added features to be limited to a subset of interest. You can limit based on record names and add all features related to a specific sequence, or you can limit based on types of GFF features and add these features to all records in the file.</p>
+<p>
+This example demonstrates the use of the GFF parser to parse out all of the coding sequence features for chromosome one (<code>'I'</code>), and add them to the initial record:</p>
+<p>[sourcecode language="python"]<br />
+from Bio import SeqIO<br />
+from BCBio.SeqIO.GFFIO import GFFFeatureAdder</p>
+<p>with open(seq_file) as seq_handle:<br />
+    seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, "fasta"))<br />
+feature_adder = GFFFeatureAdder(seq_dict)<br />
+cds_limit_info = dict(<br />
+        gff_types = [('Coding_transcript', 'gene'),<br />
+                     ('Coding_transcript', 'mRNA'),<br />
+                     ('Coding_transcript', 'CDS')],<br />
+        gff_id = ['I']<br />
+        )<br />
+with open(gff_file) as gff_handle:<br />
+    feature_adder.add_features(gff_handle, cds_limit_info)<br />
+final_rec = feature_adder.base['I']<br />
+[/sourcecode]</p>
+<p>
+This example shows the other unique aspect of GFF parsing: nested features. In the example above we pull out coding genes, mRNA transcripts, and coding sequences (CDS). These are nested as a gene can have multiple mRNAs, and CDSs are mapped to one or more mRNA transcripts. In Biopython this is handled naturally using the <code>sub_feature</code> attribute of <a href="http://cvs.biopython.org/cgi-bin/viewcvs/viewcvs.cgi/biopython/Bio/SeqFeature.py?rev=1.16&amp;cvsroot=biopython&amp;content-type=text/vnd.viewcvs-markup">SeqFeature</a>. So when handling the record, you will dig into a gene feature to find its transcripts and coding sequences. For a more detailed description of how GFF can be mapped to complex transcripts, see the <a href="http://www.sequenceontology.org/gff3.shtml">GFF3</a> documentation, which has diagrams and examples of different biological cases and how they are represented.</p>
+<h3><strong>Testing</strong></h3>
+<p>
+The <a href="http://github.com/chapmanb/bcbb/blob/1a00b56fd8344c297314574622e080a9d3326d8d/gff/Tests/test_GFFSeqIOFeatureAdder.py">test code</a> features several other usage examples which should help provide familiarity with the interface. For real life testing, this was run against the latest C elegans <a href="http://www.wormbase.org/">WormBase</a> release, WS199: <a href="ftp://ftp.wormbase.org/pub/wormbase/genomes/c_elegans/genome_feature_tables/GFF3/">GFF</a>; <a href="ftp://ftp.wormbase.org/pub/wormbase/genomes/c_elegans/sequences/dna/">sequences</a>. On a standard single processor workstation, the code took about 2 and a half minutes to parse all PCR products and coding sequences from the 1.3G GFF file and 100M genome fasta file.</p>
+<h3><strong>BioSQL</strong></h3>
+<p>
+To go full circle back to my initial inspiration, the parsed GFF was pushed into a BioSQL database using <a href="http://github.com/chapmanb/bcbb/blob/1a00b56fd8344c297314574622e080a9d3326d8d/gff/Scripts/gff/gff_to_biosql.py">this script</a>. To test on your own machine, you will have to adjust the database details at the start of the script to match your local configuration instead of my test database.</p>
+<p>
+Standard flattened features are well supported going into BioSQL. Nested features, like the coding sequence representation mentioned above, will need additional work. The current loader only utilizes <code>sub_features</code> to get location information and support the <code>join(1..3,5..8)</code> syntax of GenBank. The <code>seqfeature_relationship</code> table in BioSQL seems like the right place to start to support this.</p>
+<h3>Summary</h3>
+<p>
+This provides an initial implementation of GFF3 parsing support for Biopython. The interface is a proposal and I welcome suggestions on making it more intuitive. Code and test example contributions are also much appreciated. As we find an interface and implementation that works for the python community and the code stabilizes, we can work to integrate this into the Biopython project.</p>

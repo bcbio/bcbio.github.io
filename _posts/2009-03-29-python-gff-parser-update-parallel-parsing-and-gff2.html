@@ -1,0 +1,52 @@
+---
+layout: post
+title: Python GFF parser update -- parallel parsing and GFF2
+date: 2009-03-29 10:49:48.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  tagazine-media: a:7:{s:7:"primary";s:0:"";s:6:"images";a:0:{}s:6:"videos";a:0:{}s:11:"image_count";s:1:"0";s:6:"author";s:7:"6099765";s:7:"blog_id";s:7:"5850073";s:9:"mod_stamp";s:19:"2009-03-29
+    15:54:22";}
+  _oembed_fc6fff78c4b8743b2fd9890d0b05dff4: ! '{{unknown}}'
+  _oembed_50a9787693605250e203338513248d7a: ! '{{unknown}}'
+  _oembed_8b4b2869761c3f6c8a7a36fda074c5e8: ! '{{unknown}}'
+  _oembed_0e010c165f7042745546909d1be0147a: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<h3><b>Parallel parsing</b></h3>
+<p>
+Last week we discussed <a href="http://bcbio.wordpress.com/2009/03/22/mapreduce-implementation-of-gff-parsing-for-biopython/">refactoring the Python GFF parser to use a MapReduce framework</a>. This was designed with the idea of being able to scale GFF parsing as file size increases. In addition to large files describing genome annotations, GFF is spreading to next-generation sequencing; SOLiD provides <a href="http://solidsoftwaretools.com/gf/project/matogff/">a tool to convert their mapping files to GFF</a>.</p>
+<p>
+Parallel processing introduces overhead due to software intermediates and networking costs. For the <a href="http://discoproject.org/">Disco</a> implementation of GFF parsing, parsed lines run through Erlang and are translated to and from JSON strings. Invoking this overhead is worthwhile only if enough processors are utilized to overcome the slowdown. To estimate when we should start to parallelize, I looked at parsing a 1.5GB GFF file on a small multi-core machine and a remote cluster. Based on rough testing and non-scientific linear extrapolation of the results, I estimate 8 processors are needed to start to see a speed-up over local processing.</p>
+<p>
+The starting baseline for parsing our 1.5GB file is one and half minutes using a single processor on my commodity Dell desktop. This desktop has 4 cores, and running Disco utilizing all 4 CPUs, the time increases to 3 minutes. Once Disco itself has been set up, switching between the two is seamless since the file is parsed in shared memory.</p>
+<p>
+The advantage of utilizing Disco is that it can scale from this local implementation to very large clusters. Amazon's <a href="http://aws.amazon.com/ec2/">Elastic Computing Cloud (EC2)</a> is an amazing resource where you can quickly set up and run jobs on <a href="http://aws.amazon.com/ec2/instance-types/">powerful hardware</a>. It is essentially an instant on-demand cluster for running applications. Using the <a href="http://ec2-downloads.s3.amazonaws.com/elasticfox-owners-manual.pdf">ElasticFox Firefox plugin</a> and the <a href="http://discoproject.org/doc/start/ec2setup.html#ec2setup">setup directions for Disco on EC2</a>, I was able to quickly test GFF parsing on a test cluster of three small (AMI <code>ami-cfbc58a6</code>, a Debian 5.0 Lenny instance) instances. For distributed jobs, the main challenges are setting up each of the cluster nodes with the software, and distributing the files across the nodes. Disco provides scripts to install itself across the cluster and to <a href="http://discoproject.org/doc/start/tutorial.html#amazon-ec2">distribute the file being parsed</a>. When you are attacking a GFF parsing job that is prohibitively slow or memory intensive on your local hardware, a small cluster of a few extra-large of extra-large high CPU instances on EC2 will help you overcome these limitations. Hopefully in the future Disco will become available on some standard Amazon machine images, lowering the threshold to getting a job running.</p>
+<p>
+In practical terms, local GFF parsing will be fine for most standard files. When you are limited by parsing time with large files, attack the problem using either a local cluster or EC2 with 8 or more processors. To better utilize a small number of local CPUs, it makes sense to explore a light weight solution such as the new python <a href="http://docs.python.org/dev/library/multiprocessing.html#module-multiprocessing">multiprocessing</a> module.</p>
+<h3><b>GFF2 support</b></h3>
+<p>
+The initial target for GFF parsing was the <a href="http://www.sequenceontology.org/gff3.shtml">GFF3</a> standard. However, many genome centers still use the older <a href="http://www.sanger.ac.uk/Software/formats/GFF/GFF_Spec.shtml">GFF2</a> or <a href="http://mblab.wustl.edu/GTF22.html">GTF</a> formats. The main parsing difference between these formats are the attributes. In GFF3, they look like:</p>
+<pre>
+  ID=CDS:B0019.1;Parent=Transcript:B0019.1;locus=amx-2
+</pre>
+<p></p>
+<p>
+while in GFF2 they are less standardized, and look like:</p>
+<pre>
+  Transcript "B0019.1" ; WormPep "WP:CE40797" ; Note "amx-2"
+</pre>
+<p></p>
+<p>
+The parser has been updated to handle GFF2 attributes correctly, with test cases from several genome centers. In practice, there are several tricky implementations of the GFF2 specifications; if you find examples of incorrectly parsed attributes by the current parser, please pass them along.</p>
+<p>
+GFF2 and GFF3 also differ in how nested features are handled. A standard example of nesting is specifying the coding regions of a transcript. Since GFF2 didn't provide a default way to do this, there are several different methods used in practice. Currently, the parser leaves these GFF2 features as flat and you would need to write custom code on top of the parser to nest them if desired.</p>
+<p>
+The latest version of the GFF parsing code is available from <a href="http://github.com/chapmanb/bcbb/tree/master/gff">GitHub</a>. To install it, click the download link on that page and you will get the whole directory along with a setup.py file to install it. It installs outside of Biopython since it is still under development. As always, I am happy to accept any contributions or suggestions.</p></p>

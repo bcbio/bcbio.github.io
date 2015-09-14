@@ -1,0 +1,68 @@
+---
+layout: post
+title: Graphing of variables before classification
+date: 2009-01-24 13:26:24.000000000 -05:00
+categories:
+- visualization
+tags:
+- how-to
+- visualization
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+It is important to be able to graphically evaluate variables that feed into classification algorithms. In addition to assessing the distribution of the data, visual inspection also reveals patterns that can be later tested statistically. This post describes the preparation of a quick histogram for data from positive and negative examples feeding into a classifier. The excellent <a href="http://matplotlib.sourceforge.net/">matplotlib</a> library is used for visualization.</p>
+<p>
+The example involves classifying two sets of proteins based on regional sequence charge. Two <a href="http://en.wikipedia.org/wiki/Fasta_format">FASTA</a> files were prepared, containing positive (active) and negative (non-active) examples. The goal is to look for a difference in charge between the two groups. Given a window size of amino acids to look at, we loop over the records in the file using the <a href="http://www.biopython.org/wiki/SeqIO">Biopython SeqIO</a> interface:</p>
+<p>[sourcecode language="python"]<br />
+def file_charges(in_file, cur_window):<br />
+    all_charges = []<br />
+    with open(in_file) as in_handle:<br />
+        for rec in SeqIO.parse(in_handle, "fasta"):<br />
+            cur_charges = calc_region_charges(rec.seq, cur_window)<br />
+            all_charges.extend(cur_charges)<br />
+    return all_charges<br />
+[/sourcecode]</p>
+<p>
+We also use Biopython to calculate the <a href="http://en.wikipedia.org/wiki/Isoelectric_point">Isoelectric point</a> of each protein window. This is used as a proxy for charge; higher isoelectric points correspond to higher charges over the region.</p>
+<p>[sourcecode language="python"]<br />
+def calc_region_charges(seq, cur_window):<br />
+    # internal small regions, so do not deal with C and N terminal charges<br />
+    IsoelectricPoint.pKcterminal = {}<br />
+    IsoelectricPoint.pKnterminal = {}<br />
+    cur_pos = 0<br />
+    region_charges = []<br />
+    while cur_pos < len(seq) - cur_window:<br />
+        cur_seq = seq[cur_pos:cur_pos + cur_window]<br />
+        prot_analysis = ProtParam.ProteinAnalysis(str(cur_seq))<br />
+        ie_calc = IsoelectricPoint.IsoelectricPoint(cur_seq,<br />
+                prot_analysis.count_amino_acids())<br />
+        region_charges.append(ie_calc.pi())<br />
+        cur_pos += 1<br />
+    return region_charges<br />
+[/sourcecode]</p>
+<p>
+With this in place, we get the charges for the example records and plot them side by side as a histogram using matplotlib:</p>
+<p>[sourcecode language="python"]<br />
+cur_window = 75<br />
+pos_charges = file_charges(pos_file, cur_window)<br />
+neg_charges = file_charges(neg_file, cur_window)<br />
+n, bins, patches = pylab.hist([pos_charges, neg_charges], 30,<br />
+        normed=True, histtype='bar')<br />
+pylab.xlabel('Isoelectric point')<br />
+pylab.ylabel('Normalized percent of regions')<br />
+pylab.title('Protein charge of %s amino acid windows' % cur_window)<br />
+pylab.legend([patches[0][0], patches[1][0]], ['positives', 'negatives'])<br />
+pylab.savefig('pos_neg_hist.png')<br />
+pylab.show()<br />
+[/sourcecode]</p>
+<p>
+The resulting graph shows the different distribution of charge between the positive and negative records. At an isoelectric point just above 10, only sequence windows from the positive examples are found. Looking at the percentage of highly charged sequence regions above this threshold in non-classified sequences could serve as the basis for a classifier.</p>
+<p>[caption id="attachment_46" align="alignnone" width="400" caption="Example histogram"]<img src="http://bcbio.files.wordpress.com/2009/01/pos_neg_hist.png?w=400" alt="Example histogram" title="Histogram of example records" width="400" height="300" class="size-medium wp-image-46" />[/caption]</p>
+<p>
+The <a href="http://github.com/chapmanb/bcbb/blob/507cbb02c3531dddef67fd25087b3954f51e9d25/classify/histogram_thresh_find.py">example script</a> puts all of this together, and could be used as a template for classification problems in your own research.</p>

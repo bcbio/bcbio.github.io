@@ -1,0 +1,138 @@
+---
+layout: post
+title: Python query interface to BioGateway SPARQL endpoint and InterMine
+date: 2010-02-15 11:33:07.000000000 -05:00
+categories:
+- information retrieval
+tags:
+- open-source
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  _oembed_529ea9780e3fcb4cf556336c166084d8: ! '{{unknown}}'
+  _oembed_1d12107c6a1b0f9a1d379165a103a291: ! '{{unknown}}'
+  _oembed_7c77544d00f06e66089cfc42a93b2b8f: ! '{{unknown}}'
+  _oembed_c2e0ffb0e7aa2f4548396dd145d7bd24: ! '{{unknown}}'
+  _oembed_999becf5875b666f2a1d19efd20f8030: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>I spent the last week in Tokyo, Japan at <a href="http://hackathon3.dbcls.jp/">BioHackathon 2010</a>, an extremely productive meet up of open source coders organized by Toshiaki Katayama and the great folks at the <a href="http://dbcls.rois.ac.jp/en/access/index.html">Database Center of Life Sciences</a> (DBCLS). The focus of the week was improving biological toolkits for accessing the <a href="http://en.wikipedia.org/wiki/Semantic_Web">Semantic Web</a> of linked data.</p>
+<p>The technical focus was on <a href="http://en.wikipedia.org/wiki/Resource_Description_Framework">RDF</a> (Resource Description Format), a standard way to represent data as a triple; each triple is made up of a subject defining the item, a predicate specifying a relationship, and a object representing the linked data. By providing data in RDF along with common naming schemes for common objects we facilitate linking biological data in <a href="http://en.wikipedia.org/wiki/Mashup_(web_application_hybrid)">mashups</a>, expanding the ability of researchers to discover relationships between disparate data sources.</p>
+<p>RDF is managed in data stores like <a href="http://virtuoso.openlinksw.com/dataspace/dav/wiki/Main/">Virtuoso</a>, which are equivalent to relational or document based databases. For programmers, the primary technology for querying these stores is <a href="http://en.wikipedia.org/wiki/SPARQL">SPARQL</a>, a query language similar to SQL. The goal of the <a href="http://biopython.org">Biopython</a> programming team at the Hackathon was to provide an easy to use Python library to query RDF stores through SPARQL.</p>
+<h2>Interface design</h2>
+<p>The python interface organizes common biological queries on a datastore without exposing the backend implementation details. The final interface simplifies the process of making a query to two steps:</p>
+<ul>
+<li>Instantiate a query builder, providing it with two sets of data: attributes to retrieve and items to filter against. This is modeled after <a href="http://www.biomart.org/">BioMart</a> querying and the <a href="http://bioconductor.org/packages/bioc/html/biomaRt.html">R biomaRt interface</a>, providing a generic, well understood way to specify the query.</li>
+<li>Pass the query builder to a retrieval server which executes the query and returns the results in a tabular format, as a <a href="http://www.scipy.org/RecordArrays">numpy RecordArray</a>.</li>
+</ul>
+<p>The user is never exposed to the underlying implementation details, as the library performs the work of building the query, submitting it to the remote server and reformatting the results.</p>
+<p>Two interfaces were implemented at BioHackathon 2010:</p>
+<ul>
+<li><a href="http://www.semantic-systems-biology.org/biogateway">BioGateway</a> -- a SPARQL endpoint to a RDF data store containing SwissProt data semantically linked to Gene Ontology (GO) terms.</li>
+<li><a href="http://www.intermine.org/">InterMine</a> -- a XML based interface to a traditional relational database backend, containing organized metadata for primary experimental data from many organisms.</li>
+</ul>
+<p>By providing a common interface for both semantic data and more traditional data sources, we hope to facilitate the conversion by data providers to RDF where it simplifies their backend storage and queries. Users of this high level interface do not need to worry about the underlying implementation, instead focusing resources on developing their biological queries.</p>
+<h2>BioGateway</h2>
+<p>BioGateway organizes the <a href="http://www.uniprot.org/">SwissProt</a> database of protein sequences along with <a href="http://www.ebi.ac.uk/GOA/">Gene Ontology Annotations (GOA)</a> into an integrated RDF database. Data access is provided through a <a href="http://www.semantic-systems-biology.org/biogateway/querying">SPARQL query endpoint</a>, allowing searches for proteins based on a combination of GO and SwissProt data.</p>
+<p>This query searches for proteins that are involved in insulin response and linked to diabetes. The protein name, other proteins associated via  <a href="http://string.embl.de/">protein-protein interaction</a>, and the gene name are retrieved:</p>
+<p>[sourcecode language="python"]<br />
+from systemsbio import Biogateway, UniProtGOQueryBuilder</p>
+<p>builder = UniProtGOQueryBuilder(&quot;Homo sapiens&quot;)<br />
+builder.add_filter(&quot;GO_term&quot;, &quot;insulin&quot;)<br />
+builder.add_filter(&quot;disease_description&quot;, &quot;diabetes&quot;)<br />
+builder.add_attributes([&quot;protein_name&quot;, &quot;interactor&quot;, &quot;gene_name&quot;])</p>
+<p>server = Biogateway()<br />
+results = server.search(builder)<br />
+print len(results), results.dtype.names<br />
+result = results[0]<br />
+print result['protein_name'], result['gene_name'], \<br />
+      result['interactor'], result['GO_term']<br />
+[/sourcecode]</p>
+<p>An orthogonal search approach is to start with a protein of interest and retrieve linked details. Here we identify primary journal papers about a protein:</p>
+<p>[sourcecode language="python"]<br />
+from systemsbio import Biogateway, ReferenceBuilder</p>
+<p>builder = ReferenceBuilder()<br />
+builder.add_filter(&quot;protein_id&quot;, &quot;1433B_HUMAN&quot;)<br />
+builder.add_attributes([&quot;reference&quot;])</p>
+<p>server = Biogateway()<br />
+results = server.search(builder)<br />
+print len(results), results.dtype.names<br />
+result = results[0]<br />
+print result['protein_id'], result['reference']<br />
+[/sourcecode]</p>
+<p>Using the associated PubMed IDs, we can <a href="http://biopython.org/DIST/docs/tutorial/Tutorial.html#htoc95">retrieve the paper details</a> using Biopython and <a href="http://www.ncbi.nlm.nih.gov/Entrez/">NCBI Entrez</a>, utilizing BioGateway as part of an automated analysis pipeline:</p>
+<p>[sourcecode language="python"]<br />
+from Bio import Entrez<br />
+Entrez.email = &quot;me@example.com&quot;<br />
+pubmed_id = result['reference'].replace(&quot;PMID_&quot;, &quot;&quot;)<br />
+handle = Entrez.esummary(db=&quot;pubmed&quot;, id=pubmed_id)<br />
+record = Entrez.read(handle)[0]<br />
+print record['Title']<br />
+print record['PubDate']<br />
+print &quot;,&quot;.join(record['AuthorList'])<br />
+print record['FullJournalName'], record['Volume'], record['Pages']<br />
+# Novel raf kinase protein-protein interactions found by an exhaustive yeast two-hybrid analysis.<br />
+# 2003 Feb<br />
+# Yuryev A,Wennogle LP<br />
+# Genomics 81 112-25<br />
+[/sourcecode]</p>
+<p>The full source code is available from GitHub: <a href="http://github.com/chapmanb/bcbb/blob/master/semantic/systemsbio.py">systemsbio.py</a>. The implementation builds a SPARQL query based on the provided attributes and filters, using <a href="http://sparql-wrapper.sourceforge.net/">SPARQLwrapper</a> to interact with the remote server and parse the results.</p>
+<h2>InterMine</h2>
+<p>InterMine is an open source data management system used to power databases of primary research results like <a href="http://www.flymine.org/">FlyMine</a> and <a href="http://intermine.modencode.org/">modMine</a>. It stores metadata associated with projects in a structured way, enabling searches to identify data submissions of interest to biologists. It contains two useful web based tools to facilitate these searches:</p>
+<ul>
+<li>
+<p><a href="http://intermine.modencode.org/release-16/templates.do">Templates</a> -- Pre-defined queries that capture common ways biologists search the database.</p>
+</li>
+<li>
+<p><a href="http://intermine.modencode.org/release-16/customQuery.do">Query builder</a> -- A graphical interface to define custom queries, allowing manual discovery of attributes of interest.</p>
+</li>
+</ul>
+<p>We access InterMine programatically using the same builder and server paradigms used in our BioGateway interface. The query below searches modMine for <a href="http://en.wikipedia.org/wiki/Caenorhabditis_elegans">C. elegans</a> experiments characterizing the H3K4Me3 <a href="http://en.wikipedia.org/wiki/Histone#Histone_modifications_in_chromatin_regulation">histone modification</a>, which is associated with chromatin structure in active genes. The returned submission identifiers can be used to examine the primary data associated with the experiment:</p>
+<p>[sourcecode language="python"]<br />
+from intermine import Intermine, SubmissionQueryBuilder<br />
+builder = SubmissionQueryBuilder()<br />
+builder.add_attributes([&quot;submission_id&quot;,<br />
+    &quot;submission_title&quot;, &quot;developmental_stage&quot;])<br />
+builder.add_filter(&quot;organism&quot;, &quot;Caenorhabditis elegans&quot;)<br />
+builder.add_filter(&quot;antibody_name&quot;, &quot;H3K4me3&quot;)</p>
+<p>server = Intermine(&quot;http://intermine.modencode.org&quot;)<br />
+table = server.search(builder)<br />
+print table.dtype.names<br />
+print table<br />
+# ('submission_id', 'submission_title', 'developmental_stage')<br />
+# [('176', 'Histone_H3K4me3_from_N2_L3_larvae_(AR0169_H3K4me3_N2_L3)', '')<br />
+# ('2311', 'Histone_H3K4me3_N2_EEMB_(WA30534819_H3K4ME3_N2_EEMB)',<br />
+# 'Early Stage Embryos')<br />
+# ('2410', 'Histone_H3K79me1_N2_EEMB_(AB2886_H3K79ME1361912_N2_EEMB)',<br />
+# 'Early Stage Embryos')]<br />
+[/sourcecode]</p>
+<p>An advantage of defining query builders is that we can provide custom functionality to access more complex queries. The code below searches for C. elegans <a href="http://en.wikipedia.org/wiki/Chip-Sequencing">ChIP-seq</a> experiments using a free text search. The implementation searches for the query term against several description fields in the database, hiding these details from the user:</p>
+<p>[sourcecode language="python"]<br />
+from intermine import Intermine, ExperimentQueryBuilder<br />
+builder = ExperimentQueryBuilder()<br />
+builder.add_attributes([&quot;submission_id&quot;, &quot;experiment_name&quot;])<br />
+builder.add_filter(&quot;organism&quot;, &quot;Caenorhabditis elegans&quot;)<br />
+builder.free_text_filter(&quot;ChIP-seq&quot;)</p>
+<p>server = Intermine(&quot;http://intermine.modencode.org&quot;)<br />
+table = server.search(builder)<br />
+print table.dtype.names<br />
+print table<br />
+# ('submission_id', 'experiment_name')<br />
+# [('582', 'ChIP-Seq Identification of C. elegans TF Binding Sites')<br />
+# ('584', 'ChIP-Seq Identification of C. elegans TF Binding Sites')<br />
+# ...<br />
+[/sourcecode]</p>
+<p>The full source code is available from GitHub: <a href="http://github.com/chapmanb/bcbb/blob/master/semantic/intermine.py">intermine.py</a>. It builds a XML query for submission to <a href="http://www.intermine.org/wiki/WebService">InterMine Web Services</a>, handling submitting and parsing the result.</p>
+<h2>Thoughts</h2>
+<p>It is not a coincidence that a diverse set of tools like InterMine, BioGateway and BioMart were used in building these interfaces. The collaborative environment at BioHackathon 2010 facilitated productive discussions with the authors of these projects, leading to the API development and implementation. If you are interested in more details about the week of programming, check out the day to day summaries:</p>
+<ul>
+<li><a href="http://chapmanb.posterous.com/biohackathon-2010-day-1">Day 1</a></li>
+<li><a href="http://chapmanb.posterous.com/biohackathon-2010-day-2-python-sparql-query-b">Day 2</a></li>
+<li><a href="http://chapmanb.posterous.com/biohackathon-2010-day-3-fish-interoperating-a">Day 3</a></li>
+<li><a href="http://chapmanb.posterous.com/biohackathon-2010-day-4-improved-python-sparq">Day 4</a></li>
+<li><a href="http://chapmanb.posterous.com/biohackathon-2010-day-5-the-final-day">Day 5</a></li>
+</ul>
+<p>You are invited to fork and extend the code on GitHub.</p>

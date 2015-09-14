@@ -1,0 +1,96 @@
+---
+layout: post
+title: Evaluating key-value and document stores for short read data
+date: 2009-05-10 10:28:23.000000000 -04:00
+categories:
+- storage
+tags:
+- infrastructure
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  _oembed_f4bd3f24de6431317476c05bbc710a78: ! '{{unknown}}'
+  _oembed_53a625a2df12b899ce7540a26cc0e54c: ! '{{unknown}}'
+  _oembed_4d556665b44bae8db3893537700d5a9e: ! '{{unknown}}'
+  _oembed_29205e0076dec38f7d7e774872d96c25: ! '{{unknown}}'
+  _oembed_6923fbc86bcca771fb17217f423fbd04: ! '{{unknown}}'
+  _oembed_5e63450eba480fab39c682813cb0807a: ! '{{unknown}}'
+  _oembed_feb2220d3992ad62b2fee860f7646b22: ! '{{unknown}}'
+  _oembed_db258092274f0cff196fe4c1e23d97bb: ! '{{unknown}}'
+  _oembed_0e01ce4bcf8cf6f01aaf6ad3b63dbb40: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+Designing responsive web interfaces for analyzing short read data requires techniques to rapidly retrieve and display all details associated with a read. My own work on this has been relying heavily on <a href="http://www.oracle.com/technology/products/berkeley-db/index.html">Berkeley DB</a> key/value databases. For example, an analysis will have key/value stores relating the read to aligned positions in the genome, counts of reads found in a sequencing run, and other associated metadata.</p>
+<p>
+A recent post by Pierre on <a href="http://plindenbaum.blogspot.com/2009/04/couchdb-for-bioinformatics-storing-snps.html">storing SNPs in CouchDB</a> encouraged me to evaluate my choice of Berkeley DB for storage. My goals were to move to a network accessible store, and to potentially incorporate the advanced query features associated with <a href="http://en.wikipedia.org/wiki/Document-oriented_database">document oriented databases</a>. I had found myself embedding too much logic about database location and structure into my code while developing with Berkeley DB.</p>
+<p>
+The main factors considered in evaluating the key/value and document stores for my needs were:</p>
+<ul>
+<li>Network accessible
+  </li>
+<li>Python library support
+  </li>
+<li>Data loading time
+  </li>
+<li>Data query time
+  </li>
+<li>File storage space
+  </li>
+<li>Implementation of queries beyond key/value retrieval
+</li>
+</ul>
+<p>
+Another relevant consideration, which is not as important to my work but might be to yours, is replicating and distributing a database across multiple servers. These are major issues when developing websites with millions of concurrent users; in science applications I am less likely to find that kind of popularity for short read SNP analysis.</p>
+<p>
+Leonard had recently posted a summary of his experience <a href="http://randomfoo.net/2009/04/20/some-notes-on-distributed-key-stores">evaluating distributed key stores</a>, which served as an excellent starting point for looking at the different options out there. I decided to do an in-depth evaluation of three stores:</p>
+<ul>
+<li><a href="http://tokyocabinet.sourceforge.net/index.html">Tokyo Cabinet</a>, and its network server <a href="http://tokyocabinet.sourceforge.net/tyrantdoc/">Tokyo Tyrant</a>, using the <a href="http://code.google.com/p/pytyrant/">pytyrant library</a>.
+  </li>
+<li><a href="http://couchdb.com/">CouchDB</a>, using the <a href="http://code.google.com/p/couchdb-python/">couchdb-python</a> library.
+  </li>
+<li><a href="http://www.mongodb.org">MongoDB</a>, using <a href="http://github.com/mongodb/mongo-python-driver/tree/master">pymongo</a>.
+</li>
+</ul>
+<p>
+Tokyo Cabinet is a key/value store which received a number of excellent reviews for its speed and reliability. CouchDB and MongoDB are document oriented stores which offer additional query capabilities.</p>
+<p>
+To evaluate the performance of these three stores, frequency counts for 2.8 million unique reads were loaded.  Real stores would have additional details on each read, but the general idea is the same: a large number of relatively small documents. Each of the stores was accessed across the network on a remote machine. The 2.8 million reads were loaded, and then a half million records were retrieved from the database. The <a href="http://github.com/chapmanb/bcbb/tree/master/keyval_testing">python scripts</a> are available on github. The below table summarizes the results:</p>
+<table border="1" cellpadding="5" cellspacing="3">
+<tr>
+<th><b>Database</b></th>
+<th><b>Load time</b></th>
+<th><b>Retrieval time</b></th>
+<th><b>File size</b></th>
+</tr>
+<tr>
+<td>Tokyo Cabinet/Tyrant</td>
+<td>12 minutes</td>
+<td>3 1/2 minutes</td>
+<td>24MB</td>
+</tr>
+<tr>
+<td>CouchDB</td>
+<td>5 1/2 minutes</td>
+<td>14 1/2 minutes</td>
+<td>236MB</td>
+</tr>
+<tr>
+<td>MongoDB</td>
+<td>3 minutes</td>
+<td>4 minutes</td>
+<td>192-960MB </td>
+</tr>
+</table>
+<p></p>
+<p>
+For CouchDB, I initially reported large numbers which were improved dramatically with some small tweaks. With a naive loading strategy, times were in the range of 22 hours with large 6G files. Thanks to tips from Chris and Paul in the comments, the loading script was modified to use bulk loading. With this change, loading times and file sizes are in the range of the other stores and the new times are reflected in the table. There appear to also be some tweaks that can be made to favor speed over reliability; these tests were done with the standard configuration. The message here is to dig deeper if you find performance issues with CouchDB; small differences in usage can provide huge gains.</p>
+<p>
+Based on the loading tests, I decided to investigate MongoDB and Tokyo Cabinet/Tyrant further. CouchDB loading speeds were improved dramatically by the changes mentioned above; however, retrieval speeds are about 3 times slower. Fetching single records from the database is the most important speed consideration for my work since it happens more frequently than loading, and reflects in the responsiveness of the web front end accessing the database. It is worth investigating whether client code changes can also speed up CouchDB. For Tokyo Cabinet/Tyrant and MongoDB the main performance trade-off was disk space usage for the database files. Tokyo Cabinet loads about 4 times slower, but maintains a much more compact file representation. To better understand how MongoDB stores file, I wrote to the community mailing list and received quick and thoughtful responses on the issue. See the <a href="http://groups.google.com/group/mongodb-user/browse_thread/thread/191df9d1dbfdfc79">full thread</a> if you are interested in the details; in summary, MongoDB pre-allocated space to improve loading time and this allocation becomes less of an issue as the database size increases.</p>
+<p>
+Looking beyond performance issues, Tokyo Cabinet/Tyrant and MongoDB represent two ends of the storage spectrum. MongoDB is a larger, full featured database providing complex query operations and management of multiple data stores. Tokyo Cabinet and Tyrant provide a lightweight solution for key/value retrieval. Each separate remote Tokyo Cabinet data store requires a Tyrant instance to be running. My work involves generating many different key/value databases for individual short read sequencing projects. To reasonably achieve this with remote Tyrant stores, I would need to develop a server that could start and manage Tyrant instances on demand. Additionally, if my query needs change the key/value paradigm of Tokyo Cabinet would require generating additional key values stores. For instance, we could not readily retrieve reads with a frequency greater than a defined threshold.</p>
+<p>
+In conclusion, both Tokyo Cabinet/Tyrant and MongoDB proved to be excellent solutions for managing the volume and style of data associated with short read experiments. MongoDB provided additional functionality in the form of remote data store management and advanced queries which will be useful for my work; I'll be switching my Berkeley DB stores over to MongoDB and continuing to explore its capabilities. I would welcome hearing about the solutions others have employed for similar storage and query issues.</p>

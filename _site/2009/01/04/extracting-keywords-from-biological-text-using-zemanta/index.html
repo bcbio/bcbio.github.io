@@ -1,0 +1,274 @@
+<!doctype html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"><!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<title>Extracting keywords from biological text using Zemanta &#8211; Blue Collar Bioinformatics</title>
+
+<meta name="keywords" content="how-to">
+
+  
+
+<!-- Twitter Cards -->
+<meta name="twitter:title" content="Extracting keywords from biological text using Zemanta">
+
+<meta name="twitter:site" content="@chapmanb">
+<meta name="twitter:creator" content="@chapmanb">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://localhost:4000/images/">
+
+<!-- Open Graph -->
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Extracting keywords from biological text using Zemanta">
+
+<meta property="og:url" content="http://localhost:4000/2009/01/04/extracting-keywords-from-biological-text-using-zemanta/">
+<meta property="og:site_name" content="Blue Collar Bioinformatics">
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/2009/01/04/extracting-keywords-from-biological-text-using-zemanta/">
+<link href="http://feeds2.feedburner.com/bcbio" type="application/atom+xml" rel="alternate" title="Blue Collar Bioinformatics Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://localhost:4000/assets/css/main.css">
+<!-- Webfonts -->
+<script src="https://use.edgefonts.net/source-sans-pro:n2,i2,n3,i3,n4,i4,n6,i6,n7,i7,n9,i9;source-code-pro:n4,n7;volkhov.js"></script>
+
+<meta http-equiv="cleartype" content="on">
+
+<!-- HTML5 Shiv and Media Query Support -->
+<!--[if lt IE 9]>
+  <script src="http://localhost:4000/assets/js/vendor/html5shiv.min.js"></script>
+  <script src="http://localhost:4000/assets/js/vendor/respond.min.js"></script>
+<![endif]-->
+
+<!-- Modernizr -->
+<script src="http://localhost:4000/assets/js/vendor/modernizr-2.7.1.custom.min.js"></script>
+
+
+<!-- MathJax -->
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+<!-- Icons -->
+<!-- 16x16 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.ico">
+<!-- 32x32 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.png">
+<!-- 57x57 (precomposed) for iPhone 3GS, pre-2011 iPod Touch and older Android devices -->
+<link rel="apple-touch-icon-precomposed" href="http://localhost:4000/images/apple-touch-icon-precomposed.png">
+<!-- 72x72 (precomposed) for 1st generation iPad, iPad 2 and iPad mini -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://localhost:4000/images/apple-touch-icon-72x72-precomposed.png">
+<!-- 114x114 (precomposed) for iPhone 4, 4S, 5 and post-2011 iPod Touch -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://localhost:4000/images/apple-touch-icon-114x114-precomposed.png">
+<!-- 144x144 (precomposed) for iPad 3rd and 4th generation -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:4000/images/apple-touch-icon-144x144-precomposed.png">
+
+</head>
+
+<body id="post">
+
+<div class="navigation-wrapper">
+	<nav role="navigation" id="site-nav" class="animated drop">
+	    <ul>
+      
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/" >About</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/articles/" >Recent</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/tags/" >Topics</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/search/" >Search</a></li>
+		  
+	    </ul>
+	</nav>
+</div><!-- /.navigation-wrapper -->
+
+<!--[if lt IE 9]><div class="upgrade"><strong><a href="http://whatbrowser.org/">Your browser is quite old!</strong> Why not upgrade to a different browser to better enjoy this site?</a></div><![endif]-->
+
+<header class="masthead">
+	<div class="wrap">
+      
+      <h1 class="site-title animated fadeIn"><a href="http://localhost:4000/">Blue Collar Bioinformatics</a></h1>
+		<h2 class="site-description animated fadeIn" itemprop="description">Biological data analysis, validation and visualization</h2>
+	</div>
+</header><!-- /.masthead -->
+
+<div class="js-menu-screen menu-screen"></div>
+
+
+<div id="main" role="main">
+  <article class="hentry">
+    
+    <div class="entry-wrapper">
+      <header class="entry-header">
+        <span class="entry-tags"><a href="http://localhost:4000/tags/#how-to" title="Pages tagged how-to">how-to</a></span>
+        
+          <h1 class="entry-title">Extracting keywords from biological text using Zemanta</h1>
+        
+      </header>
+      <footer class="entry-meta">
+        
+          
+        
+          <img src="http://localhost:4000/images/diego-work.jpg" class="bio-photo" alt="Brad Chapman bio photo"></a>
+        
+        <span class="author vcard">By <span class="fn">Brad Chapman</span></span>
+        <span class="entry-date date published"><time datetime="2009-01-04T01:15:07-05:00"><i class="fa fa-calendar-o"></i> January 04, 2009</time></span>
+        
+        <span class="entry-comments"><i class="fa fa-comment-o"></i> <a href="#disqus_thread">Comment</a></span>
+        
+        
+      </footer>
+      <div class="entry-content">
+        <p>
+Increasingly, my daily work is shifting from a model of "let me do this analysis for you and give you back some data" to "let me provide an interface that allows you to do the analyses yourself." This is great as it allows more close collaboration with lab scientists, and also helps split up work so I can be involved in more projects. One common interface suggestion is a keyword google-like search box; enter some text and find anything related to this term. In implementing this, I wanted to provide reasonable search suggestions by identifying keywords from gene descriptions. These can help frame researchers questions, and prove clues about useful search terms for new users.</p>
+<p>
+Here is an implementation of keyword extraction from biological text using the <a href="http://www.zemanta.com/">Zemanta</a> semantic API. The function uses the Zemanta REST interface and parses JSON output with <a href="http://www.undefined.org/python/">simplejson</a>. The parsed JSON is available as a python dictionary.</p>
+<p>[sourcecode language="python"]<br />
+def query_zemanta(search_text):<br />
+    gateway = 'http://api.zemanta.com/services/rest/0.0/'<br />
+    args = {'method': 'zemanta.suggest',<br />
+            'api_key': 'YOUR_API_KEY',<br />
+            'text': search_text,<br />
+            'return_categories': 'dmoz',<br />
+            'return_images': 0,<br />
+            'return_rdf_links' : 1,<br />
+            'format': 'json'}<br />
+    args_enc = urllib.urlencode(args)</p>
+<p>    raw_output = urllib2.urlopen(gateway, args_enc).read()<br />
+    output = simplejson.loads(raw_output)</p>
+<p>    print 'First article:', output['articles'][0]<br />
+    print 'Keywords:', [k['name'] for k in output['keywords']]<br />
+    for link in output['markup']['links']:<br />
+        print link['anchor']<br />
+        for target in link['target']:<br />
+            if target['type'] in ['wikipedia', 'rdf']:<br />
+                print '\t', target['title'], target['url']<br />
+    #print output<br />
+    print 'Marked up text', output['markup']['text']<br />
+[/sourcecode]</p>
+<p>
+In addition to extracting keywords, Zemanta also provides links to online resources. Here is the keyword list:</p>
+<pre>
+Keywords: [u'Drosophila', u'Biology', u'Messenger RNA', u'Germ cell',
+           u'Mitogen-activated protein kinase', u'Oocyte', 
+           u'C-Jun N-terminal kinases', u'RNA']
+</pre>
+<p></p>
+<p>
+And here is the original testing text marked up with the automated links:</p>
+<blockquote><p>
+glh-2 encodes a putative <a class="zem_slink" href="http://en.wikipedia.org/wiki/DEAD_box">DEAD-box</a> <a class="zem_slink" href="http://en.wikipedia.org/wiki/Helicase">RNA helicase</a> that contains six CCHC zinc fingers and is homologous to <a class="zem_slink" href="http://en.wikipedia.org/wiki/Drosophila">Drosophila</a> VASA, a germ-line-specific, ATP-dependent, RNA helicase; GLH-2 activity may also be required for the wild-type morphology of P granules and for localization of several protein components, but not accumulation of P granule <a class="zem_slink" href="http://en.wikipedia.org/wiki/Messenger_RNA">mRNA</a> components; GLH-2 interacts in vitro with itself and with <a class="zem_slink" href="http://maps.google.com/maps?ll=55.7586666667,37.6256&amp;spn=0.01,0.01&amp;q=55.7586666667,37.6256 (KGB)&amp;t=h">KGB</a>-1, a <a class="zem_slink" href="http://en.wikipedia.org/wiki/C-Jun_N-terminal_kinases">JNK</a>-like <a class="zem_slink" href="http://en.wikipedia.org/wiki/Mitogen-activated_protein_kinase">MAP kinase</a>; GLH-2 is a constitutive P granule component and thus, with the exception of mature sperm, is expressed in <a class="zem_slink" href="http://en.wikipedia.org/wiki/Germ_cell">germ cells</a> at all stages of development; GLH-2 is cytoplasmic in <a class="zem_slink" href="http://en.wikipedia.org/wiki/Oocyte">oocytes</a> and the early <a class="zem_slink" href="http://en.wikipedia.org/wiki/Embryo">embryo</a>, while perinuclear in all later developmental stages as well as in the distal and medial regions of the hermaphrodite gonad; GLH-2 is expressed at barely detectable levels in males.
+</p></blockquote>
+<p>
+In addition to the keywords, Zemanta does an excellent job of automatically annotating the text with links to relevant resources:</p>
+<ul>
+<li>Most impressively, the JNK acronym is determined to reference C-Jun N-terminal kinases, providing a link to the Wikipedia reference.</li>
+<li>Zemanta also provides links to <a href="http://www.freebase.com/">Freebase</a>, an open database in RDF-ready format. One example is this useful link to <a href="http://rdf.freebase.com/ns/guid/9202a8c04000641f8000000000013d4b">Drosophila</a> from which you could automatically extract NCBI Taxon IDs.
+  </li>
+<li>The one automated semantic mistake is the link to KGB; it provides a link to the KGB headquarters in Russia.</li>
+</ul>
+<p>
+Zemanta also supports links to <a href="http://www.ncbi.nlm.nih.gov/">NCBI</a> in their <a href="http://www.zemanta.com/blog/december-newsletter/">latest release</a> (as a funny semantic miscue, the blog link to NCBI is to the wrong NCBI). I did not get any NCBI links with this few example, but it is exciting to see they are thinking about scientific applications.</p>
+<p>
+In addition to Zemanta, I also tested <a href="http://www.opencalais.com/">OpenCalais</a> with the <a href="http://code.google.com/p/python-calais/">python interface</a>, which was not as successful. For the same text above, it returned only a single keyword: the incorrect KGB one. It appears as if their current focus is in finance, but it is worth watching for future developments.</p></p>
+
+        
+          <div id="disqus_thread"></div><!-- /#disqus_thread -->
+          
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'bcbio'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        
+      </div><!-- /.entry-content -->
+    </div><!-- /.entry-wrapper -->
+    <nav class="pagination" role="navigation">
+      
+        <a href="http://localhost:4000/2008/12/28/comparative-genomics-information-retrieval-from-ensembl/" class="btn" title="Comparative genomics information retrieval from Ensembl">Previous</a>
+      
+      
+        <a href="http://localhost:4000/2009/01/10/extracting-protein-characteristics-for-an-interpro-domain/" class="btn" title="Extracting protein characteristics for an InterPro domain">Next</a>
+      
+    </nav><!-- /.pagination -->
+  </article>
+</div><!-- /#main -->
+
+<div class="footer-wrapper">
+  <footer role="contentinfo" class="entry-wrapper">
+    
+
+<div class="social-icons">
+	<a href="https://twitter.com/chapmanb" title="Brad Chapman on Twitter" target="_blank"><i class="fa fa-twitter-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Github" target="_blank"><i class="fa fa-github-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Bitbucket" target="_blank"><i class="fa fa-bitbucket-square fa-2x"></i></a>
+	
+	
+	
+	
+	
+	
+  
+	
+	<a href="https://linkedin.com/pub/3/300/8ba" title="Brad Chapman on LinkedIn" target="_blank"><i class="fa fa-linkedin-square fa-2x"></i></a>
+  <a href="http://feeds2.feedburner.com/bcbio" title="Atom/RSS feed"><i class="fa fa-rss-square fa-2x"></i></a>
+</div><!-- /.social-icons -->
+
+  </footer>
+</div><!-- /.footer-wrapper -->
+
+<script type="text/javascript">
+  var BASE_URL = 'http://localhost:4000';
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="http://localhost:4000/assets/js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="http://localhost:4000/assets/js/scripts.min.js"></script>
+
+
+
+
+</body>
+</html>

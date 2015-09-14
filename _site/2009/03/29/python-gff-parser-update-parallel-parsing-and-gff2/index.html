@@ -1,0 +1,252 @@
+<!doctype html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"><!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<title>Python GFF parser update -- parallel parsing and GFF2 &#8211; Blue Collar Bioinformatics</title>
+
+<meta name="keywords" content="how-to">
+
+  
+
+<!-- Twitter Cards -->
+<meta name="twitter:title" content="Python GFF parser update -- parallel parsing and GFF2">
+
+<meta name="twitter:site" content="@chapmanb">
+<meta name="twitter:creator" content="@chapmanb">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://localhost:4000/images/">
+
+<!-- Open Graph -->
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python GFF parser update -- parallel parsing and GFF2">
+
+<meta property="og:url" content="http://localhost:4000/2009/03/29/python-gff-parser-update-parallel-parsing-and-gff2/">
+<meta property="og:site_name" content="Blue Collar Bioinformatics">
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/2009/03/29/python-gff-parser-update-parallel-parsing-and-gff2/">
+<link href="http://feeds2.feedburner.com/bcbio" type="application/atom+xml" rel="alternate" title="Blue Collar Bioinformatics Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://localhost:4000/assets/css/main.css">
+<!-- Webfonts -->
+<script src="https://use.edgefonts.net/source-sans-pro:n2,i2,n3,i3,n4,i4,n6,i6,n7,i7,n9,i9;source-code-pro:n4,n7;volkhov.js"></script>
+
+<meta http-equiv="cleartype" content="on">
+
+<!-- HTML5 Shiv and Media Query Support -->
+<!--[if lt IE 9]>
+  <script src="http://localhost:4000/assets/js/vendor/html5shiv.min.js"></script>
+  <script src="http://localhost:4000/assets/js/vendor/respond.min.js"></script>
+<![endif]-->
+
+<!-- Modernizr -->
+<script src="http://localhost:4000/assets/js/vendor/modernizr-2.7.1.custom.min.js"></script>
+
+
+<!-- MathJax -->
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+<!-- Icons -->
+<!-- 16x16 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.ico">
+<!-- 32x32 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.png">
+<!-- 57x57 (precomposed) for iPhone 3GS, pre-2011 iPod Touch and older Android devices -->
+<link rel="apple-touch-icon-precomposed" href="http://localhost:4000/images/apple-touch-icon-precomposed.png">
+<!-- 72x72 (precomposed) for 1st generation iPad, iPad 2 and iPad mini -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://localhost:4000/images/apple-touch-icon-72x72-precomposed.png">
+<!-- 114x114 (precomposed) for iPhone 4, 4S, 5 and post-2011 iPod Touch -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://localhost:4000/images/apple-touch-icon-114x114-precomposed.png">
+<!-- 144x144 (precomposed) for iPad 3rd and 4th generation -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:4000/images/apple-touch-icon-144x144-precomposed.png">
+
+</head>
+
+<body id="post">
+
+<div class="navigation-wrapper">
+	<nav role="navigation" id="site-nav" class="animated drop">
+	    <ul>
+      
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/" >About</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/articles/" >Recent</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/tags/" >Topics</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/search/" >Search</a></li>
+		  
+	    </ul>
+	</nav>
+</div><!-- /.navigation-wrapper -->
+
+<!--[if lt IE 9]><div class="upgrade"><strong><a href="http://whatbrowser.org/">Your browser is quite old!</strong> Why not upgrade to a different browser to better enjoy this site?</a></div><![endif]-->
+
+<header class="masthead">
+	<div class="wrap">
+      
+      <h1 class="site-title animated fadeIn"><a href="http://localhost:4000/">Blue Collar Bioinformatics</a></h1>
+		<h2 class="site-description animated fadeIn" itemprop="description">Biological data analysis, validation and visualization</h2>
+	</div>
+</header><!-- /.masthead -->
+
+<div class="js-menu-screen menu-screen"></div>
+
+
+<div id="main" role="main">
+  <article class="hentry">
+    
+    <div class="entry-wrapper">
+      <header class="entry-header">
+        <span class="entry-tags"><a href="http://localhost:4000/tags/#how-to" title="Pages tagged how-to">how-to</a></span>
+        
+          <h1 class="entry-title">Python GFF parser update -- parallel parsing and GFF2</h1>
+        
+      </header>
+      <footer class="entry-meta">
+        
+          
+        
+          <img src="http://localhost:4000/images/diego-work.jpg" class="bio-photo" alt="Brad Chapman bio photo"></a>
+        
+        <span class="author vcard">By <span class="fn">Brad Chapman</span></span>
+        <span class="entry-date date published"><time datetime="2009-03-29T10:49:48-04:00"><i class="fa fa-calendar-o"></i> March 29, 2009</time></span>
+        
+        <span class="entry-comments"><i class="fa fa-comment-o"></i> <a href="#disqus_thread">Comment</a></span>
+        
+        
+      </footer>
+      <div class="entry-content">
+        <h3><b>Parallel parsing</b></h3>
+<p>
+Last week we discussed <a href="http://bcbio.wordpress.com/2009/03/22/mapreduce-implementation-of-gff-parsing-for-biopython/">refactoring the Python GFF parser to use a MapReduce framework</a>. This was designed with the idea of being able to scale GFF parsing as file size increases. In addition to large files describing genome annotations, GFF is spreading to next-generation sequencing; SOLiD provides <a href="http://solidsoftwaretools.com/gf/project/matogff/">a tool to convert their mapping files to GFF</a>.</p>
+<p>
+Parallel processing introduces overhead due to software intermediates and networking costs. For the <a href="http://discoproject.org/">Disco</a> implementation of GFF parsing, parsed lines run through Erlang and are translated to and from JSON strings. Invoking this overhead is worthwhile only if enough processors are utilized to overcome the slowdown. To estimate when we should start to parallelize, I looked at parsing a 1.5GB GFF file on a small multi-core machine and a remote cluster. Based on rough testing and non-scientific linear extrapolation of the results, I estimate 8 processors are needed to start to see a speed-up over local processing.</p>
+<p>
+The starting baseline for parsing our 1.5GB file is one and half minutes using a single processor on my commodity Dell desktop. This desktop has 4 cores, and running Disco utilizing all 4 CPUs, the time increases to 3 minutes. Once Disco itself has been set up, switching between the two is seamless since the file is parsed in shared memory.</p>
+<p>
+The advantage of utilizing Disco is that it can scale from this local implementation to very large clusters. Amazon's <a href="http://aws.amazon.com/ec2/">Elastic Computing Cloud (EC2)</a> is an amazing resource where you can quickly set up and run jobs on <a href="http://aws.amazon.com/ec2/instance-types/">powerful hardware</a>. It is essentially an instant on-demand cluster for running applications. Using the <a href="http://ec2-downloads.s3.amazonaws.com/elasticfox-owners-manual.pdf">ElasticFox Firefox plugin</a> and the <a href="http://discoproject.org/doc/start/ec2setup.html#ec2setup">setup directions for Disco on EC2</a>, I was able to quickly test GFF parsing on a test cluster of three small (AMI <code>ami-cfbc58a6</code>, a Debian 5.0 Lenny instance) instances. For distributed jobs, the main challenges are setting up each of the cluster nodes with the software, and distributing the files across the nodes. Disco provides scripts to install itself across the cluster and to <a href="http://discoproject.org/doc/start/tutorial.html#amazon-ec2">distribute the file being parsed</a>. When you are attacking a GFF parsing job that is prohibitively slow or memory intensive on your local hardware, a small cluster of a few extra-large of extra-large high CPU instances on EC2 will help you overcome these limitations. Hopefully in the future Disco will become available on some standard Amazon machine images, lowering the threshold to getting a job running.</p>
+<p>
+In practical terms, local GFF parsing will be fine for most standard files. When you are limited by parsing time with large files, attack the problem using either a local cluster or EC2 with 8 or more processors. To better utilize a small number of local CPUs, it makes sense to explore a light weight solution such as the new python <a href="http://docs.python.org/dev/library/multiprocessing.html#module-multiprocessing">multiprocessing</a> module.</p>
+<h3><b>GFF2 support</b></h3>
+<p>
+The initial target for GFF parsing was the <a href="http://www.sequenceontology.org/gff3.shtml">GFF3</a> standard. However, many genome centers still use the older <a href="http://www.sanger.ac.uk/Software/formats/GFF/GFF_Spec.shtml">GFF2</a> or <a href="http://mblab.wustl.edu/GTF22.html">GTF</a> formats. The main parsing difference between these formats are the attributes. In GFF3, they look like:</p>
+<pre>
+  ID=CDS:B0019.1;Parent=Transcript:B0019.1;locus=amx-2
+</pre>
+<p></p>
+<p>
+while in GFF2 they are less standardized, and look like:</p>
+<pre>
+  Transcript "B0019.1" ; WormPep "WP:CE40797" ; Note "amx-2"
+</pre>
+<p></p>
+<p>
+The parser has been updated to handle GFF2 attributes correctly, with test cases from several genome centers. In practice, there are several tricky implementations of the GFF2 specifications; if you find examples of incorrectly parsed attributes by the current parser, please pass them along.</p>
+<p>
+GFF2 and GFF3 also differ in how nested features are handled. A standard example of nesting is specifying the coding regions of a transcript. Since GFF2 didn't provide a default way to do this, there are several different methods used in practice. Currently, the parser leaves these GFF2 features as flat and you would need to write custom code on top of the parser to nest them if desired.</p>
+<p>
+The latest version of the GFF parsing code is available from <a href="http://github.com/chapmanb/bcbb/tree/master/gff">GitHub</a>. To install it, click the download link on that page and you will get the whole directory along with a setup.py file to install it. It installs outside of Biopython since it is still under development. As always, I am happy to accept any contributions or suggestions.</p></p>
+
+        
+          <div id="disqus_thread"></div><!-- /#disqus_thread -->
+          
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'bcbio'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        
+      </div><!-- /.entry-content -->
+    </div><!-- /.entry-wrapper -->
+    <nav class="pagination" role="navigation">
+      
+        <a href="http://localhost:4000/2009/03/22/mapreduce-implementation-of-gff-parsing-for-biopython/" class="btn" title="MapReduce implementation of GFF parsing for Biopython">Previous</a>
+      
+      
+        <a href="http://localhost:4000/2009/04/05/more-python-gff-parsing-iterative-parsing-and-gff2-nested-features/" class="btn" title="More python GFF parsing -- iterative parsing and GFF2 nested features">Next</a>
+      
+    </nav><!-- /.pagination -->
+  </article>
+</div><!-- /#main -->
+
+<div class="footer-wrapper">
+  <footer role="contentinfo" class="entry-wrapper">
+    
+
+<div class="social-icons">
+	<a href="https://twitter.com/chapmanb" title="Brad Chapman on Twitter" target="_blank"><i class="fa fa-twitter-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Github" target="_blank"><i class="fa fa-github-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Bitbucket" target="_blank"><i class="fa fa-bitbucket-square fa-2x"></i></a>
+	
+	
+	
+	
+	
+	
+  
+	
+	<a href="https://linkedin.com/pub/3/300/8ba" title="Brad Chapman on LinkedIn" target="_blank"><i class="fa fa-linkedin-square fa-2x"></i></a>
+  <a href="http://feeds2.feedburner.com/bcbio" title="Atom/RSS feed"><i class="fa fa-rss-square fa-2x"></i></a>
+</div><!-- /.social-icons -->
+
+  </footer>
+</div><!-- /.footer-wrapper -->
+
+<script type="text/javascript">
+  var BASE_URL = 'http://localhost:4000';
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="http://localhost:4000/assets/js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="http://localhost:4000/assets/js/scripts.min.js"></script>
+
+
+
+
+</body>
+</html>

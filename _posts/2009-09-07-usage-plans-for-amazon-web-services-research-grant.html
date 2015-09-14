@@ -1,0 +1,42 @@
+---
+layout: post
+title: Usage plans for Amazon Web Services research grant
+date: 2009-09-07 19:42:17.000000000 -04:00
+categories: []
+tags:
+- infrastructure
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  tagazine-media: a:7:{s:7:"primary";s:0:"";s:6:"images";a:0:{}s:6:"videos";a:0:{}s:11:"image_count";s:1:"0";s:6:"author";s:7:"6099765";s:7:"blog_id";s:7:"5850073";s:9:"mod_stamp";s:19:"2011-01-11
+    15:11:08";}
+  _oembed_a20786017700e28e1d395ffcf7cf9658: ! '{{unknown}}'
+  _oembed_1dfaf3e388f2c3dd670c772a7d560a71: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+
+<p>
+<a href="http://aws.amazon.com/">Amazon Web Services</a> provide an excellent distributed computing infrastructure through their <a href="http://aws.amazon.com/ec2/">Elastic Compute Cloud (EC2)</a>, <a href="http://aws.amazon.com/ebs/">Elastic Block Storage (EBS)</a> and associated resources. Essentially, they make available on demand compute power and storage at prices that scale with usage. In the past I've written about <a href="http://bcbio.wordpress.com/2009/03/29/python-gff-parser-update-parallel-parsing-and-gff2/">using EC2 for parallel parsing of large files</a>. Generally, I am a big proponent of distributed computing as a solution to dealing with problems ranging from job scaling to improving code availability.</p>
+<p>
+One of the challenges in advocating for using EC2 at my day to day work is the presence of existing computing resources. We have servers and clusters, but how will we scale for future work? Thankfully, we are able to assess the utility of Amazon services for future scaling through their <a href="http://aws.amazon.com/education/#researchers">education and research grants</a>. Our group applied and was accepted for a research grant which we plan to use to develop and distribute next generation sequencing analyses both within our group at <a href="http://genetics.mgh.harvard.edu/PublicWeb/">Mass General Hospital</a> and in the larger community.</p>
+<p>
+Amazon Machine Images (AMIs) provide an opportunity for the open source bioinformatics community to increase code availability. AMIs are essentially pre-built operating systems with installed programs. By <a href="http://www.philchen.com/2009/02/14/how-to-create-an-amazon-elastic-compute-cloud-ec2-machine-image-ami">creating AMIs</a> and making them available, a programmer can make their code readily accessible to users and avoid any of the intricacies of installation and configuration. Add this to available data in the form of <a href="http://aws.amazon.com/publicdatasets/">public data sets</a> and you have a ready to go analysis platform with very little overhead. There is already a large set of <a href="http://developer.amazonwebservices.com/connect/kbcategory.jspa?categoryID=171">available AMIs</a> from which to build.</p>
+<p>
+This idea and our thoughts on moving portions of our next generation sequencing analysis to EC2 are fleshed out further in our research grant application, portions of which are included below. We'd love to collaborate with others moving their bioinformatics work to Amazon resources.</p>
+<h3><b>Research Background</b></h3>
+<p>
+One broad area of rapid growth in biology research is deep sequencing (or short read) technology. A single lab investigator can produce hundreds of millions of DNA sequences, equivalent in scale to the entire human genome, in a period of days. This DNA sequencing technology is widely available through both on-site facilities as well as through commercial services. Creating scalable analysis methods is a high priority for the entire bioinformatics community; see <a href="http://selab.janelia.org/people/eddys/blog/?p=123">http://selab.janelia.org/people/eddys/blog/?p=123</a> for a presentation nicely summarizing the issues. We propose to address the computational bottlenecks resulting from this huge data volume using distributed AWS resources.</p>
+<p>
+An additional aim of our work is to provide tools to biologists looking to solve their data analysis challenges. When the computational portion of a project becomes a time limiting step, we can often speed up the cycling between experiment and analysis by providing researchers with ready to run scripts or web interfaces. However, this is complicated by high usage on shared computational resources and heterogeneous platforms requiring time consuming configuration. Both problems could be ameliorated by scalable EC2 instances with custom configured machine images.</p>
+<p>
+The goals of this grant application are to develop our analysis platform on Amazon's compute cloud and assess transfer, storage and utilization costs. We currently have internal computational resources ranging from high performance clusters to large memory machines. We believe Amazon's compute cloud to be an ideal solution as our analysis needs outgrow our current hardware.</p>
+<h3><b>Benefits to Amazon and the community</b></h3>
+<p>
+Developing software on AWS architecture presents a move towards a standard platform for bioinformatics research. Our group is invested in the open source community and shares both code and analysis tools. One common hindrance to sharing is the heterogeneity of platforms; code is developed on a local cluster and not readily generalizable, hence it is not shared.</p>
+<p>
+By building public machine images along with reusable source code, a diverse variety of users can readily use our code and tools. As short read sequencing continues to increase in utility and popularity, a practical ready-to-go platform for analyses will encourage many users to adopt parallelization on cloud resources as a research approach. We have begun initial work with this paradigm by developing parsers for large annotation files using MapReduce on EC2.</p>
+<p>
+Having the ability to utilize AWS with your support will help us further develop and disseminate analysis templates for the larger biology community, enabling science both at MGH and elsewhere.</p>

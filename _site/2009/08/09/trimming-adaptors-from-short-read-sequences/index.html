@@ -1,0 +1,301 @@
+<!doctype html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"><!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<title>Trimming adaptors from short read sequences &#8211; Blue Collar Bioinformatics</title>
+
+<meta name="keywords" content="how-to">
+
+  
+
+<!-- Twitter Cards -->
+<meta name="twitter:title" content="Trimming adaptors from short read sequences">
+
+<meta name="twitter:site" content="@chapmanb">
+<meta name="twitter:creator" content="@chapmanb">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://localhost:4000/images/">
+
+<!-- Open Graph -->
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Trimming adaptors from short read sequences">
+
+<meta property="og:url" content="http://localhost:4000/2009/08/09/trimming-adaptors-from-short-read-sequences/">
+<meta property="og:site_name" content="Blue Collar Bioinformatics">
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/2009/08/09/trimming-adaptors-from-short-read-sequences/">
+<link href="http://feeds2.feedburner.com/bcbio" type="application/atom+xml" rel="alternate" title="Blue Collar Bioinformatics Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://localhost:4000/assets/css/main.css">
+<!-- Webfonts -->
+<script src="https://use.edgefonts.net/source-sans-pro:n2,i2,n3,i3,n4,i4,n6,i6,n7,i7,n9,i9;source-code-pro:n4,n7;volkhov.js"></script>
+
+<meta http-equiv="cleartype" content="on">
+
+<!-- HTML5 Shiv and Media Query Support -->
+<!--[if lt IE 9]>
+  <script src="http://localhost:4000/assets/js/vendor/html5shiv.min.js"></script>
+  <script src="http://localhost:4000/assets/js/vendor/respond.min.js"></script>
+<![endif]-->
+
+<!-- Modernizr -->
+<script src="http://localhost:4000/assets/js/vendor/modernizr-2.7.1.custom.min.js"></script>
+
+
+<!-- MathJax -->
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+<!-- Icons -->
+<!-- 16x16 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.ico">
+<!-- 32x32 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.png">
+<!-- 57x57 (precomposed) for iPhone 3GS, pre-2011 iPod Touch and older Android devices -->
+<link rel="apple-touch-icon-precomposed" href="http://localhost:4000/images/apple-touch-icon-precomposed.png">
+<!-- 72x72 (precomposed) for 1st generation iPad, iPad 2 and iPad mini -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://localhost:4000/images/apple-touch-icon-72x72-precomposed.png">
+<!-- 114x114 (precomposed) for iPhone 4, 4S, 5 and post-2011 iPod Touch -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://localhost:4000/images/apple-touch-icon-114x114-precomposed.png">
+<!-- 144x144 (precomposed) for iPad 3rd and 4th generation -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:4000/images/apple-touch-icon-144x144-precomposed.png">
+
+</head>
+
+<body id="post">
+
+<div class="navigation-wrapper">
+	<nav role="navigation" id="site-nav" class="animated drop">
+	    <ul>
+      
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/" >About</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/articles/" >Recent</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/tags/" >Topics</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/search/" >Search</a></li>
+		  
+	    </ul>
+	</nav>
+</div><!-- /.navigation-wrapper -->
+
+<!--[if lt IE 9]><div class="upgrade"><strong><a href="http://whatbrowser.org/">Your browser is quite old!</strong> Why not upgrade to a different browser to better enjoy this site?</a></div><![endif]-->
+
+<header class="masthead">
+	<div class="wrap">
+      
+      <h1 class="site-title animated fadeIn"><a href="http://localhost:4000/">Blue Collar Bioinformatics</a></h1>
+		<h2 class="site-description animated fadeIn" itemprop="description">Biological data analysis, validation and visualization</h2>
+	</div>
+</header><!-- /.masthead -->
+
+<div class="js-menu-screen menu-screen"></div>
+
+
+<div id="main" role="main">
+  <article class="hentry">
+    
+    <div class="entry-wrapper">
+      <header class="entry-header">
+        <span class="entry-tags"><a href="http://localhost:4000/tags/#how-to" title="Pages tagged how-to">how-to</a></span>
+        
+          <h1 class="entry-title">Trimming adaptors from short read sequences</h1>
+        
+      </header>
+      <footer class="entry-meta">
+        
+          
+        
+          <img src="http://localhost:4000/images/diego-work.jpg" class="bio-photo" alt="Brad Chapman bio photo"></a>
+        
+        <span class="author vcard">By <span class="fn">Brad Chapman</span></span>
+        <span class="entry-date date published"><time datetime="2009-08-09T20:18:18-04:00"><i class="fa fa-calendar-o"></i> August 09, 2009</time></span>
+        
+        <span class="entry-comments"><i class="fa fa-comment-o"></i> <a href="#disqus_thread">Comment</a></span>
+        
+        
+      </footer>
+      <div class="entry-content">
+        <p>
+One common post processing step for next generation, or short read, sequencing is to remove adaptor sequences. Sample preparation for sequencing often involves selection of a particular fraction of interest like expressed genes, microRNAs, or copy number variant regions. Selecting, amplifying, and sequencing these regions can result in read sequences containing a common tag that needs to be identified and removed before continuing with other analysis steps like alignment to the genome. This is often the case when the reads of interest are small like in short RNAs or small sequence tags.</p>
+<p>
+We start with a short known sequence (the adaptor) that will be present in our sequences of interest. For each read, we want to determine the position of this adaptor and remove it. Additionally, reads may contain the adaptor but differ by one or more bases; these differences are likely due to sequencing errors. So our solution needs to allow some fuzzy matching of the adaptor to the read sequences.</p>
+<p>
+My first attempt involved using fuzzy string matching. In Python, several libraries exist to tackle this problem. The normal use case is in identifying misspelled words in text. For instance, you can calculate <a href="http://code.google.com/p/pylevenshtein/">Levenshtein (edit) distance</a> or use <a href="http://docs.python.org/library/difflib.html">difflib</a> in the standard library; Stack Overflow has a <a href="http://stackoverflow.com/questions/682367/good-python-modules-for-fuzzy-string-comparison">nice discussion</a> of the different modules. Ultimately this approach proved to be a dead end; the properties that make English words similar do not overlap well with those differentiate DNA sequences.</p>
+<p>
+That realization led me to tackle the problem by computing <a href="http://en.wikipedia.org/wiki/Sequence_alignment">local alignments</a> of the adaptor to each sequence. This effectively captures the biological intuition you need to trim a sequence with less than a specified number of errors. The downside to this rigorous approach is that it will be slower than purely string based methods.</p>
+<p>
+The <a href="http://biopython.org">Biopython</a> library contains a Python local alignment function suitable for quick alignment of short regions. We use this to align an adaptor region to a sequence and calculate the number of differences in the aligned region. To handle a common case where we can find the exact adaptor sequence, we first do an string match. This avoids the alignment overhead in many cases:</p>
+<p>[sourcecode language="python"]<br />
+from Bio import pairwise2</p>
+<p>def trim_adaptor(seq, adaptor, num_errors, right_side=True):<br />
+    gap_char = '-'<br />
+    exact_pos = str(seq).find(adaptor)<br />
+    if exact_pos &gt;= 0:<br />
+        seq_region = str(seq[exact_pos:exact_pos+len(adaptor)])<br />
+        adapt_region = adaptor<br />
+    else:<br />
+        seq_a, adaptor_a, score, start, end = pairwise2.align.localms(str(seq),<br />
+                str(adaptor), 5.0, -4.0, -9.0, -0.5,<br />
+                one_alignment_only=True, gap_char=gap_char)[0]<br />
+        adapt_region = adaptor_a[start:end]<br />
+        seq_region = seq_a[start:end]<br />
+    matches = sum((1 if s == adapt_region[i] else 0) for i, s in<br />
+            enumerate(seq_region))<br />
+    # too many errors -- no trimming<br />
+    if (len(adaptor) - matches) &gt; num_errors:<br />
+        return seq<br />
+    # remove the adaptor sequence and return the result<br />
+    else:<br />
+        return _remove_adaptor(seq, seq_region.replace(gap_char, ""),<br />
+                right_side)<br />
+[/sourcecode]</p>
+<p>
+If the alignment contains fewer than the specified number of errors we've found an adaptor and remove it, returning the trimmed sequence. The attribute <code>right_side</code> allows us to specify whether the trimming should be done on the right (3' end) or the left (5' end):</p>
+<p>[sourcecode language="python"]<br />
+def _remove_adaptor(seq, region, right_side=True):<br />
+    """Remove an adaptor region and all sequence to the right or left.<br />
+    """<br />
+    if right_side:<br />
+        try:<br />
+            pos = seq.find(region)<br />
+        # handle Biopython SeqRecords<br />
+        except AttributeError:<br />
+            pos = seq.seq.find(region)<br />
+        return seq[:pos]<br />
+    else:<br />
+        try:<br />
+            pos = seq.rfind(region)<br />
+        # handle Biopython SeqRecords<br />
+        except AttributeError:<br />
+            pos = seq.seq.rfind(region)<br />
+        return seq[pos+len(region):]<br />
+[/sourcecode]</p>
+<p>
+Here is an example script using this function along with Biopython to trim reads from a <a href="http://en.wikipedia.org/wiki/FASTQ_format">FASTQ format</a> file.Each read is analyzed to determine if it contains the adaptor, with up to 2 errors. If the adaptor is identified and trimmed, the final useful read is written to a FASTA format output file.</p>
+<p>[sourcecode language="python"]<br />
+from __future__ import with_statement<br />
+import sys<br />
+import os</p>
+<p>from Bio import SeqIO</p>
+<p>from adaptor_trim import trim_adaptor</p>
+<p>def main(in_file):<br />
+    adaptor_seq = "TCGTATGCCGTCTTCTGC"<br />
+    num_errors = 2<br />
+    base, ext = os.path.splitext(in_file)<br />
+    out_file = "%s-trimmed.fa" % (base)</p>
+<p>    with open(in_file) as in_handle:<br />
+        with open(out_file, "w") as out_handle:<br />
+            for rec in SeqIO.parse(in_handle, "fastq"):<br />
+                trim = trim_adaptor(rec.seq, adaptor_seq, num_errors)<br />
+                if len(trim) &gt; 0 and len(trim) &lt; len(rec):<br />
+                    rec.letter_annotations = {}<br />
+                    rec.seq = trim<br />
+                    SeqIO.write([rec], out_handle, &quot;fasta&quot;)<br />
+[/sourcecode]</p>
+<p>
+You can get the <a href="http://github.com/chapmanb/bcbb/blob/master/align/adaptor_trim.py">full trimming code</a>, along with tests, from GitHub. The script takes about a half hour to process 15 million 36bp reads. Other current trimming approaches are often integrated into the aligners themselves: for instance, <a href="http://www.novocraft.com/products.html#novoalign">NovoAlign</a> appears to have similar alignment based <a href="http://www.novocraft.com/wiki/tiki-index.php?page=3+Prime+Adapter+Stripping">trimming capabilities</a>.</p>
+
+        
+          <div id="disqus_thread"></div><!-- /#disqus_thread -->
+          
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'bcbio'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        
+      </div><!-- /.entry-content -->
+    </div><!-- /.entry-wrapper -->
+    <nav class="pagination" role="navigation">
+      
+        <a href="http://localhost:4000/2009/07/26/sorting-genomic-alignments-using-python/" class="btn" title="Sorting genomic alignments using Python">Previous</a>
+      
+      
+        <a href="http://localhost:4000/2009/09/07/usage-plans-for-amazon-web-services-research-grant/" class="btn" title="Usage plans for Amazon Web Services research grant">Next</a>
+      
+    </nav><!-- /.pagination -->
+  </article>
+</div><!-- /#main -->
+
+<div class="footer-wrapper">
+  <footer role="contentinfo" class="entry-wrapper">
+    
+
+<div class="social-icons">
+	<a href="https://twitter.com/chapmanb" title="Brad Chapman on Twitter" target="_blank"><i class="fa fa-twitter-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Github" target="_blank"><i class="fa fa-github-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Bitbucket" target="_blank"><i class="fa fa-bitbucket-square fa-2x"></i></a>
+	
+	
+	
+	
+	
+	
+  
+	
+	<a href="https://linkedin.com/pub/3/300/8ba" title="Brad Chapman on LinkedIn" target="_blank"><i class="fa fa-linkedin-square fa-2x"></i></a>
+  <a href="http://feeds2.feedburner.com/bcbio" title="Atom/RSS feed"><i class="fa fa-rss-square fa-2x"></i></a>
+</div><!-- /.social-icons -->
+
+  </footer>
+</div><!-- /.footer-wrapper -->
+
+<script type="text/javascript">
+  var BASE_URL = 'http://localhost:4000';
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="http://localhost:4000/assets/js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="http://localhost:4000/assets/js/scripts.min.js"></script>
+
+
+
+
+</body>
+</html>

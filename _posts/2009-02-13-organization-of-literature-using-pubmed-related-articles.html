@@ -1,0 +1,126 @@
+---
+layout: post
+title: Organization of literature using PubMed related articles
+date: 2009-02-13 06:19:05.000000000 -05:00
+categories:
+- how-to
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+When dealing with a long list of journal articles, what is the best method to organize them? I was confronted with this problem in designing an interface where users would pick specific papers and retrieve results tied to them. Presenting them as the raw list was unsatisfying; it is fine for users who know exactly what articles they want, but naive users would have a lot of difficulty finding relevant articles. Even for power users, a better classification system could help reveal items they may not have known about.</p>
+<p>
+The approach I took was to group together papers based on similarity. The <a href="http://www.ncbi.nlm.nih.gov/sites/entrez?db=PubMed">NCBI PubMed</a> literature database has links to related articles, which it exposes programmatically though <a href="http://www.ncbi.nlm.nih.gov/entrez/query/static/eutils_help.html">EUtils</a>. Using the <a href="http://biopython.org/DIST/docs/tutorial/Tutorial.html">Biopython</a> Entrez interface, the first step is to retrieve a dictionary of related IDs for each starting article, ordered by relevance:</p>
+<p>[sourcecode language="python"]<br />
+def _get_elink_related_ids(self, pmids):<br />
+    pmid_related = {}<br />
+    for pmid in pmids:<br />
+        handle = Entrez.elink(dbform='pubmed', db='pubmed', id=pmid)<br />
+        record = Entrez.read(handle)<br />
+        cur_ids = []<br />
+        for link_dict in record[0]['LinkSetDb'][0]['Link']:<br />
+            cur_ids.append((int(link_dict.get('Score', 0)),<br />
+                link_dict['Id']))<br />
+        cur_ids.sort()<br />
+        cur_ids.reverse()<br />
+        local_ids = [x[1] for x in cur_ids if x[1] in pmids]<br />
+        if pmid in local_ids:<br />
+            local_ids.remove(pmid)<br />
+        pmid_related[pmid] = local_ids<br />
+    return pmid_related<br />
+[/sourcecode]</p>
+<p>
+Trying to group directly based on this dictionary will often result in one large group, since many of the articles may be linked together through a few common articles. For instance, a review may be related to several other papers in non-overlapping areas. To make the results as useful as possible we define a maximum and minimum group size, and a two parameters to filter the related lists:</p>
+<ul>
+<li><code>overrep_thresh</code>: The percentage of papers an item is related to out of all papers being grouped; the threshold sets a maximum number of papers that can be related. For instance, a value of .25 means that a journal will be related to 25% or less of the total papers.
+  </li>
+<li><code>related_max</code>: The number of related papers to use. The best related articles go into the grouping.
+</li>
+</ul>
+<p>
+These parameters define a filter for our dictionary of related articles:</p>
+<p>[sourcecode language="python"]<br />
+def _filter_related(self, inital_dict, overrep_thresh, related_max):<br />
+    final_dict = {}<br />
+    all_vals = reduce(operator.add, inital_dict.values())<br />
+    for item_id, item_vals in inital_dict.items():<br />
+        final_vals = [val for val in item_vals if<br />
+            float(all_vals.count(val)) / len(inital_dict) <= overrep_thresh]<br />
+        final_dict[item_id] = final_vals[:related_max]<br />
+    return final_dict<br />
+[/sourcecode]</p>
+<p>
+The filtered list is grouped using a generalized version of the <code>examine_paralogs</code> function used in an earlier post to group together <a href="http://bcbio.wordpress.com/2009/01/31/location-and-duplication-information-from-ensembl/">location and duplication information</a>. Sets combine any groups with overlapping articles:</p>
+<p>[sourcecode language="python"]<br />
+def _groups_from_related_dict(self, related_dict):<br />
+    cur_groups = []<br />
+    all_base = related_dict.keys()<br />
+    for base_id, cur_ids in related_dict.items():<br />
+        overlap = set(cur_ids) & set(all_base)<br />
+        if len(overlap) > 0:<br />
+            new_group = set(overlap | set([base_id]))<br />
+            is_unique = True<br />
+            for exist_i, exist_group in enumerate(cur_groups):<br />
+                if len(new_group & exist_group) > 0:<br />
+                    update_group = new_group | exist_group<br />
+                    cur_groups[exist_i] = update_group<br />
+                    is_unique = False<br />
+                    break<br />
+            if is_unique:<br />
+                cur_groups.append(new_group)<br />
+    return [list(g) for g in cur_groups]<br />
+[/sourcecode]</p>
+<p>
+With this list, we want to extract the groups and their articles that fit in our grouping criteria, the minimum and maximum size:</p>
+<p>[sourcecode language="python"]<br />
+def _collect_new_groups(self, pmid_related, groups):<br />
+    final_groups = []<br />
+    for group_items in groups:<br />
+        final_items = [i for i in group_items if pmid_related.has_key(i)]<br />
+        if (len(final_items) >= self._min_group and<br />
+                len(final_items) <= self._max_group):<br />
+            final_groups.append(final_items)<br />
+            for item in final_items:<br />
+                del pmid_related[item]<br />
+    final_related_dict = {}<br />
+    for pmid, related in pmid_related.items():<br />
+        final_related = [r for r in related if pmid_related.has_key(r)]<br />
+        final_related_dict[pmid] = final_related<br />
+    return final_groups, final_related_dict<br />
+[/sourcecode]</p>
+<p>
+Utilizing these functions, the main algorithm steps through a series of increasingly less stringent parameters picking out groups which fall into our thresholds. Closely related journal articles are grouped first; more general papers with less association will be placed in groups in later rounds:</p>
+<p>[sourcecode language="python"]<br />
+def get_pmid_groups(self, pmids):<br />
+    pmid_related = self._get_elink_related_ids(pmids)<br />
+    filter_params = self._filter_params[:]<br />
+    final_groups = []<br />
+    while len(pmid_related) > 0:<br />
+        if len(filter_params) == 0:<br />
+            raise ValueError("Ran out of parameters before finding groups")<br />
+        cur_thresh, cur_related = filter_params.pop(0)<br />
+        while 1:<br />
+            filt_related = self._filter_related(pmid_related, cur_thresh,<br />
+                    cur_related)<br />
+            groups = self._groups_from_related_dict(filt_related)<br />
+            new_groups, pmid_related = self._collect_new_groups(<br />
+                    pmid_related, groups)<br />
+            final_groups.extend(new_groups)<br />
+            if len(new_groups) == 0:<br />
+                break<br />
+        if len(pmid_related) < self._max_group:<br />
+            final_groups.append(pmid_related.keys())<br />
+            pmid_related = {}<br />
+    return final_groups<br />
+[/sourcecode]</p>
+<p>
+The full code wrapped up into a class is available from <a href="http://github.com/chapmanb/bcbb/blob/da44ff1329f66188edd4da3aca4b93c18c216195/classify/pubmed_related_group.py">the GitHub repository</a>.</p>
+<p>
+This is one approach to automatically grouping a large list of literature to make interesting items more discoverable. With the work being done on full text indexing, the data underlying resources such as <a href="http://www.ihop-net.org/UniPub/iHOP/">iHOP</a> might be used to do these groupings even more effectively using similar algorithms.</p>

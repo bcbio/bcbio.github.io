@@ -1,0 +1,339 @@
+<!doctype html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"><!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<title>Python query interface to BioGateway SPARQL endpoint and InterMine &#8211; Blue Collar Bioinformatics</title>
+
+<meta name="keywords" content="open-source">
+
+  
+
+<!-- Twitter Cards -->
+<meta name="twitter:title" content="Python query interface to BioGateway SPARQL endpoint and InterMine">
+
+<meta name="twitter:site" content="@chapmanb">
+<meta name="twitter:creator" content="@chapmanb">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://localhost:4000/images/">
+
+<!-- Open Graph -->
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Python query interface to BioGateway SPARQL endpoint and InterMine">
+
+<meta property="og:url" content="http://localhost:4000/2010/02/15/python-query-interface-to-biogateway-sparql-endpoint-and-intermine/">
+<meta property="og:site_name" content="Blue Collar Bioinformatics">
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/2010/02/15/python-query-interface-to-biogateway-sparql-endpoint-and-intermine/">
+<link href="http://feeds2.feedburner.com/bcbio" type="application/atom+xml" rel="alternate" title="Blue Collar Bioinformatics Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://localhost:4000/assets/css/main.css">
+<!-- Webfonts -->
+<script src="https://use.edgefonts.net/source-sans-pro:n2,i2,n3,i3,n4,i4,n6,i6,n7,i7,n9,i9;source-code-pro:n4,n7;volkhov.js"></script>
+
+<meta http-equiv="cleartype" content="on">
+
+<!-- HTML5 Shiv and Media Query Support -->
+<!--[if lt IE 9]>
+  <script src="http://localhost:4000/assets/js/vendor/html5shiv.min.js"></script>
+  <script src="http://localhost:4000/assets/js/vendor/respond.min.js"></script>
+<![endif]-->
+
+<!-- Modernizr -->
+<script src="http://localhost:4000/assets/js/vendor/modernizr-2.7.1.custom.min.js"></script>
+
+
+<!-- MathJax -->
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+<!-- Icons -->
+<!-- 16x16 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.ico">
+<!-- 32x32 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.png">
+<!-- 57x57 (precomposed) for iPhone 3GS, pre-2011 iPod Touch and older Android devices -->
+<link rel="apple-touch-icon-precomposed" href="http://localhost:4000/images/apple-touch-icon-precomposed.png">
+<!-- 72x72 (precomposed) for 1st generation iPad, iPad 2 and iPad mini -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://localhost:4000/images/apple-touch-icon-72x72-precomposed.png">
+<!-- 114x114 (precomposed) for iPhone 4, 4S, 5 and post-2011 iPod Touch -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://localhost:4000/images/apple-touch-icon-114x114-precomposed.png">
+<!-- 144x144 (precomposed) for iPad 3rd and 4th generation -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:4000/images/apple-touch-icon-144x144-precomposed.png">
+
+</head>
+
+<body id="post">
+
+<div class="navigation-wrapper">
+	<nav role="navigation" id="site-nav" class="animated drop">
+	    <ul>
+      
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/" >About</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/articles/" >Recent</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/tags/" >Topics</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/search/" >Search</a></li>
+		  
+	    </ul>
+	</nav>
+</div><!-- /.navigation-wrapper -->
+
+<!--[if lt IE 9]><div class="upgrade"><strong><a href="http://whatbrowser.org/">Your browser is quite old!</strong> Why not upgrade to a different browser to better enjoy this site?</a></div><![endif]-->
+
+<header class="masthead">
+	<div class="wrap">
+      
+      <h1 class="site-title animated fadeIn"><a href="http://localhost:4000/">Blue Collar Bioinformatics</a></h1>
+		<h2 class="site-description animated fadeIn" itemprop="description">Biological data analysis, validation and visualization</h2>
+	</div>
+</header><!-- /.masthead -->
+
+<div class="js-menu-screen menu-screen"></div>
+
+
+<div id="main" role="main">
+  <article class="hentry">
+    
+    <div class="entry-wrapper">
+      <header class="entry-header">
+        <span class="entry-tags"><a href="http://localhost:4000/tags/#open-source" title="Pages tagged open-source">open-source</a></span>
+        
+          <h1 class="entry-title">Python query interface to BioGateway SPARQL endpoint and InterMine</h1>
+        
+      </header>
+      <footer class="entry-meta">
+        
+          
+        
+          <img src="http://localhost:4000/images/diego-work.jpg" class="bio-photo" alt="Brad Chapman bio photo"></a>
+        
+        <span class="author vcard">By <span class="fn">Brad Chapman</span></span>
+        <span class="entry-date date published"><time datetime="2010-02-15T11:33:07-05:00"><i class="fa fa-calendar-o"></i> February 15, 2010</time></span>
+        
+        <span class="entry-comments"><i class="fa fa-comment-o"></i> <a href="#disqus_thread">Comment</a></span>
+        
+        
+      </footer>
+      <div class="entry-content">
+        <p>I spent the last week in Tokyo, Japan at <a href="http://hackathon3.dbcls.jp/">BioHackathon 2010</a>, an extremely productive meet up of open source coders organized by Toshiaki Katayama and the great folks at the <a href="http://dbcls.rois.ac.jp/en/access/index.html">Database Center of Life Sciences</a> (DBCLS). The focus of the week was improving biological toolkits for accessing the <a href="http://en.wikipedia.org/wiki/Semantic_Web">Semantic Web</a> of linked data.</p>
+<p>The technical focus was on <a href="http://en.wikipedia.org/wiki/Resource_Description_Framework">RDF</a> (Resource Description Format), a standard way to represent data as a triple; each triple is made up of a subject defining the item, a predicate specifying a relationship, and a object representing the linked data. By providing data in RDF along with common naming schemes for common objects we facilitate linking biological data in <a href="http://en.wikipedia.org/wiki/Mashup_(web_application_hybrid)">mashups</a>, expanding the ability of researchers to discover relationships between disparate data sources.</p>
+<p>RDF is managed in data stores like <a href="http://virtuoso.openlinksw.com/dataspace/dav/wiki/Main/">Virtuoso</a>, which are equivalent to relational or document based databases. For programmers, the primary technology for querying these stores is <a href="http://en.wikipedia.org/wiki/SPARQL">SPARQL</a>, a query language similar to SQL. The goal of the <a href="http://biopython.org">Biopython</a> programming team at the Hackathon was to provide an easy to use Python library to query RDF stores through SPARQL.</p>
+<h2>Interface design</h2>
+<p>The python interface organizes common biological queries on a datastore without exposing the backend implementation details. The final interface simplifies the process of making a query to two steps:</p>
+<ul>
+<li>Instantiate a query builder, providing it with two sets of data: attributes to retrieve and items to filter against. This is modeled after <a href="http://www.biomart.org/">BioMart</a> querying and the <a href="http://bioconductor.org/packages/bioc/html/biomaRt.html">R biomaRt interface</a>, providing a generic, well understood way to specify the query.</li>
+<li>Pass the query builder to a retrieval server which executes the query and returns the results in a tabular format, as a <a href="http://www.scipy.org/RecordArrays">numpy RecordArray</a>.</li>
+</ul>
+<p>The user is never exposed to the underlying implementation details, as the library performs the work of building the query, submitting it to the remote server and reformatting the results.</p>
+<p>Two interfaces were implemented at BioHackathon 2010:</p>
+<ul>
+<li><a href="http://www.semantic-systems-biology.org/biogateway">BioGateway</a> -- a SPARQL endpoint to a RDF data store containing SwissProt data semantically linked to Gene Ontology (GO) terms.</li>
+<li><a href="http://www.intermine.org/">InterMine</a> -- a XML based interface to a traditional relational database backend, containing organized metadata for primary experimental data from many organisms.</li>
+</ul>
+<p>By providing a common interface for both semantic data and more traditional data sources, we hope to facilitate the conversion by data providers to RDF where it simplifies their backend storage and queries. Users of this high level interface do not need to worry about the underlying implementation, instead focusing resources on developing their biological queries.</p>
+<h2>BioGateway</h2>
+<p>BioGateway organizes the <a href="http://www.uniprot.org/">SwissProt</a> database of protein sequences along with <a href="http://www.ebi.ac.uk/GOA/">Gene Ontology Annotations (GOA)</a> into an integrated RDF database. Data access is provided through a <a href="http://www.semantic-systems-biology.org/biogateway/querying">SPARQL query endpoint</a>, allowing searches for proteins based on a combination of GO and SwissProt data.</p>
+<p>This query searches for proteins that are involved in insulin response and linked to diabetes. The protein name, other proteins associated via  <a href="http://string.embl.de/">protein-protein interaction</a>, and the gene name are retrieved:</p>
+<p>[sourcecode language="python"]<br />
+from systemsbio import Biogateway, UniProtGOQueryBuilder</p>
+<p>builder = UniProtGOQueryBuilder(&quot;Homo sapiens&quot;)<br />
+builder.add_filter(&quot;GO_term&quot;, &quot;insulin&quot;)<br />
+builder.add_filter(&quot;disease_description&quot;, &quot;diabetes&quot;)<br />
+builder.add_attributes([&quot;protein_name&quot;, &quot;interactor&quot;, &quot;gene_name&quot;])</p>
+<p>server = Biogateway()<br />
+results = server.search(builder)<br />
+print len(results), results.dtype.names<br />
+result = results[0]<br />
+print result['protein_name'], result['gene_name'], \<br />
+      result['interactor'], result['GO_term']<br />
+[/sourcecode]</p>
+<p>An orthogonal search approach is to start with a protein of interest and retrieve linked details. Here we identify primary journal papers about a protein:</p>
+<p>[sourcecode language="python"]<br />
+from systemsbio import Biogateway, ReferenceBuilder</p>
+<p>builder = ReferenceBuilder()<br />
+builder.add_filter(&quot;protein_id&quot;, &quot;1433B_HUMAN&quot;)<br />
+builder.add_attributes([&quot;reference&quot;])</p>
+<p>server = Biogateway()<br />
+results = server.search(builder)<br />
+print len(results), results.dtype.names<br />
+result = results[0]<br />
+print result['protein_id'], result['reference']<br />
+[/sourcecode]</p>
+<p>Using the associated PubMed IDs, we can <a href="http://biopython.org/DIST/docs/tutorial/Tutorial.html#htoc95">retrieve the paper details</a> using Biopython and <a href="http://www.ncbi.nlm.nih.gov/Entrez/">NCBI Entrez</a>, utilizing BioGateway as part of an automated analysis pipeline:</p>
+<p>[sourcecode language="python"]<br />
+from Bio import Entrez<br />
+Entrez.email = &quot;me@example.com&quot;<br />
+pubmed_id = result['reference'].replace(&quot;PMID_&quot;, &quot;&quot;)<br />
+handle = Entrez.esummary(db=&quot;pubmed&quot;, id=pubmed_id)<br />
+record = Entrez.read(handle)[0]<br />
+print record['Title']<br />
+print record['PubDate']<br />
+print &quot;,&quot;.join(record['AuthorList'])<br />
+print record['FullJournalName'], record['Volume'], record['Pages']<br />
+# Novel raf kinase protein-protein interactions found by an exhaustive yeast two-hybrid analysis.<br />
+# 2003 Feb<br />
+# Yuryev A,Wennogle LP<br />
+# Genomics 81 112-25<br />
+[/sourcecode]</p>
+<p>The full source code is available from GitHub: <a href="http://github.com/chapmanb/bcbb/blob/master/semantic/systemsbio.py">systemsbio.py</a>. The implementation builds a SPARQL query based on the provided attributes and filters, using <a href="http://sparql-wrapper.sourceforge.net/">SPARQLwrapper</a> to interact with the remote server and parse the results.</p>
+<h2>InterMine</h2>
+<p>InterMine is an open source data management system used to power databases of primary research results like <a href="http://www.flymine.org/">FlyMine</a> and <a href="http://intermine.modencode.org/">modMine</a>. It stores metadata associated with projects in a structured way, enabling searches to identify data submissions of interest to biologists. It contains two useful web based tools to facilitate these searches:</p>
+<ul>
+<li>
+<p><a href="http://intermine.modencode.org/release-16/templates.do">Templates</a> -- Pre-defined queries that capture common ways biologists search the database.</p>
+</li>
+<li>
+<p><a href="http://intermine.modencode.org/release-16/customQuery.do">Query builder</a> -- A graphical interface to define custom queries, allowing manual discovery of attributes of interest.</p>
+</li>
+</ul>
+<p>We access InterMine programatically using the same builder and server paradigms used in our BioGateway interface. The query below searches modMine for <a href="http://en.wikipedia.org/wiki/Caenorhabditis_elegans">C. elegans</a> experiments characterizing the H3K4Me3 <a href="http://en.wikipedia.org/wiki/Histone#Histone_modifications_in_chromatin_regulation">histone modification</a>, which is associated with chromatin structure in active genes. The returned submission identifiers can be used to examine the primary data associated with the experiment:</p>
+<p>[sourcecode language="python"]<br />
+from intermine import Intermine, SubmissionQueryBuilder<br />
+builder = SubmissionQueryBuilder()<br />
+builder.add_attributes([&quot;submission_id&quot;,<br />
+    &quot;submission_title&quot;, &quot;developmental_stage&quot;])<br />
+builder.add_filter(&quot;organism&quot;, &quot;Caenorhabditis elegans&quot;)<br />
+builder.add_filter(&quot;antibody_name&quot;, &quot;H3K4me3&quot;)</p>
+<p>server = Intermine(&quot;http://intermine.modencode.org&quot;)<br />
+table = server.search(builder)<br />
+print table.dtype.names<br />
+print table<br />
+# ('submission_id', 'submission_title', 'developmental_stage')<br />
+# [('176', 'Histone_H3K4me3_from_N2_L3_larvae_(AR0169_H3K4me3_N2_L3)', '')<br />
+# ('2311', 'Histone_H3K4me3_N2_EEMB_(WA30534819_H3K4ME3_N2_EEMB)',<br />
+# 'Early Stage Embryos')<br />
+# ('2410', 'Histone_H3K79me1_N2_EEMB_(AB2886_H3K79ME1361912_N2_EEMB)',<br />
+# 'Early Stage Embryos')]<br />
+[/sourcecode]</p>
+<p>An advantage of defining query builders is that we can provide custom functionality to access more complex queries. The code below searches for C. elegans <a href="http://en.wikipedia.org/wiki/Chip-Sequencing">ChIP-seq</a> experiments using a free text search. The implementation searches for the query term against several description fields in the database, hiding these details from the user:</p>
+<p>[sourcecode language="python"]<br />
+from intermine import Intermine, ExperimentQueryBuilder<br />
+builder = ExperimentQueryBuilder()<br />
+builder.add_attributes([&quot;submission_id&quot;, &quot;experiment_name&quot;])<br />
+builder.add_filter(&quot;organism&quot;, &quot;Caenorhabditis elegans&quot;)<br />
+builder.free_text_filter(&quot;ChIP-seq&quot;)</p>
+<p>server = Intermine(&quot;http://intermine.modencode.org&quot;)<br />
+table = server.search(builder)<br />
+print table.dtype.names<br />
+print table<br />
+# ('submission_id', 'experiment_name')<br />
+# [('582', 'ChIP-Seq Identification of C. elegans TF Binding Sites')<br />
+# ('584', 'ChIP-Seq Identification of C. elegans TF Binding Sites')<br />
+# ...<br />
+[/sourcecode]</p>
+<p>The full source code is available from GitHub: <a href="http://github.com/chapmanb/bcbb/blob/master/semantic/intermine.py">intermine.py</a>. It builds a XML query for submission to <a href="http://www.intermine.org/wiki/WebService">InterMine Web Services</a>, handling submitting and parsing the result.</p>
+<h2>Thoughts</h2>
+<p>It is not a coincidence that a diverse set of tools like InterMine, BioGateway and BioMart were used in building these interfaces. The collaborative environment at BioHackathon 2010 facilitated productive discussions with the authors of these projects, leading to the API development and implementation. If you are interested in more details about the week of programming, check out the day to day summaries:</p>
+<ul>
+<li><a href="http://chapmanb.posterous.com/biohackathon-2010-day-1">Day 1</a></li>
+<li><a href="http://chapmanb.posterous.com/biohackathon-2010-day-2-python-sparql-query-b">Day 2</a></li>
+<li><a href="http://chapmanb.posterous.com/biohackathon-2010-day-3-fish-interoperating-a">Day 3</a></li>
+<li><a href="http://chapmanb.posterous.com/biohackathon-2010-day-4-improved-python-sparq">Day 4</a></li>
+<li><a href="http://chapmanb.posterous.com/biohackathon-2010-day-5-the-final-day">Day 5</a></li>
+</ul>
+<p>You are invited to fork and extend the code on GitHub.</p>
+
+        
+          <div id="disqus_thread"></div><!-- /#disqus_thread -->
+          
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'bcbio'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        
+      </div><!-- /.entry-content -->
+    </div><!-- /.entry-wrapper -->
+    <nav class="pagination" role="navigation">
+      
+        <a href="http://localhost:4000/2010/01/02/automated-retrieval-of-expression-data-with-python-and-r/" class="btn" title="Automated retrieval of expression data with Python and R">Previous</a>
+      
+      
+        <a href="http://localhost:4000/2010/03/26/biopython-projects-for-google-summer-of-code-2010/" class="btn" title="Biopython projects for Google Summer of Code 2010">Next</a>
+      
+    </nav><!-- /.pagination -->
+  </article>
+</div><!-- /#main -->
+
+<div class="footer-wrapper">
+  <footer role="contentinfo" class="entry-wrapper">
+    
+
+<div class="social-icons">
+	<a href="https://twitter.com/chapmanb" title="Brad Chapman on Twitter" target="_blank"><i class="fa fa-twitter-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Github" target="_blank"><i class="fa fa-github-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Bitbucket" target="_blank"><i class="fa fa-bitbucket-square fa-2x"></i></a>
+	
+	
+	
+	
+	
+	
+  
+	
+	<a href="https://linkedin.com/pub/3/300/8ba" title="Brad Chapman on LinkedIn" target="_blank"><i class="fa fa-linkedin-square fa-2x"></i></a>
+  <a href="http://feeds2.feedburner.com/bcbio" title="Atom/RSS feed"><i class="fa fa-rss-square fa-2x"></i></a>
+</div><!-- /.social-icons -->
+
+  </footer>
+</div><!-- /.footer-wrapper -->
+
+<script type="text/javascript">
+  var BASE_URL = 'http://localhost:4000';
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="http://localhost:4000/assets/js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="http://localhost:4000/assets/js/scripts.min.js"></script>
+
+
+
+
+</body>
+</html>

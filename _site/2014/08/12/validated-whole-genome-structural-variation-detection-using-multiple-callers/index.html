@@ -1,0 +1,266 @@
+<!doctype html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"><!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<title>Validated whole genome structural variation detection using multiple callers &#8211; Blue Collar Bioinformatics</title>
+
+<meta name="keywords" content="structural-variation, germline, validation">
+
+  
+
+<!-- Twitter Cards -->
+<meta name="twitter:title" content="Validated whole genome structural variation detection using multiple callers">
+
+<meta name="twitter:site" content="@chapmanb">
+<meta name="twitter:creator" content="@chapmanb">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://localhost:4000/images/">
+
+<!-- Open Graph -->
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Validated whole genome structural variation detection using multiple callers">
+
+<meta property="og:url" content="http://localhost:4000/2014/08/12/validated-whole-genome-structural-variation-detection-using-multiple-callers/">
+<meta property="og:site_name" content="Blue Collar Bioinformatics">
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/2014/08/12/validated-whole-genome-structural-variation-detection-using-multiple-callers/">
+<link href="http://feeds2.feedburner.com/bcbio" type="application/atom+xml" rel="alternate" title="Blue Collar Bioinformatics Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://localhost:4000/assets/css/main.css">
+<!-- Webfonts -->
+<script src="https://use.edgefonts.net/source-sans-pro:n2,i2,n3,i3,n4,i4,n6,i6,n7,i7,n9,i9;source-code-pro:n4,n7;volkhov.js"></script>
+
+<meta http-equiv="cleartype" content="on">
+
+<!-- HTML5 Shiv and Media Query Support -->
+<!--[if lt IE 9]>
+  <script src="http://localhost:4000/assets/js/vendor/html5shiv.min.js"></script>
+  <script src="http://localhost:4000/assets/js/vendor/respond.min.js"></script>
+<![endif]-->
+
+<!-- Modernizr -->
+<script src="http://localhost:4000/assets/js/vendor/modernizr-2.7.1.custom.min.js"></script>
+
+
+<!-- MathJax -->
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+<!-- Icons -->
+<!-- 16x16 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.ico">
+<!-- 32x32 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.png">
+<!-- 57x57 (precomposed) for iPhone 3GS, pre-2011 iPod Touch and older Android devices -->
+<link rel="apple-touch-icon-precomposed" href="http://localhost:4000/images/apple-touch-icon-precomposed.png">
+<!-- 72x72 (precomposed) for 1st generation iPad, iPad 2 and iPad mini -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://localhost:4000/images/apple-touch-icon-72x72-precomposed.png">
+<!-- 114x114 (precomposed) for iPhone 4, 4S, 5 and post-2011 iPod Touch -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://localhost:4000/images/apple-touch-icon-114x114-precomposed.png">
+<!-- 144x144 (precomposed) for iPad 3rd and 4th generation -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:4000/images/apple-touch-icon-144x144-precomposed.png">
+
+</head>
+
+<body id="post">
+
+<div class="navigation-wrapper">
+	<nav role="navigation" id="site-nav" class="animated drop">
+	    <ul>
+      
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/" >About</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/articles/" >Recent</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/tags/" >Topics</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/search/" >Search</a></li>
+		  
+	    </ul>
+	</nav>
+</div><!-- /.navigation-wrapper -->
+
+<!--[if lt IE 9]><div class="upgrade"><strong><a href="http://whatbrowser.org/">Your browser is quite old!</strong> Why not upgrade to a different browser to better enjoy this site?</a></div><![endif]-->
+
+<header class="masthead">
+	<div class="wrap">
+      
+      <h1 class="site-title animated fadeIn"><a href="http://localhost:4000/">Blue Collar Bioinformatics</a></h1>
+		<h2 class="site-description animated fadeIn" itemprop="description">Biological data analysis, validation and visualization</h2>
+	</div>
+</header><!-- /.masthead -->
+
+<div class="js-menu-screen menu-screen"></div>
+
+
+<div id="main" role="main">
+  <article class="hentry">
+    
+    <div class="entry-wrapper">
+      <header class="entry-header">
+        <span class="entry-tags"><a href="http://localhost:4000/tags/#structural-variation" title="Pages tagged structural-variation">structural-variation</a>&nbsp;&bull;&nbsp;<a href="http://localhost:4000/tags/#germline" title="Pages tagged germline">germline</a>&nbsp;&bull;&nbsp;<a href="http://localhost:4000/tags/#validation" title="Pages tagged validation">validation</a></span>
+        
+          <h1 class="entry-title">Validated whole genome structural variation detection using multiple callers</h1>
+        
+      </header>
+      <footer class="entry-meta">
+        
+          
+        
+          <img src="http://localhost:4000/images/diego-work.jpg" class="bio-photo" alt="Brad Chapman bio photo"></a>
+        
+        <span class="author vcard">By <span class="fn">Brad Chapman</span></span>
+        <span class="entry-date date published"><time datetime="2014-08-12T13:22:00-04:00"><i class="fa fa-calendar-o"></i> August 12, 2014</time></span>
+        
+        <span class="entry-comments"><i class="fa fa-comment-o"></i> <a href="#disqus_thread">Comment</a></span>
+        
+        
+      </footer>
+      <div class="entry-content">
+        <div id="outline-container-sec-1" class="outline-2">
+<h2 id="sec-1">Structural variant detection goals</h2>
+<div class="outline-text-2" id="text-1">
+<p> This post describes community based work integrating structural variant calling and validation into <a href="https://github.com/chapmanb/bcbio-nextgen">bcbio-nextgen</a>. I've previously written about approaches for <a href="http://bcbio.wordpress.com/2014/05/12/wgs-trio-variant-evaluation/">validating single nucleotide changes (SNPs) and small insertions/deletions (Indels)</a>, but it has always been unfortunate to not have reliable ways to detect larger structural variations: deletions, duplications, inversions, translocations and other disruptive events. Detecting these events with short read sequencing is difficult, and our goal in bcbio is to create a global summary of predicted structural variants from multiple callers alongside measures of sensitivity and precision. </p>
+<p> The latest release of bcbio automates structural variant calling with three callers: </p>
+<ul class="org-ul">
+<li><a href="https://github.com/arq5x/lumpy-sv">LUMPY</a> &#x2013; a <a href="http://genomebiology.com/2014/15/6/R84/abstract">probabilistic structural variant caller</a> incorporating both split read and read pair discordance, developed by Ryan Layer in <a href="http://quinlanlab.org/">Aaron Quinlan</a> and <a href="http://faculty.virginia.edu/irahall/">Ira Hall's</a> labs. </li>
+<li><a href="https://github.com/tobiasrausch/delly">DELLY</a> &#x2013; an <a href="http://bioinformatics.oxfordjournals.org/content/28/18/i333.abstract">integrated paired-end and split-end structural variant caller</a>   developed by Tobias Rausch. </li>
+<li><a href="http://www.bioconductor.org/packages/release/bioc/html/cn.mops.html">cn.mops</a> &#x2013; a <a href="http://nar.oxfordjournals.org/content/40/9/e69">read count based copy number variation (CNV) caller</a>   developed by Günter Klambauer. </li>
+</ul>
+<p> bcbio integrates structural variation predictions from all approaches into a high level BED file. This is a first pass way to identify potentially disruptive large scale events. Here are example regions: a duplication called by all 3 callers, a deletion called by 2 callers, and a complex region with both deletions and duplications. </p>
+<pre class="example">
+9  139526855 139527537 DUP_delly,DUP_lumpy,cnv3_cn_mops
+10  99034861  99037400 DEL_delly,cnv0_cn_mops,cnv1_cn_mops
+12   8575814   8596742 BND_lumpy,DEL_delly,DEL_lumpy,DUP_delly,DUP_lumpy,cnv1_cn_mops,cnv3_cn_mops
+</pre>
+<p> 
+<p> This output associates larger structural events with regions of interest in a high level way, while allowing us to quickly determine the individual tool support for each event.  Using this, we are no longer blind to potential structural changes and can use the summary to target in-depth investigation with the more detailed metrics available from each caller and a read viewer like <a href="http://melissagymrek.com/pybamview/">PyBamView</a>. The results can also help inform prioritization of SNP and Indel calls since structural rearrangements often associate with false positives. Longer term we hope this structural variant summary and comparison work will be useful for community validation efforts like the <a href="http://genomicsandhealth.org/">Global Alliance for Genomics and Health benchmarking group</a>, the <a href="http://www.genomeinabottle.org/">Genome in a Bottle consortium</a> and the <a href="https://www.synapse.org/#!Synapse:syn312572">ICGC-TCGA DREAM Mutation Calling challenge</a>. </p>
+<p> Below I'll describe a full evaluation of the sensitivity and precision of this combined approach using an NA12878 trio, as well as describe how to run and extend this work using <a href="https://github.com/chapmanb/bcbio-nextgen">bcbio-nextgen</a>. </p>
+<p> This blog post is the culmination of a lot of work and support from the open source bioinformatics community. <a href="https://twitter.com/dfjenkins3">David Jenkins</a> worked with our <a href="http://compbio.sph.harvard.edu/chb/">our group</a> for the summer and headed up evaluation of structural variation results. We received wonderful support from Colby Chang, Ryan Layer, Ira Hall and Aaron Quinlan on both LUMPY and structural variation validation in general. They freely shared scripts and datasets for evaluation, which gave us the materials to make these comparisons. Günter Klambauer gave us great practical advice on using cn.mops. Tobias Rausch helped immensely with tips for speeding up DELLY on whole genomes, and Ashok Ragavendran from <a href="http://talkowski.mgh.harvard.edu/people/">Mike Talkowski's lab</a> generously discussed tricks for scaling DELLY runs. <a href="https://rc.fas.harvard.edu/">Harvard Research Computing</a> provided critical support and compute for this analysis as part of a collaboration with <a href="https://01.org/">Intel</a>. </p>
+</p></div>
+</p></div>
+<div id="outline-container-sec-2" class="outline-2">
+<h2 id="sec-2">Evaluation</h2>
+<div class="outline-text-2" id="text-2">
+<p> To validate the output of this combined structural variant calling approach we used a set of over 4000 validated deletions made available by Ryan Layer as part of the <a href="http://genomebiology.com/2014/15/6/R84/abstract">LUMPY manuscript</a>.  These are deletion calls in <a href="http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref=GM12878">NA12878</a> with secondary support evidence from <a href="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20131209_na12878_moleculo/README_na12878_moleculo_20131209">Moleculo</a> and <a href="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20131209_na12878_pacbio/Schadt/README.NA12878_PacBio_data_from_Schadt">PacBio</a> datasets. We further subset these regions by removing calls in <a href="http://bcbio.wordpress.com/2014/05/12/wgs-trio-variant-evaluation/">low complexity regions</a> identified in <a href="http://bioinformatics.oxfordjournals.org/content/early/2014/07/03/bioinformatics.btu356">Heng Li's variant calling artifacts paper</a>.  An alternative set of problematic regions are the <a href="https://github.com/cc2qe/speedseq#annotations">potential misassembly regions</a> identified by Colby Chang and Ira Hall during LUMPY and <a href="https://github.com/cc2qe/speedseq">speedseq</a> development (Edit: The original post mistakenly mentioned these overlap significantly with low complexity regions, but that is only due to overlap in obvious problem areas like the N gap regions. We'll need additional work to incorporate both regions into future evaluations. Thanks to Colby for catching this error.). These are a useful proxy for regions we're currently not able to reliably call structural variants in. </p>
+<p> We ran all structural variant callers using the <a href="http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref=GM12878">NA12878/NA12891/NA12892 trio</a> from the <a href="http://blog.goldenhelix.com/wp-content/uploads/2013/03/Utah-Pedigree-1463-with-NA12878.png">CEPH 1463 Pedigree</a> as an input dataset. This consists of 50x whole genome reads from <a href="http://www.illumina.com/platinumgenomes/">Illumina's platinum genomes</a> project, and is the same dataset used in our previous analyses of population based SNP and small indel calling. </p>
+<p> Our goal is to define boundaries on <a href="https://en.wikipedia.org/wiki/Sensitivity_and_specificity">sensitivity</a> &#x2013; the percentage of validated calls we detect &#x2013; and <a href="https://en.wikipedia.org/wiki/Sensitivity_and_specificity">precision</a> &#x2013; how many of the total calls overlap with validated regions. We required a simple overlap of the called regions with validated regions to consider a called variant as validated, and stratified results by event size to quantify detection metrics at different size ranges. </p>
+<p> The comparison highlights the value of providing a combined call set. I'd caution against using this as a comparison between methods. Accurate structural variation calling depends on multiple sources of evidence and we still have work to do in improving our ability to filter for maximal sensitivity and specificity. The ensemble method in the figure below displays results of our final calls, made from collapsing structural variant calls from all three input callers: </p>
+<p>  <a href="http://i.imgur.com/DOqjHRP.png">   <img src="http://i.imgur.com/DOqjHRP.png" width="650" alt="Structural variant calling sensitivity and precision at different event sizes" /> </a>
+<p> Across all size classes, we detect approximately half of the structural variants and expect that about half of the called events are false positives. Smaller structural variants of less than 1kb are the most difficult to detect with these methods. Larger events from 1kb to 25kb have better sensitivity and precision. As the size of the events increase precision decreases, so larger called events tend to have more false positives. </p>
+<p> Beyond the values for sensitivity and precision, the biggest takeaway is that combining multiple callers helps detect additional variants we'd miss with any individual caller. Count based callers like cn.mops enable improved sensitivity on large deletions but don't resolve small deletions at 50x depth using our current settings, although tuning can help detect these smaller sized events as well. Similarly, lumpy and delly capture different sets of variants across all of the size classes. </p>
+<p> The comparison also emphasizes the potential for improving both individual caller filtering and ensemble structural variant preparation. The ensemble method uses <a href="http://bedtools.readthedocs.org/en/latest/index.html">bedtools</a> to create a merged superset of all individually called regions. This is the simplest possible approach to combine calls. Similarly, individual caller filters are intentionally simple as well. cn.mops calling performs no additional filtering beyond the defaults, and could use adjustment to detect and filter smaller events. Our <a href="https://github.com/chapmanb/bcbio-nextgen/blob/ac82a1d25cab0c498d645f899abc3af65c8fbbba/bcbio/structural/delly.py#L132">DELLY filter</a> requires 4 supporting reads or both split and paired read evidence. Our <a href="https://github.com/chapmanb/bcbio-nextgen/blob/ac82a1d25cab0c498d645f899abc3af65c8fbbba/bcbio/structural/lumpy.py#L74">LUMPY filter</a> require at least 4 supporting reads to retain an event. We welcome discussion of the costs and tradeoffs of these approaches. For instance, requiring split and paired evidence for DELLY increases precision at the cost of sensitivity.  These filters are a useful starting point and resolution, but we hope to continue to refine and improve them over time. </p>
+</p></div>
+</p></div>
+<div id="outline-container-sec-3" class="outline-2">
+<h2 id="sec-3">Implementation</h2>
+<div class="outline-text-2" id="text-3">
+<p> <a href="https://github.com/chapmanb/bcbio-nextgen/">bcbio-nextgen</a> handles installation and automation of the programs used in this comparison. The documentation contains <a href="https://bcbio-nextgen.readthedocs.org/en/latest/contents/testing.html#structural-variant-calling-whole-genome-trio-50x">instructions to download the data and run the NA12878 trio calling and validation</a>. This <a href="https://github.com/chapmanb/bcbio-nextgen/blob/master/config/examples/NA12878-trio-sv.yaml">input configuration file</a> should be easily adjusted to run on your data of interest. </p>
+<p> The current implementation has reasonable run times for whole genome structural variant calling. We use <a href="https://github.com/GregoryFaust/samblaster">samblaster</a> to perform duplicate marking alongside identification of discordant and split read pairs. The aligned reads from <a href="https://github.com/lh3/bwa">bwa</a> stream directly into samblaster, adding minimal processing time to the run. For LUMPY calling, the pre-prepared split and discordant reads feed directly into <a href="https://github.com/cc2qe/speedseq">speedseq</a>, which nicely automates the process of running LUMPY. For DELLY, we <a href="https://github.com/chapmanb/bcbio-nextgen/blob/ac82a1d25cab0c498d645f899abc3af65c8fbbba/bcbio/structural/delly.py#L110">subsample correct pairs in the input BAM to 50 million reads</a> and combine with the pre-extracted problematic pairs to improve runtimes for whole genome inputs. </p>
+<p> We processed three concurrently called 50x whole genome samples from FASTQ reads to validated structural variants in approximately 3 days using 32 cores. Following the preparation work described above, LUMPY calling took 6 hours, DELLY takes 24 hours parallelized on 32 cores and cn.mops took 16 hours parallelized by chromosome on 16 cores. This is a single data point for current capabilities, and is an area where we hope to continue to improve scalability and parallelization. </p>
+<p> The implementation and validation are fully integrated into the community developed <a href="https://github.com/chapmanb/bcbio-nextgen/">bcbio-nextgen</a> project and we hope to expand this work to incorporate additional structural variant callers like <a href="https://github.com/genome/pindel">Pindel</a> and <a href="http://cnvkit.readthedocs.org/en/latest/">CNVkit</a>, as well as improving filtering and ensemble calling. We also want to expand structural variant validation to include tumor/normal cancer samples and targeted sequencing. We welcome contributions and suggestions on current and future directions in structural variant calling. </p>
+</p></div>
+</p></div>
+
+        
+          <div id="disqus_thread"></div><!-- /#disqus_thread -->
+          
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'bcbio'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        
+      </div><!-- /.entry-content -->
+    </div><!-- /.entry-wrapper -->
+    <nav class="pagination" role="navigation">
+      
+        <a href="http://localhost:4000/2014/05/12/wgs-trio-variant-evaluation/" class="btn" title="Whole genome trio variant calling evaluation: low complexity regions, GATK VQSR and high depth filters">Previous</a>
+      
+      
+        <a href="http://localhost:4000/2014/10/07/joint-calling/" class="btn" title="Validating generalized incremental joint variant calling with GATK HaplotypeCaller, FreeBayes, Platypus and samtools">Next</a>
+      
+    </nav><!-- /.pagination -->
+  </article>
+</div><!-- /#main -->
+
+<div class="footer-wrapper">
+  <footer role="contentinfo" class="entry-wrapper">
+    
+
+<div class="social-icons">
+	<a href="https://twitter.com/chapmanb" title="Brad Chapman on Twitter" target="_blank"><i class="fa fa-twitter-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Github" target="_blank"><i class="fa fa-github-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Bitbucket" target="_blank"><i class="fa fa-bitbucket-square fa-2x"></i></a>
+	
+	
+	
+	
+	
+	
+  
+	
+	<a href="https://linkedin.com/pub/3/300/8ba" title="Brad Chapman on LinkedIn" target="_blank"><i class="fa fa-linkedin-square fa-2x"></i></a>
+  <a href="http://feeds2.feedburner.com/bcbio" title="Atom/RSS feed"><i class="fa fa-rss-square fa-2x"></i></a>
+</div><!-- /.social-icons -->
+
+  </footer>
+</div><!-- /.footer-wrapper -->
+
+<script type="text/javascript">
+  var BASE_URL = 'http://localhost:4000';
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="http://localhost:4000/assets/js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="http://localhost:4000/assets/js/scripts.min.js"></script>
+
+
+
+
+</body>
+</html>

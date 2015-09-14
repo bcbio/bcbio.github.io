@@ -1,0 +1,156 @@
+---
+layout: post
+title: Gene Ontology analysis with Python and Bioconductor
+date: 2009-10-18 11:03:24.000000000 -04:00
+categories:
+- analysis
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _oembed_66166db06d10f6dc3a6b450f76da139c: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+Last post we discussed <a href="http://bcbio.wordpress.com/2009/09/13/differential-expression-analysis-with-bioconductor-and-python/">extracting differentially expressed genes</a> from a set of short read data. The output of this analysis is a large list of genes, and the next challenge is to try and extract interesting patterns from the results. Are genes in particular families over-represented? Are there a large number of genes with a particular function? These patterns can help direct your future experiments and provide an understandable grouping for biologists examining the data.</p>
+<p>
+The <a href="http://www.geneontology.org/">Gene Ontology (GO)</a> project provides a standardized set of terms describing the molecular function of genes. We will use the <a href="http://www.bioconductor.org/packages/bioc/html/topGO.html">topGO</a> package from the <a href="http://www.bioconductor.org/">Bioconductor</a> project to identify over-represented GO terms from a set of differentially expressed genes. Python will be used to prepare the data, utilizing <a href="http://rpy.sourceforge.net/rpy2.html">rpy2</a> to call <a href="http://www.r-project.org/">R</a> for the statistical analysis.</p>
+<p>
+The first step is to parse input files describing the differentially expressed genes and the mapping of gene names to GO terms. For the example we will use a <a href="http://github.com/chapmanb/bcbb/blob/master/stats/diffexp_example-diffs.csv">simple CSV file from our previous analysis</a> and an <a href="http://github.com/chapmanb/bcbb/blob/master/stats/diffexp_example-go_map.txt">equally simple file describing the gene to GO mapping</a>. For real life work, you will need to get the GO mapping file for your organism; for instance, here is the <a href="ftp://ftp.arabidopsis.org/home/tair/Ontologies/Gene_Ontology/ATH_GO_GOSLIM.txt">Arabidopsis GO mapping from TAIR</a>.</p>
+<p>
+The input file of differentially expressed genes is parsed into a dictionary where the keys are gene names and the values are associated p-values:</p>
+<p>[sourcecode language="python"]<br />
+import csv</p>
+<p>def parse_input_csv(in_handle):<br />
+    reader = csv.reader(in_handle)<br />
+    reader.next() # header<br />
+    all_genes = dict()<br />
+    for (gene_name, _, _, pval) in reader:<br />
+        all_genes[gene_name] = float(pval)<br />
+    return all_genes<br />
+[/sourcecode]</p>
+<p>
+The GO mapping input file is parsed into two dictionaries: one mapping genes to GO terms for the GO analysis, and the second mapping GO terms to genes for displaying the results of the analysis:</p>
+<p>[sourcecode language="python"]<br />
+import collections</p>
+<p>def parse_go_map_file(in_handle, genes_w_pvals):<br />
+    gene_list = genes_w_pvals.keys()<br />
+    gene_to_go = collections.defaultdict(list)<br />
+    go_to_gene = collections.defaultdict(list)<br />
+    for line in in_handle:<br />
+        parts = line.split("\t")<br />
+        gene_id = parts[0]<br />
+        go_id = parts[1].strip()<br />
+        if gene_id in gene_list:<br />
+            gene_to_go[gene_id].append(go_id)<br />
+            go_to_gene[go_id].append(gene_id)<br />
+    return dict(gene_to_go), dict(go_to_gene)<br />
+[/sourcecode]</p>
+<p>
+Next we set up our associated R environment for GO analysis. This involves loading the topGO library and creating a function to classify genes as either differentially expressed, or not. We do this based on the p-value, classifying genes with a p-value of 0.01 or less as differentially expressed:</p>
+<p>[sourcecode language="python"]<br />
+import rpy2.robjects as robjects</p>
+<p>gene_pval = 1e-2<br />
+robjects.r('''<br />
+    library(topGO)<br />
+''')<br />
+robjects.r('''<br />
+    topDiffGenes = function(allScore) {<br />
+      return (allScore &lt; %s)<br />
+    }<br />
+&#39;&#39;&#39; % gene_pval)<br />
+[/sourcecode]</p>
+<p>
+Now it's time to run the analysis. The paramters are defined as a dictionary which initializes a <code>topGOdata</code> object:</p>
+<ul>
+<li>ontology -- the type of GO ontology to analyze; molecular function (MF) is examined here.
+  </li>
+<li>annot -- how the GO terms are annotated; we specify they will be identified by a mapping of genes to GO ids, passed as the gene2GO argument.
+  </li>
+<li>geneSelectionFun -- the function we defined above to determine if genes are differentially expressed.
+  </li>
+<li>allGenes -- an R named vector where the names are genes and the values are p-values; we use a utility function to convert a python dictionary to the named vector.
+  </li>
+<li>gene2GO -- an R named vector mapping gene names to associated GO terms.
+</li>
+</ul>
+<p>The initialized object is run using Fisher classic analysis. Several different analysis methods and test statistics are available in the package. The resulting scores are extracted and a summary table of the results is generated:</p>
+<p>[sourcecode language="python"]<br />
+def _dict_to_namedvector(init_dict):<br />
+    """Call R to create a named vector from an input dictionary.<br />
+    """<br />
+    return robjects.r.c(**init_dict)</p>
+<p>go_term_type = "MF"<br />
+topgo_method = "classic" # choice of classic, elim, weight<br />
+params = {"ontology" : go_term_type,<br />
+          "annot" : robjects.r["annFUN.gene2GO"],<br />
+          "geneSelectionFun" : robjects.r["topDiffGenes"],<br />
+          "allGenes" : _dict_to_namedvector(gene_vals),<br />
+          "gene2GO" : _dict_to_namedvector(gene_to_go)<br />
+          }<br />
+go_data = robjects.r.new("topGOdata", **params)<br />
+results = robjects.r.runTest(go_data, algorithm=topgo_method,<br />
+        statistic="fisher")<br />
+scores = robjects.r.score(results)<br />
+score_names = scores.getnames()<br />
+num_summarize = min(100, len(score_names))<br />
+results_table = robjects.r.GenTable(go_data, elimFisher=results,<br />
+        orderBy="elimFisher", topNodes=num_summarize)<br />
+[/sourcecode]</p>
+<p>
+The scores and results table are used to generate a list of over-represented GO terms with their associated p-values and descriptions:</p>
+<p>[sourcecode language="python"]<br />
+# extract term names from the topGO summary dataframe<br />
+GO_ID_INDEX = 0<br />
+TERM_INDEX = 1<br />
+ids_to_terms = dict()<br />
+for index, go_id in enumerate(results_table[GO_ID_INDEX]):<br />
+    ids_to_terms[go_id] = results_table[TERM_INDEX][index]<br />
+go_terms = []<br />
+# convert the scores and results information info terms to return<br />
+for index, item in enumerate(scores):<br />
+    if item &lt; go_pval:<br />
+        go_id = score_names[index]<br />
+        go_terms.append((item, go_id, ids_to_terms.get(go_id, &quot;&quot;)))<br />
+go_terms.sort()<br />
+[/sourcecode]</p>
+<p>
+Finally, we print out the resulting overexpressed GO terms along with associated genes:</p>
+<p>[sourcecode language="python"]<br />
+def print_go_info(go_terms, go_term_type, go_to_gene):<br />
+    for final_pval, go_id, go_term in go_terms:<br />
+        genes = []<br />
+        for check_go in [go_id] + get_go_children(go_id, go_term_type):<br />
+            genes.extend(go_to_gene.get(check_go, []))<br />
+        genes = sorted(list(set(genes)))<br />
+        print "-&gt; %s (%s) : %0.4f" % (go_id, go_term, final_pval)<br />
+        for g in genes:<br />
+            print g<br />
+[/sourcecode]</p>
+<p>
+One tricky part of the post-analysis processing is finding all of the genes associated with an identified GO id. The GO terminology is hierarchical, so a resulting GO identifier like <code>GO:0042578</code> in the <a href="http://github.com/chapmanb/bcbb/blob/master/stats/diffexp_example-go_results.txt">example results file</a> can represent both that term and more specific terms. A nice way to illustrate this for yourself is to look at the <a href="http://amigo.geneontology.org/cgi-bin/amigo/term-details.cgi?term=GO:0042578&amp;session_id=2471amigo1255800166">AmiGO browser display for the term</a>.</p>
+<p>
+The result is that genes associated with an over-represented term will come from both the identified term and more specific terms. Bioconductor has an interface to the GO database, so we can extract all of the relevant terms by moving down the GO tree collecting the more specific children, given the parent term:</p>
+<p>[sourcecode language="python"]<br />
+def get_go_children(go_term, go_term_type):<br />
+    robjects.r('''<br />
+        library(GO.db)<br />
+    ''')<br />
+    child_map = robjects.r["GO%sCHILDREN" % (go_term_type)]<br />
+    children = []<br />
+    to_check = [go_term]<br />
+    while len(to_check) &gt; 0:<br />
+        new_children = []<br />
+        for check_term in to_check:<br />
+            new_children.extend(list(robjects.r.get(check_term, child_map)))<br />
+        new_children = list(set([c for c in new_children if c]))<br />
+        children.extend(new_children)<br />
+        to_check = new_children<br />
+    children = list(set(children))<br />
+    return children<br />
+[/sourcecode]</p>
+<p>
+The <a href="http://github.com/chapmanb/bcbb/blob/master/stats/diffexp_go_analysis.py">full script</a> pulls all of this code together into a working example. You will need to update the parsers to match your input and GO mapping file, but otherwise the code can plug directly into full genome analyses of differential expression data.</p>

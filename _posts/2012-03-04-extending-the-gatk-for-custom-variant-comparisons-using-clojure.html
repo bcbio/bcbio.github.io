@@ -1,0 +1,149 @@
+---
+layout: post
+title: Extending the GATK for custom variant comparisons using Clojure
+date: 2012-03-04 20:13:37.000000000 -05:00
+categories:
+- analysis
+tags:
+- how-to
+- clojure
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>The <a href="http://www.broadinstitute.org/gsa/wiki/index.php/The_Genome_Analysis_Toolkit">Genome Analysis Toolkit (GATK)</a> is a full-featured library for dealing with next-generation sequencing data. The open-source Java code base, written by the <a href="http://www.broadinstitute.org/gsa/wiki/index.php/Main_Page">Genome Sequencing and Analysis Group at the Broad Institute</a>, exposes a <a href="http://en.wikipedia.org/wiki/Mapreduce">Map/Reduce framework</a> allowing developers to code custom tools taking advantage of support for: BAM Alignment files through <a href="http://picard.sourceforge.net/">Picard</a>, BED and other interval file formats through <a href="http://code.google.com/p/tribble/">Tribble</a>, and variant data in <a href="http://www.1000genomes.org/wiki/Analysis/Variant%20Call%20Format/vcf-variant-call-format-version-41">VCF format</a>.</p>
+<p>Here I'll show how to utilize the GATK API from <a href="http://clojure.org/">Clojure</a>, a functional, dynamic programming language that targets the Java Virtual Machine. We'll:</p>
+<ul>
+<li>Write a GATK walker that plots variant quality scores using the Map/Reduce API.</li>
+<li>Create a custom annotation that adds a mean neighboring base quality metric using the <a href="http://www.broadinstitute.org/gsa/wiki/index.php/VariantAnnotator">GATK VariantAnnotator</a>.</li>
+<li>Use the VariantContext API to parse and access variant information in a VCF file.</li>
+</ul>
+<p>The <a href="https://github.com/chapmanb/bcbio.variation">Clojure variation library</a> is freely available and is part of a larger project to provide variant assessment capabilities for the <a href="http://genomics.xprize.org/">Archon Genomics XPRIZE competition</a>.</p>
+<h2 id="mapreduce-gatk-walker">Map/Reduce GATK Walker</h2>
+<p>GATK's <a href="http://www.broadinstitute.org/gsa/wiki/index.php/GATK_Development">well documented</a> Map/Reduce API eases the development of custom programs for processing BAM and VCF files. The <a href="http://db.tt/y29eDuh">presentation from Eli Lilly</a> is a great introduction to developing your own custom GATK Walkers in Java. Here we'll follow a similar approach to code these in Clojure.</p>
+<p>We'll start by defining a simple Java base class that extends the base GATK walker and defines an output and input variable. The output is a string specifying the output file to write to, and the input is any type of variant file the GATK accepts. Here we'll be dealing with VCF input files:</p>
+<p>[sourcecode language="java"]<br />
+public abstract class BaseVariantWalker extends RodWalker {<br />
+  @Output<br />
+  public String out;</p>
+<p>  @ArgumentCollection<br />
+  public StandardVariantContextInputArgumentCollection invrns = new StandardVariantContextInputArgumentCollection();<br />
+}<br />
+[/sourcecode]</p>
+<p>This base class is all the Java we need. We implement the remaining walker in Clojure and will walk through the <a href="http://chapmanb.github.com/bcbio.variation/uberdoc.html#bcbio.variation.vcfwalker">fully annotated source</a> in sections. To start, we import the base walker we wrote and extend this to generate a Java class, which the GATK will pick up and make available as a command line walker:</p>
+<p>[sourcecode language="clojure"]<br />
+(ns bcbio.variation.vcfwalker<br />
+  (:import [bcbio.variation BaseVariantWalker])<br />
+  (:gen-class<br />
+   :name bcbio.variation.vcfwalker.VcfSimpleStatsWalker<br />
+   :extends bcbio.variation.BaseVariantWalker))<br />
+[/sourcecode]</p>
+<p>Since this is a Map/Reduce framework, we first need to implement the map function. GATK passes this function a tracker, used to retrieve the actual variant call values and a context which describes the current location. We use the <code>invrns</code> argument we defined in Java to reference the input VCF file supplied on the commandline. Finally, we extract the quality score from each <code>VariantContext</code> and return those. This map function produces a stream of quality scores from the input VCF file:</p>
+<p>[sourcecode language="clojure"]<br />
+(defn -map<br />
+  [this tracker ref context]<br />
+  (if-not (nil? tracker)<br />
+    (for [vc (map from-vc<br />
+                    (.getValues tracker (.variants (.invrns this))<br />
+                                (.getLocation context)))]<br />
+      (-&gt; vc :genotypes first :qual))))<br />
+[/sourcecode]</p>
+<p>For the reduce part, we take the stream of quality scores and plot a histogram. In the GATK this happens in 3 functions: <code>reduceInit</code> starts the reduction step and creates a list to add the quality scores to, <code>reduce</code> collects all of the quality scores into this list, and <code>onTraversalDone</code> plots a histogram of these scores using the <a href="http://incanter.org/">Incanter</a> statistical library:</p>
+<p>[sourcecode language="clojure"]<br />
+(defn -reduceInit<br />
+  [this]<br />
+  [])</p>
+<p>(defn -reduce<br />
+  [this cur coll]<br />
+  (if-not (nil? cur)<br />
+    (vec (flatten [coll cur]))<br />
+    coll))</p>
+<p>(defn -onTraversalDone<br />
+  [this result]<br />
+  (doto (icharts/histogram result<br />
+                           :x-label &quot;Variant quality&quot;<br />
+                           :nbins 50)<br />
+    (icore/save (.out this) :width 500 :height 400)))<br />
+[/sourcecode]</p>
+<p>We've implemented a full GATK walker in Clojure, taking advantage of existing Clojure plotting libraries. To run this, compile the code into a jarfile and run like a standard GATK tool:</p>
+<pre><code>$ lein uberjar
+$ java -jar bcbio.variation-0.0.1-SNAPSHOT-standalone.jar -T VcfSimpleStats
+  -r test/data/grch37.fa --variant test/data/gatk-calls.vcf --out test.png
+</code></pre>
+<p></p>
+<p>which produces a plot of quality score distributions:</p>
+<p>
+<a href="http://bcbio.files.wordpress.com/2012/03/gatk-quals.png"> <img src="http://bcbio.files.wordpress.com/2012/03/gatk-quals.png" width="400px" alt="GATK walker quality scores" /></a></p>
+<h2 id="custom-gatk-annotation">Custom GATK Annotation</h2>
+<p><a href="http://www.broadinstitute.org/gsa/wiki/index.php/VariantAnnotator">GATK's Variant Annotator</a> is a useful way to add metrics information to a file of variants. These metrics allow filtering and prioritization of variants, either by <a href="http://www.broadinstitute.org/gsa/wiki/index.php/Variant_quality_score_recalibration">variant quality score recalibration</a> or <a href="http://www.broadinstitute.org/gsa/wiki/index.php/VariantFiltrationWalker">hard filtering</a>. We can add new annotation metrics by inheriting from GATK Java interfaces. Here we'll implement Mean Neighboring Base Quality (NBQ), a metric from the <a href="http://www.biomedcentral.com/1471-2105/13/8/abstract">Atlas2 variation suite</a> that assesses the quality scores in a region surrounding a variation.</p>
+<p>We start walking through the <a href="http://chapmanb.github.com/bcbio.variation/uberdoc.html#bcbio.variation.annotate.nbq">full implementation</a> by again defining a generated Java class that inherits from a GATK interface. In this case, <code>InfoFieldAnnotation</code>:</p>
+<p>[sourcecode language="clojure"]<br />
+(ns bcbio.variation.annotate.nbq<br />
+  (:import [org.broadinstitute.sting.gatk.walkers.annotator.interfaces.InfoFieldAnnotation]<br />
+           [org.broadinstitute.sting.utils.codecs.vcf VCFInfoHeaderLine VCFHeaderLineType])<br />
+  (:require [incanter.stats :as istats])<br />
+  (:gen-class<br />
+   :name bcbio.variation.annotate.nbq.MeanNeighboringBaseQuality<br />
+   :extends org.broadinstitute.sting.gatk.walkers.annotator.interfaces.InfoFieldAnnotation))<br />
+[/sourcecode]</p>
+<p>The <code>annotate</code> function does the work of calculating the mean quality score. We define functions that use the GATK API to:</p>
+<ul>
+<li>Retrieve the pileup at the current position.</li>
+<li>Get the neighbor qualities from a read at a position.</li>
+<li>Combine the qualities for all reads in a pileup.</li>
+</ul>
+<p>With these three functions, we can use the Clojure threading macro to cleanly organize the steps of the operation as we retrieve the pileup, get the qualities and calculate the mean:</p>
+<p>[sourcecode language="clojure"]<br />
+(defn -annotate<br />
+  [_ _ _ _ contexts _]<br />
+  (letfn [(get-pileup [context]<br />
+            (if (.hasExtendedEventPileup context)<br />
+              (.getExtendedEventPileup context)<br />
+              (.getBasePileup context)))<br />
+          (neighbor-qualities [[offset read]]<br />
+            (let [quals (-&gt; read .getBaseQualities vec)]<br />
+              (map #(nth quals % nil) (range (- offset flank-bp) (+ offset flank-bp)))))<br />
+          (pileup-qualities [pileup]<br />
+            (map neighbor-qualities (map vector (.getOffsets pileup) (.getReads pileup))))]<br />
+    {&quot;NBQ&quot; (-&gt;&gt; contexts<br />
+                vals<br />
+                (map get-pileup)<br />
+                (map pileup-qualities)<br />
+                flatten<br />
+                (remove nil?)<br />
+                istats/mean<br />
+                (format &quot;%.2f&quot;))}))<br />
+[/sourcecode]</p>
+<p>With this in place we can now run this directly using the standard GATK command line arguments. As before, we create a jar file with the new annotator, and then pass the name as a desired annotation when running the <code>VariantAnnotator</code>, producing a VCF file with NBQ annotations:</p>
+<pre><code>$ lein uberjar
+$ java -jar bcbio.variation-0.0.1-SNAPSHOT-standalone.jar -T VariantAnnotator
+   -A MeanNeighboringBaseQuality -R test/data/GRCh37.fa -I test/data/aligned-reads.bam
+   --variant test/data/gatk-calls.vcf -o annotated-file.vcf
+</code></pre>
+<p></p>
+<h2 id="access-vcf-variant-information">Access VCF variant information</h2>
+<p>In addition to extending the GATK through walkers and annotations you can also utilize the extensive API directly, taking advantage of parsers and data structures to handle common file formats. Using Clojure's Java interoperability, the <a href="http://chapmanb.github.com/bcbio.variation/uberdoc.html#bcbio.variation.variantcontext">variantcontext module</a> provides a high level API to parse and extract information from VCF files. To loop through a VCF file and print the location, reference allele and called alleles for each variant we:</p>
+<ul>
+<li>Open a VCF source providing access to the underlying file inside a <code>with-open</code> statement to ensure closing of the resource.</li>
+<li>Parse the VCF source, returning an iterator of <code>VariantContext</code> maps for each variant in the file.</li>
+<li>Extract values from the map: the chromosome, start, reference allele and called alleles for the first genotype.</li>
+</ul>
+<p>[sourcecode language="clojure"]<br />
+(use 'bcbio.variation.variantcontext)</p>
+<p>(with-open [vcf-source (get-vcf-source &quot;test/data/gatk-calls.vcf&quot;)]<br />
+  (doseq [vc (parse-vcf vcf-source)]<br />
+    (println (:chr vc) (:start vc) (:ref-allele vc)<br />
+             (-&gt; vc :genotypes first :alleles)))<br />
+[/sourcecode]</p>
+<p>This produces:</p>
+<pre><code>MT 73 #&lt;Allele G*&gt; [#&lt;Allele A&gt; #&lt;Allele A&gt;]
+MT 150 #&lt;Allele T*&gt; [#&lt;Allele C&gt; #&lt;Allele C&gt;]
+MT 152 #&lt;Allele T*&gt; [#&lt;Allele C&gt; #&lt;Allele C&gt;]
+MT 195 #&lt;Allele C*&gt; [#&lt;Allele T&gt; #&lt;Allele T&gt;]
+</code></pre>
+<p></p>
+<p>I hope this tour provides some insight into the powerful tools that can be rapidly built by leveraging the GATK from Clojure. The <a href="https://github.com/chapmanb/bcbio.variation">full library</a> contains a range of additional functionality including normalization of complex MNPs and support for phased haplotype comparisons.</p>

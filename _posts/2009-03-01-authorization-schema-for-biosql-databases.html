@@ -1,0 +1,57 @@
+---
+layout: post
+title: Authorization schema for BioSQL databases
+date: 2009-03-01 12:48:08.000000000 -05:00
+categories:
+- OpenBio
+tags:
+- infrastructure
+status: publish
+type: post
+published: true
+meta: {}
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+The <a href="http://www.biosql.org/wiki/Main_Page">BioSQL</a> relational database model provides a set of tables for storing biological sequences and information related to them. The model covers many common use cases when representing sequence information, and serves as a reusable component that can be plugged into many projects.</p>
+<p>
+For larger web-based projects, users often would like a permissions system that:</p>
+<ul>
+<li>Allows storage of data available only to the user, for collecting experimental data that is in progress.
+  </li>
+<li>Shares data with other colleagues within defined groups.
+  </li>
+<li>Defines the ability to edit data.
+  </li>
+<li>Stores user specific preferences and defaults.
+</li>
+</ul>
+<p>Here I present a simple relational database model for MySQL that ties in with BioSQL and provides this functionality. The <a href="http://github.com/chapmanb/bcbb/blob/3fe55cfed1657089ce454bbdecd02bbee405fb72/biosql/auth/biosql_authorization.sql">full schema</a> can be downloaded from github and is described in more detail below.</p>
+<p>
+The authorization framework is based on a three tiered system <a href="http://turbogears.org/2.0/docs/main/Auth/index.html">used in the Turbogears web framework</a>:</p>
+<ul>
+<li>Users -- these are the base logged in users. The <code>auth_user</code> table defines them and includes user_names, passwords, and e-mail information.
+  </li>
+<li>Groups -- each user can belong to one or more groups. These groups will often represent real life groups, like research laboratories or collaborative groups.
+  </li>
+<li>Permissions -- each group has one or more permissions associated with it. This assigns a group one or more things it can do or access.
+</li>
+</ul>
+<p>
+In BioSQL, we can associate permissions with many items using generic key value pairs. These are implemented as qualifier values, and many different items have this association mechanism including biological entries (bioentry), features, and database references (dbxref). The <a href="http://biosql.org/wiki/Schema_Overview">BioSQL schema description</a> goes into more detail about the representation, which is very flexible.</p>
+<p>
+As an example of using this framework, suppose you add several new sequence you want to be available to only users in your research group. You would do the following:</p>
+<ol>
+<li>Create a new permission (<code>auth_permission</code> table).
+  </li>
+<li>Associate the permission with your group (<code>auth_group_permission</code>  table).
+  </li>
+<li>Assign the new permission id to a qualifer value named permissions on the bioentries of interest (<code>bioentry_qualifer_value</code> table, in BioSQL).
+</li>
+</ol>
+<p>The web interface should then be designed to check for permissions and display only those available to the current users. This can be done very flexibly according to your design preferences; in the most transparent case displays would only include those items for which permissions are available. Users without permissions could proceed unaware of these items they cannot access.</p>
+<p>
+The final desired item of functionality is storing user specific information. This helps a user set defaults for a web interface, save queries or other complex information, and generally achieve a more pleasant browsing experience. This information is stored using the same key-value pair mechanism described above, in the <code>auth_user_qualifier_value</code> table. This should be very familiar to BioSQL developers, and flexibly allows us to store any kind of information of interest.</p>
+<p>
+Hopefully this authentication system is useful to others implementing interfaces on top of BioSQL databases. In subsequent posts, I will provide client and server code which helps manage user authorization within this system.</p>

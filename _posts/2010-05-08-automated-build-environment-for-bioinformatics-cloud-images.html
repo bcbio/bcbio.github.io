@@ -1,0 +1,81 @@
+---
+layout: post
+title: Automated build environment for Bioinformatics cloud images
+date: 2010-05-08 09:35:21.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- cloudbiolinux
+- open-source
+- infrastructure
+status: publish
+type: post
+published: true
+meta:
+  tagazine-media: a:7:{s:7:"primary";s:0:"";s:6:"images";a:0:{}s:6:"videos";a:0:{}s:11:"image_count";s:1:"0";s:6:"author";s:7:"6099765";s:7:"blog_id";s:7:"5850073";s:9:"mod_stamp";s:19:"2011-01-23
+    14:26:29";}
+  _edit_last: '6099765'
+  _oembed_b6f957a25f0e2b2dcec5d75e071867d9: ! '{{unknown}}'
+  _oembed_12aca01e769f684fd0440017af016e24: ! '{{unknown}}'
+  _oembed_0ceb67a5bc4bf399ec8751d5460ae3c7: ! '{{unknown}}'
+  _oembed_7687046a4006b55bff2277c79e34b1a0: ! '{{unknown}}'
+  _oembed_7fabd93fa2dd670da4f2958137a0a16d: ! '{{unknown}}'
+  _oembed_6cb0619da26b3ba1e683b91d939d592e: ! '{{unknown}}'
+  _oembed_fa70043166abf6e74070fc19125ca054: ! '{{unknown}}'
+  _oembed_407df38e7dd05ec3f4567b581fff1400: ! '{{unknown}}'
+  _oembed_01bbac87c6b69094ae482f67aa03fadf: ! '{{unknown}}'
+  _oembed_5ef3a350cdcba1a4f52731a0d5b719ce: ! '{{unknown}}'
+  _oembed_3dbbce532bbe05e15f08110555808c79: ! '{{unknown}}'
+  _oembed_325c5544321a0e89a82e0a07b21473d1: ! '{{unknown}}'
+  _oembed_f1e70b528cb547cd8e55b6ca56c6e860: ! '{{unknown}}'
+  _oembed_67ac74cfe0741b98ae6187c583e67009: ! '{{unknown}}'
+  _oembed_bea240b8538aef8e053b16ab9918b7f0: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p><a href="http://aws.amazon.com">Amazon web services</a> provide scalable, on demand computational resources through their <a href="http://aws.amazon.com/ec2/">elastic compute cloud (EC2)</a>. Previously, I <a href="http://bcbio.wordpress.com/2009/09/07/usage-plans-for-amazon-web-services-research-grant/">described the goal</a> of providing publicly available machine images loaded with bioinformatics tools. I'm happy to describe an initial step in that direction: an automated build system, using easily editable configuration files, that generates a bioinformatics-focused <a href="http://en.wikipedia.org/wiki/Amazon_Machine_Image">Amazon Machine Image (AMI)</a> containing packages integrated from several existing efforts. The hope is to consolidate the community's open source work around a single, continuously improving, machine image.</p>
+<p>This image incorporates software from several existing AMIs:</p>
+<ul>
+<li><a href="http://www.jcvi.org/cms/research/projects/jcvi-cloud-biolinux/overview/">JCVI Cloud BioLinux</a> -- JCVI's work porting Bio-Linux to the cloud.</li>
+<li><a href="http://fortinbras.us/bioperl-max/">bioperl-max</a> -- Fortinbras' package of BioPerl and associated informatics tools.</li>
+<li><a href="http://blog.infochimps.org/2009/02/06/start-hacking-machetec2-released/">MachetEC2</a> -- An InfoChimps image loaded with data mining software.</li>
+</ul>
+<p>Each of these libraries inspired different aspects of developing this image and associated infrastructure, and I'm extremely grateful to the authors for their code, documentation and discussions.</p>
+<p>The current AMI is available for loading on EC2 -- search for 'CloudBioLinux' in the  <a href="https://console.aws.amazon.com/">AWS console</a> or go to <a href="http://cloudbiolinux.org">the CloudBioLinux project page</a> for the latest AMIs. Automated scripts and configuration files with contained packages are available as a  <a href="https://github.com/chapmanb/cloudbiolinux">GitHub repository</a>.</p>
+<h2>Contributions encouraged</h2>
+<p>This image is intended as a starting point for developing a community resource that provides biology and data-mining oriented software. Experienced developers should be able to fire up this image and expect to find the same up to date libraries and programs they have installed  on their work machines. If their favorite package is missing it should be quick  and easy to add, making the improvement available to future developers.</p>
+<p>Achieving these goals requires help and contributions from other programmers utilizing the cloud -- everyone reading this. The current image is ready to be used, but is more complete in areas where I normally work.  For instance, the Python and R libraries are off to a good start. I'd like to extend an invitation to folks with expertise in other areas to  help improve the coverage of this AMI:</p>
+<ul>
+<li>Programmers: help expand the configuration files for your areas of interest:
+<ul>
+<li>Perl CPAN support and libraries</li>
+<li>Ruby gems</li>
+<li>Java libraries</li>
+<li>Haskell hackage support and libraries</li>
+<li>Erlang libraries</li>
+<li>Bioinformatics areas of specialization:
+<ul>
+<li>Next-gen sequencing</li>
+<li>Structural biology</li>
+<li>Parallelized algorithms</li>
+</ul>
+</li>
+<li>Much more... Let us know what you are interested in.</li>
+</ul>
+</li>
+<li>Documentation experts: provide cookbook style instructions to help others get started.</li>
+<li>Porting specialists: The automation infrastructure is dependent on having  good ports for libraries and programs. Many widely used biological programs are not  yet ported. Establishing a Debian or Ubuntu port for a missing program will not only  help this effort, but make the programs more widely available.</li>
+<li>Systems administrators: The ultimate goal is to have the AMI be automatically updated on a regular basis with the latest changes. We'd like to set up an Amazon instance that pulls down the latest configuration, populates an image, builds the AMI, and then updates a central web page and REST API for getting the latest and greatest.</li>
+<li>Testers: Check that this runs on <a href="http://www.eucalyptus.com/">open source Eucalyptus</a> clouds, additional linux distributions, and other cloud deployments.</li>
+</ul>
+<p>If any of this sounds interesting, please get in contact. The <a href="http://groups.google.com/group/cloudbiolinux">Cloud BioLinux mailing list</a> is a good central point for discussion.</p>
+<h2>Infrastructure overview</h2>
+<p>In addition to supplying an image for downstream use, this implementation was designed to be easily extendible. Inspired by the <a href="http://github.com/infochimps/machetec2">MachetEC2</a> project, packages to be installed are entered into a set of easy to edit configuration files in <a href="http://www.yaml.org/">YAML</a> syntax. There are  three different configuration file types:</p>
+<ul>
+<li><a href="https://github.com/chapmanb/cloudbiolinux/blob/master/config/main.yaml">main.yaml</a> -- The high level configuration file defining which groups of packages to install. This allows a user to build a custom image simply by commenting out those groups which are not of interest.</li>
+<li><a href="https://github.com/chapmanb/cloudbiolinux/blob/master/config/packages.yaml">packages.yaml</a> -- Defines debian/ubuntu packages to be installed. This leans heavily on the work of <a href="http://www.debian.org/devel/debian-med/">DebianMed</a> and <a href="http://nebc.nox.ac.uk/tools/bio-linux/">Bio-Linux</a> communities, as well as all of the hard working package maintainers for the distributions. If it exists in package form, you can list it here.</li>
+<li><a href="https://github.com/chapmanb/cloudbiolinux/blob/master/config/python-libs.yaml">python-libs.yaml</a>, <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/config/r-libs.yaml">r-libs.yaml</a> -- These take advantage of language specific ways of installing libraries. Currently implemented is support for Python library installation  from the <a href="http://pypi.python.org/">Python package index</a>, and R library installation from <a href="http://cran.r-project.org/">CRAN</a> and <a href="http://www.bioconductor.org/docs/install/">Bioconductor</a>. This will be expanded to include support for other languages.</li>
+</ul>
+<p>The <a href="http://docs.fabfile.org/">Fabric remote automated deployment tool</a> is used to build AMIs from  these configuration files. Written in Python, the <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/fabfile.py">fabfile</a> automates the process of installing packages on the cloud machine.</p>
+<p>We hope that the straightforward architecture of the build system will encourage  other developers to dig in and provide additional coverage of program and libraries  through the configuration files. For those comfortable with Python, the fabfile is  very accessible for adding in new functionality.</p>
+<p>If you are interested in face-to-face collaboration and will be in the Boston area on July 7th and 8th, check out <a href="http://www.open-bio.org/wiki/Codefest_2010">Codefest 2010</a>; it'll be two enjoyable days of cloud informatics development. I'm looking forward to hearing from other developers who are interested in building and maintaining an easy to use, up to date, machine image that can help make biological computation more accessible to the community.</p>

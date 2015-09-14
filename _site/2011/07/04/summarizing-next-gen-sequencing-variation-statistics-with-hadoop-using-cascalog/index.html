@@ -1,0 +1,312 @@
+<!doctype html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"><!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<title>Summarizing next-gen sequencing variation statistics with Hadoop using Cascalog &#8211; Blue Collar Bioinformatics</title>
+
+<meta name="keywords" content="how-to, clojure">
+
+  
+
+<!-- Twitter Cards -->
+<meta name="twitter:title" content="Summarizing next-gen sequencing variation statistics with Hadoop using Cascalog">
+
+<meta name="twitter:site" content="@chapmanb">
+<meta name="twitter:creator" content="@chapmanb">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://localhost:4000/images/">
+
+<!-- Open Graph -->
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Summarizing next-gen sequencing variation statistics with Hadoop using Cascalog">
+
+<meta property="og:url" content="http://localhost:4000/2011/07/04/summarizing-next-gen-sequencing-variation-statistics-with-hadoop-using-cascalog/">
+<meta property="og:site_name" content="Blue Collar Bioinformatics">
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/2011/07/04/summarizing-next-gen-sequencing-variation-statistics-with-hadoop-using-cascalog/">
+<link href="http://feeds2.feedburner.com/bcbio" type="application/atom+xml" rel="alternate" title="Blue Collar Bioinformatics Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://localhost:4000/assets/css/main.css">
+<!-- Webfonts -->
+<script src="https://use.edgefonts.net/source-sans-pro:n2,i2,n3,i3,n4,i4,n6,i6,n7,i7,n9,i9;source-code-pro:n4,n7;volkhov.js"></script>
+
+<meta http-equiv="cleartype" content="on">
+
+<!-- HTML5 Shiv and Media Query Support -->
+<!--[if lt IE 9]>
+  <script src="http://localhost:4000/assets/js/vendor/html5shiv.min.js"></script>
+  <script src="http://localhost:4000/assets/js/vendor/respond.min.js"></script>
+<![endif]-->
+
+<!-- Modernizr -->
+<script src="http://localhost:4000/assets/js/vendor/modernizr-2.7.1.custom.min.js"></script>
+
+
+<!-- MathJax -->
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+<!-- Icons -->
+<!-- 16x16 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.ico">
+<!-- 32x32 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.png">
+<!-- 57x57 (precomposed) for iPhone 3GS, pre-2011 iPod Touch and older Android devices -->
+<link rel="apple-touch-icon-precomposed" href="http://localhost:4000/images/apple-touch-icon-precomposed.png">
+<!-- 72x72 (precomposed) for 1st generation iPad, iPad 2 and iPad mini -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://localhost:4000/images/apple-touch-icon-72x72-precomposed.png">
+<!-- 114x114 (precomposed) for iPhone 4, 4S, 5 and post-2011 iPod Touch -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://localhost:4000/images/apple-touch-icon-114x114-precomposed.png">
+<!-- 144x144 (precomposed) for iPad 3rd and 4th generation -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:4000/images/apple-touch-icon-144x144-precomposed.png">
+
+</head>
+
+<body id="post">
+
+<div class="navigation-wrapper">
+	<nav role="navigation" id="site-nav" class="animated drop">
+	    <ul>
+      
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/" >About</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/articles/" >Recent</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/tags/" >Topics</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/search/" >Search</a></li>
+		  
+	    </ul>
+	</nav>
+</div><!-- /.navigation-wrapper -->
+
+<!--[if lt IE 9]><div class="upgrade"><strong><a href="http://whatbrowser.org/">Your browser is quite old!</strong> Why not upgrade to a different browser to better enjoy this site?</a></div><![endif]-->
+
+<header class="masthead">
+	<div class="wrap">
+      
+      <h1 class="site-title animated fadeIn"><a href="http://localhost:4000/">Blue Collar Bioinformatics</a></h1>
+		<h2 class="site-description animated fadeIn" itemprop="description">Biological data analysis, validation and visualization</h2>
+	</div>
+</header><!-- /.masthead -->
+
+<div class="js-menu-screen menu-screen"></div>
+
+
+<div id="main" role="main">
+  <article class="hentry">
+    
+    <div class="entry-wrapper">
+      <header class="entry-header">
+        <span class="entry-tags"><a href="http://localhost:4000/tags/#how-to" title="Pages tagged how-to">how-to</a>&nbsp;&bull;&nbsp;<a href="http://localhost:4000/tags/#clojure" title="Pages tagged clojure">clojure</a></span>
+        
+          <h1 class="entry-title">Summarizing next-gen sequencing variation statistics with Hadoop using Cascalog</h1>
+        
+      </header>
+      <footer class="entry-meta">
+        
+          
+        
+          <img src="http://localhost:4000/images/diego-work.jpg" class="bio-photo" alt="Brad Chapman bio photo"></a>
+        
+        <span class="author vcard">By <span class="fn">Brad Chapman</span></span>
+        <span class="entry-date date published"><time datetime="2011-07-04T21:25:14-04:00"><i class="fa fa-calendar-o"></i> July 04, 2011</time></span>
+        
+        <span class="entry-comments"><i class="fa fa-comment-o"></i> <a href="#disqus_thread">Comment</a></span>
+        
+        
+      </footer>
+      <div class="entry-content">
+        <p>Improvements in next-generation sequencing technology are leading to ever increasing amounts of sequencing data. With this additional throughput comes the demand for algorithms and approaches that can easily scale. <a href="http://hadoop.apache.org/">Hadoop</a> offers an open source framework for batch processing large files. This post describes using <a href="https://github.com/nathanmarz/cascalog">Cascalog</a>, a Hadoop query language written in <a href="http://clojure.org/">Clojure</a>, to investigate quality statistics for variant calling in deeply sequenced regions.</p>
+<div id="biological-question">
+<h3>Biological question</h3>
+<p>The goal is to improve a variation calling algorithm for next-generation sequencing data. We have a densely sequenced region, where each position has thousands of potential base calls. Each position may be a single base, or a mix of of majority and minority variants. We are filtering variants on 3 metrics of quality:</p>
+<ul>
+<li>Quality score -- The sequencing technology's assessment of the correctness of a base.</li>
+<li>K-mer score -- An estimate of the uniqueness of the region surrounding the base call position, built using <a href="https://github.com/ctb/khmer">khmer</a>. Unique regions are more likely to be sequencing artifacts, while common regions are more likely to be real.</li>
+<li>Mapping score -- The aligner's estimate of the reliability of the read alignment.</li>
+</ul>
+<p>Each read and position is in a <a href="https://github.com/hbc/projects/blob/master/snp-assess/test/data/raw_variations.tsv">tab delimited file</a> that looks like:</p>
+<pre><code>951     G       31      0.0515130211584 198</code></pre>
+<p>
+<p>The <a href="https://github.com/hbc/projects/blob/master/snp-assess/test/positions/pos_to_examine.tsv">training data</a> has a set of known variable positions, and details about how the current variant calling algorithm did at each position:</p>
+<pre><code>951     T       false_positive  0.7
+953     A       true_positive   4.0
+</code></pre>
+<p>
+<p>We wanted to generate summary statistics at each position of interest, and look for additional criteria that could be built into the calling algorithm.</p>
+</div>
+<div id="writing-cascalog-queries">
+<h3>Writing cascalog queries</h3>
+<p>Cascalog is based on the <a href="http://en.wikipedia.org/wiki/Datalog">Datalog</a> rule language, a subset of Prolog. You describe the rules of a system and the query optimizer figures out how best to satisfy them; it requires a change of mindset from the more standard approach that you need to write detailed instructions about what to do.</p>
+<p>Cascalog provides a high level of abstraction over Hadoop and Map-Reduce, so you focus entirely on writing the query. <a href="http://blog.piccolboni.info/2011/04/looking-for-map-reduce-language.html">This post from Antonio Piccolboni</a> compares several Hadoop languages; the post provides a nice side-by-side example of the brevity you can achieve with Cascalog.</p>
+<p>The main query defines the outputs, retrieves input data from the <code>snpdata</code> and location <code>target</code> files described above, provides a count of reads at each position and base of interest, then averages the kmer, quality and mapping score metrics described earlier:</p>
+<p>[sourcecode language="clojure"]<br />
+(defn calc-snpdata-stats [snpdata targets]<br />
+  (??&lt;- [?chr ?pos ?base ?count ?avg-score ?avg-kmer-pct<br />
+         ?avg-qual ?avg-map ?type]<br />
+        (snpdata ?chr ?pos ?base ?qual ?kmer-pct ?map-score)<br />
+        (targets ?chr ?pos ?base ?type)<br />
+        (ops/count ?count)<br />
+        (ops/avg ?kmer-pct :&gt; ?avg-kmer-pct)<br />
+        (ops/avg ?qual :&gt; ?avg-qual)<br />
+        (ops/avg ?map-score :&gt; ?avg-map)<br />
+        (combine-score ?kmer-pct ?qual ?map-score :&gt; ?score)<br />
+        (ops/avg ?score :&gt; ?avg-score)))<br />
+[/sourcecode]</p>
+<p>A big advantage of Cascalog is that it is just Clojure, so you can write custom queries in a full-featured language. The last two lines of the query define a custom score and its average at a position. The custom score is a linear combination of the <a href="http://wiki.answers.com/Q/What_is_min-max_normalization">min-max normalized</a> scores:</p>
+<p>[sourcecode language="clojure"]<br />
+(defn min-max-norm [score minv maxv]<br />
+  (let [trunc-score-max (if (&lt; score maxv) score maxv)<br />
+        trunc-score (if (&gt; trunc-score-max minv) trunc-score-max minv)]<br />
+    (/ (- trunc-score minv) (- maxv minv))))</p>
+<p>(defmapop combine-score [kmer-pct qual map-score]<br />
+  (+ (min-max-norm kmer-pct 1e-5 0.10)<br />
+     (min-max-norm qual 4.0 35.0)<br />
+     (min-max-norm map-score 0.0 250.0)))<br />
+[/sourcecode]</p>
+<p>The final part of the code involves parsing the files and producing the <code>snpdata</code> and <code>targets</code> inputs to the query. That code splits each line in the input file and assigns the parts to the variables of interest:</p>
+<p>[sourcecode language="clojure"]<br />
+(defmapop parse-snpdata-line [line]<br />
+  (let [[space pos base qual kmer-pct map-score] (split line #&quot;\t&quot;)]<br />
+    [space (Integer/parseInt pos) base (Integer/parseInt qual)<br />
+     (Float/parseFloat kmer-pct) (Integer/parseInt map-score)]))</p>
+<p>(defn snpdata-from-hfs [dir]<br />
+  (let [source (hfs-textline dir)]<br />
+    (&lt;- [?chr ?pos ?base ?qual ?kmer-pct ?map-score]<br />
+        (source ?line)<br />
+        (parse-snpdata-line ?line :&gt; ?chr ?pos ?base ?qual<br />
+                                     ?kmer-pct ?map-score))))<br />
+[/sourcecode]</p>
+</div>
+<div id="running-on-hadoop">
+<h3>Running on Hadoop</h3>
+<p>The <a href="https://github.com/hbc/projects/tree/master/snp-assess">full project is available on GitHub</a>. To run on a <a href="https://ccp.cloudera.com/display/CDHDOC/CDH3+Installation">configured Hadoop system</a>, you build the code, copy your input files to HDFS, then run:</p>
+<pre><code>% lein deps
+% lein uberjar
+% hadoop fs -mkdir /tmp/snp-assess/data
+% hadoop fs -mkdir /tmp/snp-assess/positions
+% hadoop fs -put your_variation_data.tsv /tmp/snp-assess/data
+% hadoop fs -put positions_of_interest.tsv /tmp/snp-assess/positions
+% hadoop jar snp-assess-0.0.1-SNAPSHOT-standalone.jar
+             snp_assess.core /tmp/snp-assess/data /tmp/snp-assess/positions
+</code></pre>
+<p>
+<p>The same code can also run locally without Hadoop. This is extremely useful for testing and development, or for smaller datasets that do not require the distributed power of Hadoop:</p>
+<pre><code>% lein deps
+% lein run :snp-data /directory/of/varation/data /directory/of/positions
+</code></pre>
+<p>Both approaches generate tabular output with our positions, counts, scores and average metrics:</p>
+<pre><code>| 951 | T |  3 | 0.9 | 2.0e-04 | 24.7 | 55.7  | false_positive |
+| 953 | A | 10 | 1.5 | 1.6e-02 | 23.1 | 175.5 | true_positive  |
+</code></pre>
+</div>
+<p>
+<div id="overview-and-additional-projects">
+<h3>Overview and additional projects</h3>
+<p>Cascalog provided an easy to use abstraction on top of Hadoop, which enabled exploration of densely mapped next-generation sequencing reads for variant detection. The code is free of scaling specific details, and instead focuses purely on the data of interest.</p>
+<p>Another example of Cascalog in a biological setting is the answer I wrote to <a href="http://biostar.stackexchange.com/questions/8821/hadoop-genomic-segments-and-join">Pierre's question on BioStar</a>, dealing with overlapping genomic segments within Hadoop. The <a href="https://github.com/chapmanb/bcbb/tree/master/biostar/bed-hadoop">code is available from GitHub</a> as an additional starting point for getting oriented with Hadoop and Cascalog.</p>
+</div>
+
+        
+          <div id="disqus_thread"></div><!-- /#disqus_thread -->
+          
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'bcbio'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        
+      </div><!-- /.entry-content -->
+    </div><!-- /.entry-wrapper -->
+    <nav class="pagination" role="navigation">
+      
+        <a href="http://localhost:4000/2011/04/10/bioinformatics-jobs-at-harvard-school-of-public-health/" class="btn" title="Bioinformatics jobs at Harvard School of Public Health">Previous</a>
+      
+      
+        <a href="http://localhost:4000/2011/08/19/distributed-exome-analysis-pipeline-with-cloudbiolinux-and-cloudman/" class="btn" title="Distributed exome analysis pipeline with CloudBioLinux and CloudMan">Next</a>
+      
+    </nav><!-- /.pagination -->
+  </article>
+</div><!-- /#main -->
+
+<div class="footer-wrapper">
+  <footer role="contentinfo" class="entry-wrapper">
+    
+
+<div class="social-icons">
+	<a href="https://twitter.com/chapmanb" title="Brad Chapman on Twitter" target="_blank"><i class="fa fa-twitter-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Github" target="_blank"><i class="fa fa-github-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Bitbucket" target="_blank"><i class="fa fa-bitbucket-square fa-2x"></i></a>
+	
+	
+	
+	
+	
+	
+  
+	
+	<a href="https://linkedin.com/pub/3/300/8ba" title="Brad Chapman on LinkedIn" target="_blank"><i class="fa fa-linkedin-square fa-2x"></i></a>
+  <a href="http://feeds2.feedburner.com/bcbio" title="Atom/RSS feed"><i class="fa fa-rss-square fa-2x"></i></a>
+</div><!-- /.social-icons -->
+
+  </footer>
+</div><!-- /.footer-wrapper -->
+
+<script type="text/javascript">
+  var BASE_URL = 'http://localhost:4000';
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="http://localhost:4000/assets/js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="http://localhost:4000/assets/js/scripts.min.js"></script>
+
+
+
+
+</body>
+</html>

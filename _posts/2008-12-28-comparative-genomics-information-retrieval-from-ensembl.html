@@ -1,0 +1,67 @@
+---
+layout: post
+title: Comparative genomics information retrieval from Ensembl
+date: 2008-12-28 22:14:15.000000000 -05:00
+categories:
+- how-to
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  _oembed_b65f952774d547b4bc4916484ad012f2: ! '{{unknown}}'
+  _oembed_ff85de8c55cc3997118a66d28fc9e303: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>The <a href="http://www.ensembl.org/index.html">Ensembl</a> website provides a powerful front end to genomic data from a wide variety of eukaryotic species. Additionally, the <a href="http://www.ensembl.org/info/docs/compara/index.html">Comparative Genomics</a> initiative provides automated phylogenetic analyses for comprehensive examination of gene families. This post describes retrieving comparative protein details for a human gene of interest using the tried and true method of <a href="http://en.wikipedia.org/wiki/Screen_scraping">screen scraping</a>, presenting the data in a method ready to be presented via a <a href="http://en.wikipedia.org/wiki/Representational_State_Transfer">REST</a> interface.</p>
+<p>
+Several other people have had similar notions for retrieving Ensembl data. <a href="http://pbeltrao.blogspot.com/2007/03/bioinformatic-web-scrapingmash-ups-made.html">Pedro</a> describes an example using <a href="http://openkapow.com/Default.aspx">openKapow</a>, and <a href="http://blog.pansapiens.com/2007/03/19/dapper-the-screen-scraper-for-everyone/">Andrew</a> uses <a href="http://www.dapper.net/">Dapper</a>.</p>
+<p>
+Here, we deal with the Ensembl web pages using <a href="http://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a>, a Python web parser that simplifies the work of web page retrieval. The idea is to generate an interface that could be readily abstracted to a set of REST web pages. This would greatly simplify information retrieval from Ensembl; retrieving a set of orthologs for a gene ID would involve a workflow like:</p>
+<ul>
+<li>Prepare a URL like:
+<pre>http://example.ensembl.org/REST/Compara_Ortholog/Homo_sapiens/ENSG00000173894</pre>
+</li>
+<li>Parse out a simple text result in CSV:
+<pre>
+Cavia_porcellus,ENSCPOG00000005599
+Danio_rerio,ENSDARG00000044938
+Dasypus_novemcinctus,ENSDNOG00000002668
+</pre>
+</li>
+</ul>
+<p>
+For queries that can be expressed with a few inputs and readily understandable outputs, this would provide programmatic access to Ensembl data without the overhead of installing the Perl API. Below is a function which retrieves the pages, parses them with Beautiful Soup, and returns the simplified information. To wrap this into a REST interface described above, would require adding a layer on top using a Python web framework like <a href="http://pylonshq.com/">Pylons</a>.</p>
+<p>[sourcecode language="python"]<br />
+def orthologs(self, organism, gene_id):<br />
+    """Retrieve a list of orthologs for the given gene ID.<br />
+    """<br />
+    orthologs = []<br />
+    with self._get_open_handle("Gene", "Compara_Ortholog",<br />
+            organism, gene_id) as in_handle:<br />
+        soup = BeautifulSoup(in_handle)<br />
+        orth_table = soup.find("table", "orthologues")<br />
+        orth_links = orth_table.findAll("a",<br />
+                href = re.compile("Gene/Summary"))<br />
+        for orth_link in orth_links:<br />
+            href_parts = [x for x in orth_link['href'].split('/') if x]<br />
+            orthologs.append((href_parts[0], orth_link.string))<br />
+    return orthologs<br />
+[/sourcecode]</p>
+<p>
+The <a href="http://github.com/chapmanb/bcbb/tree/master/rest_apis/ensembl_remote_rest.py">full example script</a> takes an organism and gene ID as input and displays homologs in Ensembl along with distance from the initial organism, protein domains, and features of the protein. The script uses <a href="http://biopython.org/wiki/Main_Page">Biopython</a>, the <a href="http://www.daimi.au.dk/~mailund/newick.html">Newick Tree Parser</a> to parse phylogenetic trees, and <a href="http://networkx.lanl.gov/">NetworkX</a> to calculate phylogenetic distances from the tree.</p>
+<pre>
+&gt; python2.5 ensembl_remote_rest.py Homo_sapiens ENSG00000173894
+Homo_sapiens 0 [u'IPR016197', u'IPR000953'] 38.0
+Pan_troglodytes 0.009 [u'IPR016197', u'IPR000637', u'IPR000953'] 38.0
+Gorilla_gorilla 0.0169 [u'IPR016197', u'IPR000637', u'IPR000953'] 
+Macaca_mulatta 0.0538 [u'IPR000637', u'IPR000953'] 36.0
+Tarsius_syrichta 0.1622 [u'IPR000637'] 
+Microcebus_murinus 0.1848 [u'IPR000637', u'IPR000953'] 33.5
+</pre>
+<p></p>
+<p>
+This demonstrates using the framework to look at the change in domains and protein charge across a gene family. The general idea of the <code>EnsemblComparaRest&lt;</code> class could be applied to other information of interest available from Ensembl web pages.</p>

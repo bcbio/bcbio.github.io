@@ -1,0 +1,38 @@
+---
+layout: post
+title: Parallel approaches in next-generation sequencing analysis pipelines
+date: 2011-09-10 15:12:50.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- infrastructure
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  tagazine-media: a:7:{s:7:"primary";s:51:"http://chapmanb.github.com/bcbb/lane_processing.png";s:6:"images";a:4:{s:51:"http://chapmanb.github.com/bcbb/lane_processing.png";a:6:{s:8:"file_url";s:51:"http://chapmanb.github.com/bcbb/lane_processing.png";s:5:"width";s:3:"877";s:6:"height";s:3:"563";s:4:"type";s:5:"image";s:4:"area";s:6:"493751";s:9:"file_path";s:0:"";}s:53:"http://chapmanb.github.com/bcbb/sample_processing.png";a:6:{s:8:"file_url";s:53:"http://chapmanb.github.com/bcbb/sample_processing.png";s:5:"width";s:3:"619";s:6:"height";s:3:"355";s:4:"type";s:5:"image";s:4:"area";s:6:"219745";s:9:"file_path";s:0:"";}s:48:"http://chapmanb.github.com/bcbb/variant_call.png";a:6:{s:8:"file_url";s:48:"http://chapmanb.github.com/bcbb/variant_call.png";s:5:"width";s:3:"688";s:6:"height";s:3:"507";s:4:"type";s:5:"image";s:4:"area";s:6:"348816";s:9:"file_path";s:0:"";}s:54:"http://chapmanb.github.com/bcbb/parallel_messaging.png";a:6:{s:8:"file_url";s:54:"http://chapmanb.github.com/bcbb/parallel_messaging.png";s:5:"width";s:3:"618";s:6:"height";s:3:"360";s:4:"type";s:5:"image";s:4:"area";s:6:"222480";s:9:"file_path";s:0:"";}}s:6:"videos";a:0:{}s:11:"image_count";s:1:"4";s:6:"author";s:7:"6099765";s:7:"blog_id";s:7:"5850073";s:9:"mod_stamp";s:19:"2011-09-10
+    22:36:23";}
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>My last post described a <a href="http://bcbio.wordpress.com/2011/08/19/distributed-exome-analysis-pipeline-with-cloudbiolinux-and-cloudman/">distributed exome analysis pipeline</a> implemented on the <a href="http://cloudbiolinux.org">CloudBioLinux</a> and <a href="http://wiki.g2.bx.psu.edu/Admin/Cloud">CloudMan</a> frameworks. This was a practical introduction to running the pipeline on <a href="http://aws.amazon.com/">Amazon resources</a>. Here I'll describe how the pipeline runs in parallel, specifically diagramming the workflow to identify points of parallelization during lane and sample processing.</p>
+<p>Incredible innovation in throughput makes parallel processing critical for next-generation sequencing analysis. When a single <a href="http://www.illumina.com/systems/hiseq_2000.ilmn">Hi-Seq</a> run can produce 192 samples (2 flowcells x 8 lanes per flowcell x 12 barcodes per lane), the analysis steps quickly become limited by the number of processing cores available.</p>
+<p>The heterogeneity of architectures utilized by researchers is a major challenge in building re-usable systems. A pipeline needs to support <a href="http://jermdemo.blogspot.com/2011/06/big-ass-servers-and-myths-of-clusters.html">powerful multi-core servers</a>, clusters and virtual cloud-based machines. The approach we took is to scale at the level of individual samples, lanes and pipelines, exploiting the <a href="http://en.wikipedia.org/wiki/Embarrassingly_parallel">embarassingly parallel</a> nature of the computation. An <a href="http://www.rabbitmq.com/">AMQP messaging queue</a> allows for communication between processes, independent of the system architecture. This flexible approach allows the pipeline to serve as a general framework that can be easily adjusted or expanded to incorporate new algorithms and analysis methods.</p>
+<div id="process-overview----points-for-parallel-implementations">
+<h2>Process overview -- points for parallel implementations</h2>
+<p>The first level of parallelization occurs during processing of each fastq lane. We split the file into individualized barcoded components, followed by alignment and BAM processing. The result is a sorted BAM file for each barcoded sub-sample, given a set of input fastq files:</p>
+<p><a href="http://chapmanb.github.com/bcbb/lane_processing.png"> <img src="http://chapmanb.github.com/bcbb/lane_processing.png" width="650px" alt="Initial lane processing" /></a></p>
+<p>The pipeline merges samples present in barcodes on multiple lanes, producing a single representative BAM file. The next step parallelizes the processing of each alignment file with read quality assessment, preparation for visualization and variant calling:</p>
+<p><a href="http://chapmanb.github.com/bcbb/sample_processing.png"> <img src="http://chapmanb.github.com/bcbb/sample_processing.png" width="650px" alt="Sample processing overview" /></a></p>
+<p>The variant calling steps utilize <a href="http://www.broadinstitute.org/gsa/wiki/index.php/The_Genome_Analysis_Toolkit">The Genome Analysis Toolkit (GATK)</a> from the Broad Institute. It prepares alignments by recalibrating initial quality scores given the aligned sequences and consistently realigning reads around indels. The Unified Genotyper identifies variants from this prepared alignment file, then uses these variants along with known true sites for assigning quality scores and filtering to a final set of calls:</p>
+<p><a href="http://chapmanb.github.com/bcbb/variant_call.png"> <img src="http://chapmanb.github.com/bcbb/variant_call.png" width="650px" alt="GATK variant calling details" /></a></p>
+<p>Subsequent steps include <a href="http://snpeff.sourceforge.net/">assessment of variant effects using snpEff</a> and <a href="http://www.broadinstitute.org/gsa/wiki/index.php/Read-backed_phasing_algorithm">haplotype phasing of variants</a> in diploid organism analyses.</p>
+</div>
+<div id="messaging-approach-to-parallel-execution">
+<h2>Messaging approach to parallel execution</h2>
+<p>The process diagrams illustrate points of parallel execution for each fastq file and sample analysis. Practically, a top level analysis server manages each of the sub-processes. A command line script, a LIMS system or a specialized Galaxy interface start this top level process. RabbitMQ messaging facilitates communication between the analysis controller and processing nodes:</p>
+<p><a href="http://chapmanb.github.com/bcbb/parallel_messaging.png"> <img src="http://chapmanb.github.com/bcbb/parallel_messaging.png" width="650px" alt="Messaging approach" /></a></p>
+<p>In <a href="http://bcbio.wordpress.com/2011/08/19/distributed-exome-analysis-pipeline-with-cloudbiolinux-and-cloudman/">my previous post</a>, CloudMan manages this entire process. The web interface controls a pre-configured SGE cluster and a custom script starts the job on this cluster. However, the general nature of the pipeline architecture allows this to work equally well on multiple core machines or a heterogeneous set of connected machines.</p>
+<p>The CloudMan work demonstrates that clusters, especially on-demand virtual images like those available from Amazon, are be a powerful way to scale analyses. Equally important, it provides an open platform to share these pipelines and encourage re-use. The code for the pipeline is available from the <a href="https://github.com/chapmanb/bcbb/tree/master/nextgen">bcbio-nextgen GitHub repository</a></p>
+</div>

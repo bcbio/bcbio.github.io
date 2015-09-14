@@ -1,0 +1,554 @@
+<!doctype html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"><!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<title>Genomics X Prize public phase: reference genome preparation and comparisons to Illumina and Complete Genomics &#8211; Blue Collar Bioinformatics</title>
+
+<meta name="keywords" content="germline, small-variants, validation, xprize">
+
+  
+
+<!-- Twitter Cards -->
+<meta name="twitter:title" content="Genomics X Prize public phase: reference genome preparation and comparisons to Illumina and Complete Genomics">
+
+<meta name="twitter:site" content="@chapmanb">
+<meta name="twitter:creator" content="@chapmanb">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://localhost:4000/images/">
+
+<!-- Open Graph -->
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Genomics X Prize public phase: reference genome preparation and comparisons to Illumina and Complete Genomics">
+
+<meta property="og:url" content="http://localhost:4000/2012/08/15/genomics-x-prize-public-phase-reference-genome-preparation-and-comparisons-to-illumina-and-complete-genomics/">
+<meta property="og:site_name" content="Blue Collar Bioinformatics">
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/2012/08/15/genomics-x-prize-public-phase-reference-genome-preparation-and-comparisons-to-illumina-and-complete-genomics/">
+<link href="http://feeds2.feedburner.com/bcbio" type="application/atom+xml" rel="alternate" title="Blue Collar Bioinformatics Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://localhost:4000/assets/css/main.css">
+<!-- Webfonts -->
+<script src="https://use.edgefonts.net/source-sans-pro:n2,i2,n3,i3,n4,i4,n6,i6,n7,i7,n9,i9;source-code-pro:n4,n7;volkhov.js"></script>
+
+<meta http-equiv="cleartype" content="on">
+
+<!-- HTML5 Shiv and Media Query Support -->
+<!--[if lt IE 9]>
+  <script src="http://localhost:4000/assets/js/vendor/html5shiv.min.js"></script>
+  <script src="http://localhost:4000/assets/js/vendor/respond.min.js"></script>
+<![endif]-->
+
+<!-- Modernizr -->
+<script src="http://localhost:4000/assets/js/vendor/modernizr-2.7.1.custom.min.js"></script>
+
+
+<!-- MathJax -->
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+<!-- Icons -->
+<!-- 16x16 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.ico">
+<!-- 32x32 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.png">
+<!-- 57x57 (precomposed) for iPhone 3GS, pre-2011 iPod Touch and older Android devices -->
+<link rel="apple-touch-icon-precomposed" href="http://localhost:4000/images/apple-touch-icon-precomposed.png">
+<!-- 72x72 (precomposed) for 1st generation iPad, iPad 2 and iPad mini -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://localhost:4000/images/apple-touch-icon-72x72-precomposed.png">
+<!-- 114x114 (precomposed) for iPhone 4, 4S, 5 and post-2011 iPod Touch -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://localhost:4000/images/apple-touch-icon-114x114-precomposed.png">
+<!-- 144x144 (precomposed) for iPad 3rd and 4th generation -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:4000/images/apple-touch-icon-144x144-precomposed.png">
+
+</head>
+
+<body id="post">
+
+<div class="navigation-wrapper">
+	<nav role="navigation" id="site-nav" class="animated drop">
+	    <ul>
+      
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/" >About</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/articles/" >Recent</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/tags/" >Topics</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/search/" >Search</a></li>
+		  
+	    </ul>
+	</nav>
+</div><!-- /.navigation-wrapper -->
+
+<!--[if lt IE 9]><div class="upgrade"><strong><a href="http://whatbrowser.org/">Your browser is quite old!</strong> Why not upgrade to a different browser to better enjoy this site?</a></div><![endif]-->
+
+<header class="masthead">
+	<div class="wrap">
+      
+      <h1 class="site-title animated fadeIn"><a href="http://localhost:4000/">Blue Collar Bioinformatics</a></h1>
+		<h2 class="site-description animated fadeIn" itemprop="description">Biological data analysis, validation and visualization</h2>
+	</div>
+</header><!-- /.masthead -->
+
+<div class="js-menu-screen menu-screen"></div>
+
+
+<div id="main" role="main">
+  <article class="hentry">
+    
+    <div class="entry-wrapper">
+      <header class="entry-header">
+        <span class="entry-tags"><a href="http://localhost:4000/tags/#germline" title="Pages tagged germline">germline</a>&nbsp;&bull;&nbsp;<a href="http://localhost:4000/tags/#small-variants" title="Pages tagged small-variants">small-variants</a>&nbsp;&bull;&nbsp;<a href="http://localhost:4000/tags/#validation" title="Pages tagged validation">validation</a>&nbsp;&bull;&nbsp;<a href="http://localhost:4000/tags/#xprize" title="Pages tagged xprize">xprize</a></span>
+        
+          <h1 class="entry-title">Genomics X Prize public phase: reference genome preparation and comparisons to Illumina and Complete Genomics</h1>
+        
+      </header>
+      <footer class="entry-meta">
+        
+          
+        
+          <img src="http://localhost:4000/images/diego-work.jpg" class="bio-photo" alt="Brad Chapman bio photo"></a>
+        
+        <span class="author vcard">By <span class="fn">Brad Chapman</span></span>
+        <span class="entry-date date published"><time datetime="2012-08-15T09:10:00-04:00"><i class="fa fa-calendar-o"></i> August 15, 2012</time></span>
+        
+        <span class="entry-comments"><i class="fa fa-comment-o"></i> <a href="#disqus_thread">Comment</a></span>
+        
+        
+      </footer>
+      <div class="entry-content">
+        <div id="outline-container-1" class="outline-2">
+<h2 id="sec-1">Background</h2>
+<div class="outline-text-2" id="text-1">
+<p> The <a href="http://genomics.xprize.org/">Archon Genomics X Prize, presented by Express Scripts</a>, is a 10 million dollar competition to establish highly accurate clinical grade sequencing and variation detection methods. Our group at <a href="http://compbio.sph.harvard.edu/chb/">Harvard School of Public Health</a> works with the <a href="http://www.edgebio.com/">EdgeBio</a> team on developing the infrastructure for the competition: identify variations in the grading genomes and provide software to compare these reference variation sets against a competitor's list of variations. </p>
+<p> The exciting aspect of the Genomics X Prize is that it enables open comparisons between sequencing technologies and variant calling methodologies. Sequencing genomes to the high degree of accuracy sufficient for clinical usage is a difficult, open, problem. Here I'll present detailed numbers comparing variants called by different sequencing technologies and variant callers. </p>
+<p> The public phase of the Genomics X Prize starts today, August 15th. The goal of this six month period is to have an open dialog with everyone working in the sequencing and variant calling communities. We want to refine our methods to provide the most accurate and fair variant calling for the reference genomes. To start the discussion we've prepared: </p>
+<ul>
+<li>Variant calls for a HapMap individual:   <a href="http://ccr.coriell.org/Sections/Collections/NHGRI/Yoruba.aspx?PgId=128&amp;coll=HG">NA19239, a Yoruba male from Ibadan, Nigeria</a>.   We sequenced haploid fosmids from NA19239 with two   technologies: <a href="https://en.wikipedia.org/wiki/Illumina_(company)">Illumina</a> and <a href="https://en.wikipedia.org/wiki/ABI_Solid_Sequencing">SOLiD</a>; and called variants with three   different methods:   <a href="http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_genotyper_UnifiedGenotyper.html">GATK Unified Genotyper</a>, <a href="https://github.com/ekg/freebayes">FreeBayes</a>, and <a href="#samtools">SAMtools mpileup</a>.   We combined these calls into a unified final call set, NA19239   version 0.1, that I discuss in detail below.  </li>
+<li>Fully documented methods, access to all data files used, and a public   scoring site. The <a href="https://edgebio.atlassian.net/wiki/display/AGXPPUB/Home">X Prize Validation wiki</a> contains detailed   information about sequencing, variant calling, validation and   scoring. The <a href="https://validationprotocol.org/">validationprotocol.org</a> website provides a simple way   for anyone to compare their variant calls against the public   reference genomes. It encourages submission and analysis in public   tools like <a href="http://usegalaxy.org">Galaxy</a> through transparent interoperability with   <a href="http://www.genomespace.org/">GenomeSpace</a>.  </li>
+<li><a href="https://github.com/chapmanb/bcbio.variation">An automated variant analysis infrastructure</a> built on top of the   Broad's <a href="http://www.broadinstitute.org/gatk/">Genome Analysis Toolkit (GATK)</a> that performs comparisons as   well as variant unification. This is a generally useful toolkit of   functionality to manipulate variants, and we <a href="http://chapmanb.github.com/bcbio.variation/presentations/variation_bosc_2012/variation_chapman.pdf">presented an overview</a>   at the <a href="http://open-bio.org/wiki/BOSC_2012">Bioinformatics Open Source Conference</a> last month.   This is an open-source community developed project, and has   received great contributions from the <a href="http://www.nist.gov/mml/biochemical/biomolecular/genome_in_a_bottle_consortium.cfm">Genome in a Bottle Consortium</a> at   <a href="#justin-nist">the National Institute of Standards and Technology</a>. </li>
+</ul>
+<p>   The goal of this writeup, and the X Prize public phase, is to iterate over calling and unification methods to improve our algorithms and approaches. Rather than promoting or disparaging any particular technology or calling method, we're instead providing full transparency and a good-faith effort to combining approaches. Our hope is that this will help engage the community, encourage feedback, and result in a unbiased and accurate set of reference genomes for the competition. </p>
+</p></div>
+</p></div>
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">Unification of variant calls</h2>
+<div class="outline-text-2" id="text-2">
+<p> For the August 15th public phase kickoff, we prepared a reference data set of NA19239 based on <a href="http://www.ncbi.nlm.nih.gov/pmc/articles/PMC3202284/#__sec1title">pooled sequencing of haploid fosmid clones</a>. The callable regions of these clones totaled 129,513,026 total bases, covering ~4% of the 3.1 billion bases in the human genome. We use fosmid clones to obtain complete regional haplotype coverage and focus on partial genome coverage to achieve high coverage depth and accuracy for assessed regions. </p>
+<p> Version 0.1 of the NA19239 reference set uses variant calls from two technologies: Illumina and SOLiD; and three callers: GATK's Unified Genotyper, FreeBayes and SAMtools. To move from these data to a unified call set we: </p>
+<ul>
+<li>Align to <a href="http://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/index.shtml">GRCh37 reference genome</a> with <a href="http://www.novocraft.com/main/index.php">Novoalign</a>. </li>
+<li>Perform post-processing and indel realignment with   <a href="http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_indels_IndelRealigner.html">GATK's IndelRealigner</a>. </li>
+<li>Perform variant calling with GATK's UnifiedGenotyper, FreeBayes and   samtools mpileup. </li>
+<li>Do pairwise comparisons between all technology/caller approaches. </li>
+<li>Generate the union of all possible calls and merge with initial GATK   calls, recalling any no-call positions at expected sites. </li>
+<li>Use validation information on variants found in multiple   technologies, plus metrics associated with common variants, to filter   the full call set to a final set of trusted calls. </li>
+</ul>
+<p> The challenging decisions begin when merging and filtering the final call set. This requires careful bookkeeping and variant representation to ensure identical variants are directly comparable, followed by setting cutoffs for variant inclusion. </p>
+</p></div>
+<div id="outline-container-2-1" class="outline-3">
+<h3 id="sec-2-1">Comparison details</h3>
+<div class="outline-text-3" id="text-2-1">
+<p> The details of variant comparisons introduce an additional layer of complexity during assessment. The approach we've taken is create a normalized set of variants so all comparison differences are due to actual call differences rather than variant representation. We split multiple nucleotide polymorphisms into individual calls, split complex indel-variant combinations, and left-align remaining variants. </p>
+<p> For haploid/diploid comparisons, we establish haplotype blocks for the diploid sequence based on phasing provided in the input variant file, and then compare the best matching haplotype to our fosmid reference. Single nucleotide polymorphisms and indels less than 30bp require exact machines between two comparison genomes. Larger indels and structural variations receive more flexible matching with confidence intervals around start and end coordinates. </p>
+<p> The goal of the normalized, compared variants is to reflect real underlying differences in calling approaches relative to how well we can currently resolve variation endpoints. </p>
+</p></div>
+</p></div>
+<div id="outline-container-2-2" class="outline-3">
+<h3 id="sec-2-2">Comparisons between variation callers</h3>
+<div class="outline-text-3" id="text-2-2">
+<p> For a concrete example of two different variant calling approaches, below is a table comparing GATK variants against samtools calls for the NA19239 sample, using identically aligned and post-processed BAMs: </p>
+<table border="1" cellspacing="0" cellpadding="6" rules="all" style="width:350px;">
+<caption></caption>
+<col class="left" />
+<col class="right" />
+<tbody>
+<tr>
+<td class="left">concordant: total</td>
+<td class="right">160851</td>
+</tr>
+<tr>
+<td class="left">concordant: SNPs</td>
+<td class="right">136146</td>
+</tr>
+<tr>
+<td class="left">concordant: indels</td>
+<td class="right">24705</td>
+</tr>
+<tr>
+<td class="left">GATK discordant: total</td>
+<td class="right">13925</td>
+</tr>
+<tr>
+<td class="left">GATK discordant: SNPs</td>
+<td class="right">1315</td>
+</tr>
+<tr>
+<td class="left">GATK discordant: indels</td>
+<td class="right">12610</td>
+</tr>
+<tr>
+<td class="left">samtools discordant: total</td>
+<td class="right">25368</td>
+</tr>
+<tr>
+<td class="left">samtools discordant: SNPs</td>
+<td class="right">17247</td>
+</tr>
+<tr>
+<td class="left">samtools discordant: indels</td>
+<td class="right">8121</td>
+</tr>
+</tbody>
+</table>
+<p> The number of discordant variant calls is high, making up 8% of the GATK calls and 14% of the samtools calls, and samtools calls almost 16,000 additional SNPs compared to GATK. As a result, a large percentage of variants require making hard decisions: are those additional calls interesting, real variants in samtools and false negatives in the GATK calls? Or conversely, are they false positives in samtools that GATK correctly excludes? </p>
+</p></div>
+</p></div>
+<div id="outline-container-2-3" class="outline-3">
+<h3 id="sec-2-3">Comparisons between sequencing technologies</h3>
+<div class="outline-text-3" id="text-2-3">
+<p> There is a similar level of discrepancy when comparing variant calls between Illumina and SOLiD sequencing. Below is a comparison between GATK Unified genotyper calls on the two technologies: </p>
+<table border="1" cellspacing="0" cellpadding="6" rules="all" style="width:350px;">
+<caption></caption>
+<col class="left" />
+<col class="right" />
+<tbody>
+<tr>
+<td class="left">concordant: total</td>
+<td class="right">135263</td>
+</tr>
+<tr>
+<td class="left">concordant: SNPs</td>
+<td class="right">122267</td>
+</tr>
+<tr>
+<td class="left">concordant: indels</td>
+<td class="right">12996</td>
+</tr>
+<tr>
+<td class="left">Illumina discordant: total</td>
+<td class="right">39491</td>
+</tr>
+<tr>
+<td class="left">Illumina discordant: unique</td>
+<td class="right">7079</td>
+</tr>
+<tr>
+<td class="left">Illumina discordant: SNPs</td>
+<td class="right">15188</td>
+</tr>
+<tr>
+<td class="left">Illumina discordant: indels</td>
+<td class="right">24303</td>
+</tr>
+<tr>
+<td class="left">SOLiD discordant: total</td>
+<td class="right">16022</td>
+</tr>
+<tr>
+<td class="left">SOLiD discordant: unique</td>
+<td class="right">3800</td>
+</tr>
+<tr>
+<td class="left">SOLiD discordant: SNPs</td>
+<td class="right">3908</td>
+</tr>
+<tr>
+<td class="left">SOLiD discordant: indels</td>
+<td class="right">12114</td>
+</tr>
+</tbody>
+</table>
+<p> Unique coverage explains some differences: 4% of the Illumina variants (7079) and 2.5% (3800) of the SOLiD variants were uniquely covered by the technologies. However, the remaining variant discordant calls are on the order of those seen in the technology comparisons. Adding to the complexity, we find only 84% of the total concordant variants compared to the Illumina only GATK/samtools comparison. </p>
+</p></div>
+</p></div>
+<div id="outline-container-2-4" class="outline-3">
+<h3 id="sec-2-4">Unified call set</h3>
+<div class="outline-text-3" id="text-2-4">
+<p> The level of discrepancy between calling methods and sequencing approaches introduces complexity in the preparation of the final call set: How much evidence does a variant need for inclusion? Can single calls be true positives if supported by high confidence values? This will require extensive refinement throughout the public phase. For the initial version 0.1 release of NA19239, we took the following high level approach to filtering: </p>
+<ul>
+<li>Retain variants found in 4 out of 6 calling/technology methods   (including genotyping data). </li>
+<li>Retain variants identified across multiple technologies. </li>
+<li>Retain variants found in both more stringent (GATK) and more lenient   (FreeBayes, samtools) callers. </li>
+<li>Assess remaining variants using a <a href="https://en.wikipedia.org/wiki/Support_vector_machine">Support Vector Machine</a> with   quality score, read depth and <a href="https://github.com/chapmanb/bcbio.variation/blob/master/src/java/bcbio/variation/annotate/ReadPosEndDist.java#L32">variant distance from read ends</a>   metrics, training the classifier on likely true and false positives   from the pairwise overlap comparisons. </li>
+</ul>
+<p> The result is a unified call set of 171,009 variants derived from all technologies and callers, that we're releasing as NA19239 version 0.1. </p>
+</p></div>
+</p></div>
+</p></div>
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">Comparisons with whole genome datasets</h2>
+<div class="outline-text-2" id="text-3">
+<p> To assess the quality of the unified call set, we compared to two public genomes: </p>
+<ul>
+<li><a href="https://en.wikipedia.org/wiki/Complete_Genomics">Complete Genomics's</a> NA19239 variants from their <a href="http://www.completegenomics.com/public-data/">public whole genome datasets</a>, </li>
+<li>An Illumina whole genome dataset for NA19239 at 30x coverage. </li>
+</ul>
+<p> This provides us with three independent call sets to assess variability between approaches. To provide a baseline, here is the comparison of the Illumina and Complete Genomics calls in our assessment regions: </p>
+<table border="1" cellspacing="0" cellpadding="6" rules="all" style="width:350px;">
+<caption></caption>
+<col class="left" />
+<col class="right" />
+<tbody>
+<tr>
+<td class="left">Overall genotype concordance</td>
+<td class="right">98.47</td>
+</tr>
+<tr>
+<td class="left">concordant: total</td>
+<td class="right">205868</td>
+</tr>
+<tr>
+<td class="left">concordant: SNPs</td>
+<td class="right">186365</td>
+</tr>
+<tr>
+<td class="left">concordant: indels</td>
+<td class="right">19503</td>
+</tr>
+<tr>
+<td class="left">Illumina discordant: total</td>
+<td class="right">31267</td>
+</tr>
+<tr>
+<td class="left">Illumina discordant: SNPs</td>
+<td class="right">19334</td>
+</tr>
+<tr>
+<td class="left">Illumina discordant: indels</td>
+<td class="right">11933</td>
+</tr>
+<tr>
+<td class="left">Complete Genomics discordant: total</td>
+<td class="right">15174</td>
+</tr>
+<tr>
+<td class="left">Complete Genomics discordant: SNPs</td>
+<td class="right">9586</td>
+</tr>
+<tr>
+<td class="left">Complete Genomics discordant: indels</td>
+<td class="right">5510</td>
+</tr>
+</tbody>
+</table>
+<p> We see familiar discordance rates: 13% of the Illumina calls and 7% of the Complete Genomics calls differ. Since it's diploid versus diploid, this comparison includes all heterozygous variant matches. As a result the numbers in this comparison will be higher, but it is a good order of magnitude approximation for looking at our fosmid reference set versus each individual technology. </p>
+</p></div>
+<div id="outline-container-3-1" class="outline-3">
+<h3 id="sec-3-1">Illumina</h3>
+<div class="outline-text-3" id="text-3-1">
+<p> The comparison against the Illumina whole genome variant calls contains 12% discordant calls in our fosmid reference set, with 79% of those being indel differences. Indels are notoriously more difficult to identify and assess, so this will be an area of increased focus as we move forward: </p>
+<table border="1" cellspacing="0" cellpadding="6" rules="all" style="width:350px;">
+<caption></caption>
+<col class="left" />
+<col class="right" />
+<tbody>
+<tr>
+<td class="left">concordant: total</td>
+<td class="right">150420</td>
+</tr>
+<tr>
+<td class="left">concordant: SNPs</td>
+<td class="right">132604</td>
+</tr>
+<tr>
+<td class="left">concordant: indels</td>
+<td class="right">17816</td>
+</tr>
+<tr>
+<td class="left">fosmid discordant: total</td>
+<td class="right">19624</td>
+</tr>
+<tr>
+<td class="left">fosmid discordant: SNPs</td>
+<td class="right">4165</td>
+</tr>
+<tr>
+<td class="left">fosmid discordant: indels</td>
+<td class="right">15459</td>
+</tr>
+<tr>
+<td class="left">Illumina discordant: total</td>
+<td class="right">5475</td>
+</tr>
+<tr>
+<td class="left">Illumina discordant: SNPs</td>
+<td class="right">2952</td>
+</tr>
+<tr>
+<td class="left">Illumina discordant: indels</td>
+<td class="right">2523</td>
+</tr>
+</tbody>
+</table></div>
+</p></div>
+<div id="outline-container-3-2" class="outline-3">
+<h3 id="sec-3-2">Complete Genomics</h3>
+<div class="outline-text-3" id="text-3-2">
+<p> The Complete Genomics comparison has 17% discordant calls including 2x more discordant SNP calls. This highlights another key area of call set refinement: identifying and correcting for technology specific calls. </p>
+<table border="1" cellspacing="0" cellpadding="6" rules="all" style="width:350px;">
+<caption></caption>
+<col class="left" />
+<col class="right" />
+<tbody>
+<tr>
+<td class="left">concordant: total</td>
+<td class="right">139559</td>
+</tr>
+<tr>
+<td class="left">concordant: SNPs</td>
+<td class="right">126296</td>
+</tr>
+<tr>
+<td class="left">concordant: indels</td>
+<td class="right">13263</td>
+</tr>
+<tr>
+<td class="left">fosmid discordant: total</td>
+<td class="right">29883</td>
+</tr>
+<tr>
+<td class="left">fosmid discordant: SNPs</td>
+<td class="right">10162</td>
+</tr>
+<tr>
+<td class="left">fosmid discordant: indels</td>
+<td class="right">19721</td>
+</tr>
+<tr>
+<td class="left">Complete Genomics discordant: total</td>
+<td class="right">7571</td>
+</tr>
+<tr>
+<td class="left">Complete Genomics discordant: SNPs</td>
+<td class="right">5542</td>
+</tr>
+<tr>
+<td class="left">Complete Genomics discordant: indels</td>
+<td class="right">1965</td>
+</tr>
+</tbody>
+</table></div>
+</p></div>
+</p></div>
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4">Summary</h2>
+<div class="outline-text-2" id="text-4">
+<p> The initial NA19239 public genome for the Genomics X Prize provides unified variant calls based on two sequencing technologies and three calling methods. I've delved into a lot of details on our approaches, challenges and goals with the hopes of encouraging suggestions from other researchers working on these problems. We're especially interested in feedback on these areas of ongoing research: </p>
+<ul>
+<li>Digging deeper into potential false positives and negatives: By   combining comparison information between the unified callset and   external resources, we can identify 17654 fosmid variants (10%) not   found in both the Complete Genomics and Illumina datasets. These   require additional in-depth analysis to classify as uniquely   identified fosmid calls or potential false positives. Similarly,   Illumina and Complete Genomics combine to call 1228 variants (0.7%)   that are not in the fosmid call set. These need examination to   classify as fosmid false negatives, or false positive calls in the   individual technologies.  </li>
+<li>Additional public genomes: We're actively working with teams like   the <a href="http://www.nist.gov/mml/biochemical/biomolecular/genome_in_a_bottle_consortium.cfm">Genome in a Bottle Consortium</a> and <a href="http://www.ncbi.nlm.nih.gov/projects/genome/assembly/grc/human/index.shtml">Genome Research Consortium</a> to   compare with their reference sets and approaches. Our next target   public genome is NA12878, used in both of these projects and widely   studied.  </li>
+<li>Improve variant representation and assessment: The   <a href="https://github.com/chapmanb/bcbio.variation">variation software framework</a> works hard to make variant   representations as uniform as possible. Indels are especially   challenging and we welcome practical examples of regions that need   additional standardization.  </li>
+<li>Refine approaches to unifying variant calls: What we learn from the   additional inspection of discordant variants can help inform   improved approaches to filtering. This is a great opportunity to   develop generalized, reusable methods for combining variants from   multiple approaches. </li>
+</ul>
+<p>   The call sets used here are available as public data folders on <a href="http://www.genomespace.org/">GenomeSpace</a>: </p>
+<ul>
+<li>Public/chapmanb/xprize/NA19239-v0_1 &ndash; The combined final call set   along with training true/false positives and Illumina/Complete   Genomics comparison based potential false positives and negatives.  </li>
+<li>Public/EdgeBio/PublicData/Release1 &ndash; All of the raw input data,   including fastq files, BAM alignments and individual variant calls. </li>
+</ul>
+<p> Combined with the open source code and configurations, we hope this will provided interested researchers with all the raw materials needed to reproduce and extend these analyses. Your feedback and suggestions are very welcome. </p>
+</p></div>
+</p></div>
+
+        
+          <div id="disqus_thread"></div><!-- /#disqus_thread -->
+          
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'bcbio'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        
+      </div><!-- /.entry-content -->
+    </div><!-- /.entry-wrapper -->
+    <nav class="pagination" role="navigation">
+      
+        <a href="http://localhost:4000/2012/03/04/extending-the-gatk-for-custom-variant-comparisons-using-clojure/" class="btn" title="Extending the GATK for custom variant comparisons using Clojure">Previous</a>
+      
+      
+        <a href="http://localhost:4000/2012/09/17/genomics-x-prize-public-phase-update-variant-classification-and-de-novo-calling/" class="btn" title="Genomics X Prize public phase update: variant classification and de novo calling">Next</a>
+      
+    </nav><!-- /.pagination -->
+  </article>
+</div><!-- /#main -->
+
+<div class="footer-wrapper">
+  <footer role="contentinfo" class="entry-wrapper">
+    
+
+<div class="social-icons">
+	<a href="https://twitter.com/chapmanb" title="Brad Chapman on Twitter" target="_blank"><i class="fa fa-twitter-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Github" target="_blank"><i class="fa fa-github-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Bitbucket" target="_blank"><i class="fa fa-bitbucket-square fa-2x"></i></a>
+	
+	
+	
+	
+	
+	
+  
+	
+	<a href="https://linkedin.com/pub/3/300/8ba" title="Brad Chapman on LinkedIn" target="_blank"><i class="fa fa-linkedin-square fa-2x"></i></a>
+  <a href="http://feeds2.feedburner.com/bcbio" title="Atom/RSS feed"><i class="fa fa-rss-square fa-2x"></i></a>
+</div><!-- /.social-icons -->
+
+  </footer>
+</div><!-- /.footer-wrapper -->
+
+<script type="text/javascript">
+  var BASE_URL = 'http://localhost:4000';
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="http://localhost:4000/assets/js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="http://localhost:4000/assets/js/scripts.min.js"></script>
+
+
+
+
+</body>
+</html>

@@ -1,0 +1,367 @@
+<!doctype html>
+<!--[if lt IE 7]><html class="no-js lt-ie9 lt-ie8 lt-ie7" lang="en"> <![endif]-->
+<!--[if (IE 7)&!(IEMobile)]><html class="no-js lt-ie9 lt-ie8" lang="en"><![endif]-->
+<!--[if (IE 8)&!(IEMobile)]><html class="no-js lt-ie9" lang="en"><![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en"><!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<title>Exploring BioPerl GenBank to GFF mapping &#8211; Blue Collar Bioinformatics</title>
+
+<meta name="keywords" content="how-to">
+
+  
+
+<!-- Twitter Cards -->
+<meta name="twitter:title" content="Exploring BioPerl GenBank to GFF mapping">
+
+<meta name="twitter:site" content="@chapmanb">
+<meta name="twitter:creator" content="@chapmanb">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://localhost:4000/images/">
+
+<!-- Open Graph -->
+<meta property="og:locale" content="en_US">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Exploring BioPerl GenBank to GFF mapping">
+
+<meta property="og:url" content="http://localhost:4000/2009/02/22/exploring-bioperl-genbank-to-gff-mapping/">
+<meta property="og:site_name" content="Blue Collar Bioinformatics">
+
+
+
+
+
+<link rel="canonical" href="http://localhost:4000/2009/02/22/exploring-bioperl-genbank-to-gff-mapping/">
+<link href="http://feeds2.feedburner.com/bcbio" type="application/atom+xml" rel="alternate" title="Blue Collar Bioinformatics Feed">
+
+<!-- https://t.co/dKP3o1e -->
+<meta name="HandheldFriendly" content="True">
+<meta name="MobileOptimized" content="320">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- For all browsers -->
+<link rel="stylesheet" href="http://localhost:4000/assets/css/main.css">
+<!-- Webfonts -->
+<script src="https://use.edgefonts.net/source-sans-pro:n2,i2,n3,i3,n4,i4,n6,i6,n7,i7,n9,i9;source-code-pro:n4,n7;volkhov.js"></script>
+
+<meta http-equiv="cleartype" content="on">
+
+<!-- HTML5 Shiv and Media Query Support -->
+<!--[if lt IE 9]>
+  <script src="http://localhost:4000/assets/js/vendor/html5shiv.min.js"></script>
+  <script src="http://localhost:4000/assets/js/vendor/respond.min.js"></script>
+<![endif]-->
+
+<!-- Modernizr -->
+<script src="http://localhost:4000/assets/js/vendor/modernizr-2.7.1.custom.min.js"></script>
+
+
+<!-- MathJax -->
+<script src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+
+<!-- Icons -->
+<!-- 16x16 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.ico">
+<!-- 32x32 -->
+<link rel="shortcut icon" href="http://localhost:4000/favicon.png">
+<!-- 57x57 (precomposed) for iPhone 3GS, pre-2011 iPod Touch and older Android devices -->
+<link rel="apple-touch-icon-precomposed" href="http://localhost:4000/images/apple-touch-icon-precomposed.png">
+<!-- 72x72 (precomposed) for 1st generation iPad, iPad 2 and iPad mini -->
+<link rel="apple-touch-icon-precomposed" sizes="72x72" href="http://localhost:4000/images/apple-touch-icon-72x72-precomposed.png">
+<!-- 114x114 (precomposed) for iPhone 4, 4S, 5 and post-2011 iPod Touch -->
+<link rel="apple-touch-icon-precomposed" sizes="114x114" href="http://localhost:4000/images/apple-touch-icon-114x114-precomposed.png">
+<!-- 144x144 (precomposed) for iPad 3rd and 4th generation -->
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="http://localhost:4000/images/apple-touch-icon-144x144-precomposed.png">
+
+</head>
+
+<body id="post">
+
+<div class="navigation-wrapper">
+	<nav role="navigation" id="site-nav" class="animated drop">
+	    <ul>
+      
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/" >About</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/articles/" >Recent</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/tags/" >Topics</a></li>
+		  
+		    
+		        
+		    
+		    <li><a href="http://localhost:4000/search/" >Search</a></li>
+		  
+	    </ul>
+	</nav>
+</div><!-- /.navigation-wrapper -->
+
+<!--[if lt IE 9]><div class="upgrade"><strong><a href="http://whatbrowser.org/">Your browser is quite old!</strong> Why not upgrade to a different browser to better enjoy this site?</a></div><![endif]-->
+
+<header class="masthead">
+	<div class="wrap">
+      
+      <h1 class="site-title animated fadeIn"><a href="http://localhost:4000/">Blue Collar Bioinformatics</a></h1>
+		<h2 class="site-description animated fadeIn" itemprop="description">Biological data analysis, validation and visualization</h2>
+	</div>
+</header><!-- /.masthead -->
+
+<div class="js-menu-screen menu-screen"></div>
+
+
+<div id="main" role="main">
+  <article class="hentry">
+    
+    <div class="entry-wrapper">
+      <header class="entry-header">
+        <span class="entry-tags"><a href="http://localhost:4000/tags/#how-to" title="Pages tagged how-to">how-to</a></span>
+        
+          <h1 class="entry-title">Exploring BioPerl GenBank to GFF mapping</h1>
+        
+      </header>
+      <footer class="entry-meta">
+        
+          
+        
+          <img src="http://localhost:4000/images/diego-work.jpg" class="bio-photo" alt="Brad Chapman bio photo"></a>
+        
+        <span class="author vcard">By <span class="fn">Brad Chapman</span></span>
+        <span class="entry-date date published"><time datetime="2009-02-22T15:56:02-05:00"><i class="fa fa-calendar-o"></i> February 22, 2009</time></span>
+        
+        <span class="entry-comments"><i class="fa fa-comment-o"></i> <a href="#disqus_thread">Comment</a></span>
+        
+        
+      </footer>
+      <div class="entry-content">
+        <p>
+A mailing list message from Peter about <a href="http://lists.open-bio.org/pipermail/biosql-l/2009-February/001492.html">importing GFF files to BioSQL</a> inspired me to take a look at how <a href="http://www.bioperl.org/wiki/Main_Page">BioPerl</a> treats GFF files. <a href="http://www.sequenceontology.org/gff3.shtml">Generic Feature Format (GFF)</a> is a plain text file format used to represent annotations and features on biological sequences. It is a nice biological file format:</p>
+<ul>
+<li>Parsed relatively easily.
+  </li>
+<li>Human readable and editable in Excel.
+  </li>
+<li>Quickly understood at a basic level.
+  </li>
+<li>Flexible and adapting. GFF3, the current format, handles a number of incompatibility issues that arose in GFF2.
+  </li>
+<li>Widely used.
+</li>
+</ul>
+<p>
+<a href="http://www.biosql.org/wiki/Main_Page">BioSQL</a> is a relational database model that stores annotations and features on sequences. As Peter implies, having a general mapping between the two would facilitate plain text database dumps from BioSQL databases in GFF. Conversely, GFF formatted files could be loaded directly into BioSQL databases.</p>
+<p>
+The BioSQL object model maps very closely to the <a href="http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html">GenBank file format</a>, so a good way to examine the BioPerl to BioSQL mapping is to produce GFF from a GenBank file. The BioPerl distribution contains a script to do exactly this:</p>
+<p><code><br />
+bp_genbank2gff3.pl -out stdout cbx8.gb &gt; cbx8.gff<br />
+</code></p>
+<p>
+Starting with <a href="http://www.ncbi.nlm.nih.gov/nuccore/118404259?ordinalpos=1&amp;itool=EntrezSystem2.PEntrez.Sequence.Sequence_ResultsPanel.Sequence_RVDocSum">this straightforward GenBank file</a>, the above command produces a GFF file that I will explore more below. GFF files are structured as tab delimited columns. The first 8 columns describe the exact sequence location and contain a <a href="http://www.sequenceontology.org/">Sequence Ontology</a> term describing the relationship between the annotation and the sequence region. The final column is a set of key-value pairs with the annotation data. For example, here is a line from our output file:</p>
+<pre>
+NM_001078975    GenBank gene    1       1847    .       +       .       
+ID=cbx8;Dbxref=GeneID:779897;Note=chromobox homolog 8;gene=cbx8;
+gene_synonym=MGC147589
+</pre>
+<p></p>
+<p>
+This maps directly to the corresponding feature in the original GenBank table:</p>
+<pre>
+     gene            1..1847
+                     /gene="cbx8"
+                     /gene_synonym="MGC147589"
+                     /note="chromobox homolog 8"
+                     /db_xref="GeneID:779897"
+</pre>
+<p></p>
+<p>
+This is a nice one-to-one mapping of the GenBank feature table. The ontology for mapping feature keys to the sequence ontology terms was discussed in more detail in an earlier <a href="http://bcbio.wordpress.com/2008/12/14/standard-ontologies-in-biosql/">post on BioSQL ontologies</a>. Here, the qualifier names map to uppercase standard keys where possible (Note, DBxref) and all lowercase names where they do not characterize a standard term. For BioSQL, these GFF lines would map directly into the <code>seqfeature</code> table, with a dictionary to provide the back and forth mapping between standard terms and qualifier names.</p>
+<p>
+The less straightforward part of the mapping involves the high level annotations which describe the entire sequence. This corresponds to the header section in the GenBank file and maps to several specialized tables in the BioSQL schema. Here is a summary of the current mappings in BioPerl GFF:</p>
+<table border="1">
+<tr>
+<th>GenBank</th>
+<th>BioSQL table</th>
+<th>Current BioPerl GFF</th>
+<th>Proposed GFF key/value</th>
+</tr>
+<tr>
+<td>LOCUS; identifier ACCESSION</td>
+<td>
+<pre>bioentry</pre>
+<p> name</td>
+<td>ID</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>LOCUS; Molecule type</td>
+<td>
+<pre>biosequence</pre>
+<p> alphabet</td>
+<td>mol_type</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>LOCUS; division</td>
+<td>
+<pre>bioentry</pre>
+<p> division</td>
+<td>&nbsp;</td>
+<td>division</td>
+</tr>
+<tr>
+<td>LOCUS; date</td>
+<td>
+<pre>bioentry_qualifer_value</pre>
+<p> term date_changed</td>
+<td>date</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>DEFINITION</td>
+<td>
+<pre>bioentry</pre>
+<p> description</td>
+<td>Note, but combined with COMMENT</td>
+<td>description</td>
+</tr>
+<tr>
+<td>VERSION</td>
+<td>
+<pre>bioentry</pre>
+<p> accession and version</td>
+<td>&nbsp;</td>
+<td>hasVersion</td>
+</tr>
+<tr>
+<td>GI</td>
+<td>
+<pre>bioentry</pre>
+<p> identifier</td>
+<td>&nbsp;</td>
+<td>identifier</td>
+</tr>
+<tr>
+<td>KEYWORDS</td>
+<td>
+<pre>bioentry_qualifer_value</pre>
+<p> term keywords</td>
+<td>&nbsp;</td>
+<td>subject</td>
+</tr>
+<tr>
+<td>SOURCE and ORGANISM</td>
+<td>
+<pre>taxon</pre>
+</td>
+<td>organism and Dbxref to taxon ID</td>
+<td>Full lineage needs representation as well</td>
+</tr>
+<tr>
+<td>REFERENCE</td>
+<td>
+<pre>reference</pre>
+</td>
+<td>&nbsp;</td>
+<td>Dbxref for PubMed IDs; need to store full reference information as well</td>
+</tr>
+<tr>
+<td>COMMENT</td>
+<td>
+<pre>comment</pre>
+</td>
+<td>comment1 and Note, combined with DEFINITION</td>
+<td>comment1 only</td>
+</tr>
+</table>
+<p></p>
+<p>
+Most of the major mappings are in place, with some naming refinement needed. The most complicated outstanding aspect would be storing the reference journal information. Someone more familiar with GFF may be able to offer a solution that has been used previously. My guess at this point is that each reference would be a separate GFF line item, with key/value pairs for the authors, title and other information.</p>
+<p>
+Overall, GFF offers a nice flat file output format for BioSQL databases. Much of the mapping from GFF to BioSQL is in place currently in BioPerl, with consensus needed for the missing parts. With that established, the other languages that support BioSQL can follow the BioPerl mapping. In my view, being able to round-trip between GFF flat files and the BioSQL relational database would help drive usage of both.</p>
+<p><b>Edit</b>: James Procter put together a <a href="http://www.biosql.org/wiki/Annotation_Mapping#GFF3">BioSQL wiki page</a> to help specify the mapping. Please help contribute there and ask questions on the <a href="http://lists.open-bio.org/mailman/listinfo/biosql-l">BioSQL mailing list</a>.</p>
+
+        
+          <div id="disqus_thread"></div><!-- /#disqus_thread -->
+          
+<script type="text/javascript">
+    /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+    var disqus_shortname = 'bcbio'; // required: replace example with your forum shortname
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function() {
+        var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+        dsq.src = 'https://' + disqus_shortname + '.disqus.com/embed.js';
+        (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    })();
+
+    /* * * DON'T EDIT BELOW THIS LINE * * */
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'https://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+<noscript>Please enable JavaScript to view the <a href="https://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+<a href="https://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+        
+      </div><!-- /.entry-content -->
+    </div><!-- /.entry-wrapper -->
+    <nav class="pagination" role="navigation">
+      
+        <a href="http://localhost:4000/2009/02/13/organization-of-literature-using-pubmed-related-articles/" class="btn" title="Organization of literature using PubMed related articles">Previous</a>
+      
+      
+        <a href="http://localhost:4000/2009/03/01/authorization-schema-for-biosql-databases/" class="btn" title="Authorization schema for BioSQL databases">Next</a>
+      
+    </nav><!-- /.pagination -->
+  </article>
+</div><!-- /#main -->
+
+<div class="footer-wrapper">
+  <footer role="contentinfo" class="entry-wrapper">
+    
+
+<div class="social-icons">
+	<a href="https://twitter.com/chapmanb" title="Brad Chapman on Twitter" target="_blank"><i class="fa fa-twitter-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Github" target="_blank"><i class="fa fa-github-square fa-2x"></i></a>
+	<a href="https://github.com/chapmanb" title="Brad Chapman on Bitbucket" target="_blank"><i class="fa fa-bitbucket-square fa-2x"></i></a>
+	
+	
+	
+	
+	
+	
+  
+	
+	<a href="https://linkedin.com/pub/3/300/8ba" title="Brad Chapman on LinkedIn" target="_blank"><i class="fa fa-linkedin-square fa-2x"></i></a>
+  <a href="http://feeds2.feedburner.com/bcbio" title="Atom/RSS feed"><i class="fa fa-rss-square fa-2x"></i></a>
+</div><!-- /.social-icons -->
+
+  </footer>
+</div><!-- /.footer-wrapper -->
+
+<script type="text/javascript">
+  var BASE_URL = 'http://localhost:4000';
+</script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="http://localhost:4000/assets/js/vendor/jquery-1.9.1.min.js"><\/script>')</script>
+<script src="http://localhost:4000/assets/js/scripts.min.js"></script>
+
+
+
+
+</body>
+</html>

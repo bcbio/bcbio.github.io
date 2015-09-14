@@ -1,0 +1,67 @@
+---
+layout: post
+title: Sorting genomic alignments using Python
+date: 2009-07-26 15:52:10.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta: {}
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+Recent, I was asked to sort a <a href="https://cgwb.nci.nih.gov/goldenPath/help/maf.html">MAF (Multiple Alignment Format)</a> file containing genomic alignments. This was a large vertebrate alignment file and the researchers were interested in manually examining the longest matches. The tricky part of doing this is that the entire file cannot comfortably fit in memory on a standard machine.</p>
+<p>
+The common solution to dealing with large memory intensive files is to pre-parse the file and provide a way to look up individual records based on an identifier. For instance, items could be pushed into a relational database table and retrieved based on primary keys. While moving to disk access is less efficient, it allows your code to scale to these type of real life problems without resorting to buying large memory machines.</p>
+<p>
+We will use the <a href="http://bitbucket.org/james_taylor/bx-python/wiki/Home">bx-python</a> library to read the MAF alignment files, prepare an index for accessing the alignments individually, and ultimately perform the sorting.</p>
+<p>
+The first step is to define the index retrieval method. bx-python has <a href="http://bitbucket.org/james_taylor/bx-python/src/tip/lib/bx/interval_index_file.py">index retrival functionality</a> that allows querying and retrieving records based on genomic location. We don't need that advanced query capability here, and can retrieve records based on position in the file as well. We build the index by looping through each record and recording the file position and genomic locations in the index.</p>
+<p>[sourcecode language="python"]<br />
+from bx.align import maf<br />
+from bx import interval_index_file</p>
+<p>def build_index(in_file, index_file):<br />
+    indexes = interval_index_file.Indexes()<br />
+    with open(in_file) as in_handle:<br />
+        reader = maf.Reader(in_handle)<br />
+        while 1:<br />
+            pos = reader.file.tell()<br />
+            rec = reader.next()<br />
+            if rec is None:<br />
+                break<br />
+            for c in rec.components:<br />
+                indexes.add(c.src, c.forward_strand_start,<br />
+                        c.forward_strand_end, pos, max=c.src_size )</p>
+<p>    with open(index_file, "w") as index_handle:<br />
+        indexes.write(index_handle)<br />
+[/sourcecode]</p>
+<p>
+Now we have a unique index to retrieve a record -- the position in the file. The second step is to loop through the file again and build a list of alignment sizes and positions. Alignment size is the first value in each list item, since this is the criteria to sort by. This list easily fits in memory, and we sort it with the largest alignments first.</p>
+<p>[sourcecode language="python"]<br />
+rec_info = []<br />
+with open(in_file) as in_handle:<br />
+    reader = maf.Reader(in_handle)<br />
+    while 1:<br />
+        pos = reader.file.tell()<br />
+        rec = reader.next()<br />
+        if rec is None:<br />
+            break<br />
+        rec_info.append((rec.text_size, pos))<br />
+rec_info.sort(reverse=True)<br />
+[/sourcecode]</p>
+<p>
+Finally, we loop though the sorted list of sizes and use the associated positions to get records from our index. Each record is then written to an output file.</p>
+<p>[sourcecode language="python"]<br />
+index = maf.Indexed(in_file, index_file)<br />
+with open(out_file, "w") as out_handle:<br />
+    writer = maf.Writer(out_handle)<br />
+    for size, pos in rec_info:<br />
+        rec = index.get_at_offset(pos)<br />
+        writer.write(rec)<br />
+[/sourcecode]</p>
+<p>
+The <a href="http://github.com/chapmanb/bcbb/blob/master/align/maf_sort_by_size.py">full script</a> puts this together into a usable program. This could be adjusted to deal with other alignment formats supported by bx-python, like <a href="http://genome.ucsc.edu/goldenPath/help/axt.html">axt files</a>.</p>

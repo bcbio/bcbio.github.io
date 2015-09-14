@@ -1,0 +1,80 @@
+---
+layout: post
+title: Making next-generation sequencing analysis pipelines easier with BioCloudCentral
+  and Galaxy integration
+date: 2011-11-29 20:50:52.000000000 -05:00
+categories:
+- analysis
+tags:
+- infrastructure
+- galaxy
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  tagazine-media: a:7:{s:7:"primary";s:0:"";s:6:"images";a:0:{}s:6:"videos";a:0:{}s:11:"image_count";s:1:"0";s:6:"author";s:7:"6099765";s:7:"blog_id";s:7:"5850073";s:9:"mod_stamp";s:19:"2011-11-30
+    01:50:52";}
+  _oembed_d35cb96f6e9c853c74d3aae2c96a2508: ! '{{unknown}}'
+  _oembed_c4b792a029c1aa05e3c3923125f1afb6: ! '{{unknown}}'
+  _oembed_cea8afecc44d093a931b73805731fe9f: ! '{{unknown}}'
+  _oembed_71f120d444ccc03d4498d4ef9344c989: ! '{{unknown}}'
+  _oembed_8322817778614ee93fdc60bdb6488373: ! '{{unknown}}'
+  _oembed_76689c2e691671aaf85195abdd903c07: ! '{{unknown}}'
+  _oembed_30de7aa6d9b4bb06bebc079b54b7da7b: ! '{{unknown}}'
+  _oembed_5daf19f86c602e1c6d57d2bb8254959e: ! '{{unknown}}'
+  _oembed_f11329c0b690f009cd4848f8a872f618: ! '{{unknown}}'
+  _oembed_c3bd84a3318a8a6f5e79b6a5b0f97909: ! '{{unknown}}'
+  _oembed_ca594a9f24a301c0c60c56b68e0a727e: ! '{{unknown}}'
+  _oembed_f700b43c6037d2f85a8bcbf97acd2450: ! '{{unknown}}'
+  _oembed_a1b86d44bbf9ca26c81d7cab0d41b0ca: ! '{{unknown}}'
+  _oembed_92acdfd3164b5c83665ce55f09599f40: ! '{{unknown}}'
+  _oembed_574ade3d8ab885150a06769813f08948: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>My <a href="http://bcbio.wordpress.com/2011/08/19/distributed-exome-analysis-pipeline-with-cloudbiolinux-and-cloudman/">previous post described running an automated exome pipeline using CloudBioLinux and CloudMan</a>, and generated incredibly useful feedback. Comments and e-mails pointed out potential points of confusion for new users deploying the process on custom data. I also had the chance to get hands on with researchers running <a href="http://cloudbiolinux.org/">CloudBioLinux</a> and <a href="http://www.usecloudman.org/">CloudMan</a> during the <a href="http://aws.amazon.com/genomicsevent/">AWS Genomics Event</a> (<a href="http://www.slideshare.net/chapmanb/developing-distributed-analysis-pipelines-with-shared-community-resources-using-cloudbiolinux-and-cloudman">talk slides are available</a>).</p>
+<p>The culmination of all this feedback are two new development projects from the CloudBioLinux community, aimed at making it easier to run custom analysis pipelines:</p>
+<ul>
+<li>
+<p><a href="http://biocloudcentral.org">BioCloudCentral</a> -- A web service that launches CloudBioLinux and CloudMan clusters on <a href="http://aws.amazon.com/">Amazon Web Services</a> hardware. This removes all of the manual steps involved in setting up security groups and launching a CloudBioLinux instance. A user only needs to sign up for an AWS account; BioCloudCentral takes care of everything else.</p>
+</li>
+<li>
+<p>A custom <a href="http://galaxyproject.org/">Galaxy</a> integrated front-end to next-generation sequencing pipelines. A <a href="http://jqueryui.com/">jQuery UI</a> wizard interface manages the intake of sequences and specification of parameters. It runs an automated backend processing pipeline with the structured input data, uploading results into Galaxy data libraries for additional analysis.</p>
+</li>
+</ul>
+<p>Special thanks are due to <a href="http://www.usecloudman.org/enis/">Enis Afgan</a> for his help building these tools. He provided his <a href="http://readthedocs.org/docs/boto/en/latest/">boto</a> expertise to the BioCloudCentral Amazon interaction, and generalized CloudMan to support the additional flexibility and automation on display here.</p>
+<p>This post describes using these tools to start a CloudMan instance, create an SGE cluster and run a distributed variant calling analysis, all from the browser. The behind the scene details described earlier are available: the piepline uses a CloudBioLinux image containing a wide variety of bioinformatics software and you can use ssh or an <a href="http://www.nomachine.com/download.php">NX graphical client</a> to connect to the instance. This is the unique approach behind CloudBioLinux and CloudMan: they provide an open framework for building automated, easy-to-use workflows.</p>
+<h2 id="biocloudcentral----starting-a-cloudbiolinux-instance">BioCloudCentral -- starting a CloudBioLinux instance</h2>
+<p>To get started, sign up for an <a href="http://aws.amazon.com/">Amazon Web services account</a>. This gives you access to on demand computing where you pay per hour of usage. Once signed up, you will need your Access Key ID and Secret Access Key from the <a href="https://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key">Amazon security credentials page</a>.</p>
+<p>With these, navigate to <a href="http://biocloudcentral.org">BioCloudCentral</a> and fill out the simple entry form. In addition to your access credentials, enter your choice of a name used to identify the cluster, and your choice of password to access the CloudMan web interface and the cluster itself via ssh or NX.</p>
+<p>[youtube=http://www.youtube.com/watch?v=9ZqvxhwcPaw]<br /></p>
+<p>Clicking submit launches a CloudBioLinux server on Amazon. Be careful, since you are now paying per hour for your machine; remember to shut it down when finished.</p>
+<p>Before leaving the monitoring page, you want to download a pre-formatted user-data file; this allows you to later start the same CloudMan instance directly from the <a href="https://console.aws.amazon.com/ec2/home">Amazon web services console</a>.</p>
+<h2 id="cloudman----managing-the-cluster">CloudMan -- managing the cluster</h2>
+<p>The monitoring page on BioCloudCentral provides links directly to the CloudMan web interface. On the welcome page, start a shared CloudMan instance with this identifier:</p>
+<pre><code>cm-b53c6f1223f966914df347687f6fc818/shared/2012-07-23--19-23/
+</code></pre>
+<p></p>
+<p>This shared instance contains the custom Galaxy interface we will use, along with FASTQ sequence files for demonstration purposes. CloudMan will start up the filesystem, SGE, PostgreSQL and Galaxy. Once launched, you can use the CloudMan interface to add additional machines to your cluster for processing.</p>
+<p>[youtube=http://www.youtube.com/watch?v=NkayXBBAr8I]<br /></p>
+<h2 id="galaxy-pipeline-interface----running-the-analysis">Galaxy pipeline interface -- running the analysis</h2>
+<p>This Galaxy instance is a <a href="https://bitbucket.org/hbc/galaxy-central-hbc/overview">fork of the main codebase</a> containing a custom pipeline interface in addition to all of the standard Galaxy tools. It provides an intuitive way to select FASTQ files for processing. Login with the demonstration account (user: example@example.com; password: example) and load FASTQ files along with target and bait BED files into your active history. Then work through the pipeline wizard step by step to start an analysis:</p>
+<p>[youtube=http://www.youtube.com/watch?v=dIeQCIi3EXw]<br /></p>
+<p>The Galaxy interface builds a configuration file describing the parameters and inputs, and submits this to the backend analysis server. This server kicks off processing, distributing the analysis across the SGE cluster. For the test data, processing will take approximately 4 hours on a cluster with a single additional work node (Large instance type).</p>
+<h2 id="galaxy----retrieving-and-displaying-results">Galaxy -- retrieving and displaying results</h2>
+<p>The analysis pipeline uploads the finalized results into Galaxy data libraries. For this demonstration, the example user has results from a previous run in the data library so you don't need to wait for the analysis to finish. This folder contains alignment data in BAM format, coverage information in BigWig format, a VCF file of variant calls, a tab separate file with predicted variant effects, and a PDF file of summary information. After importing these into your active Galaxy history, you can perform additional analysis on the data, including visualization in the UCSC genome browser:</p>
+<p>[youtube=http://www.youtube.com/watch?v=LtOK3U8990w]<br /></p>
+<p>As a reminder, don't forget to terminate your cluster when finished. You can do this either from the CloudMan web interface or the <a href="https://console.aws.amazon.com/ec2/home">Amazon console</a>.</p>
+<h2 id="analysis-pipeline-details-and-extending-this-work">Analysis pipeline details and extending this work</h2>
+<p>The backend analysis pipeline is a <a href="https://github.com/chapmanb/bcbb/tree/master/nextgen">freely available set of Python modules</a> included on the CloudBioLinux AMI. The pipeline closely follows current <a href="http://www.broadinstitute.org/gsa/wiki/index.php/Best_Practice_Variant_Detection_with_the_GATK_v3">best practice variant detection recommendations from the Broad GATK team</a>:</p>
+<ul>
+<li>FASTQ alignment with <a href="http://bio-bwa.sourceforge.net/">BWA</a>; <a href="https://github.com/chapmanb/bcbb/blob/master/nextgen/bcbio/ngsalign/bwa.py">source code</a></li>
+<li><a href="http://www.broadinstitute.org/gsa/wiki/index.php/Base_quality_score_recalibration">Base quality score recalibration</a> with GATK: <a href="https://github.com/chapmanb/bcbb/blob/master/nextgen/bcbio/variation/recalibrate.py">source code</a></li>
+<li><a href="http://www.broadinstitute.org/gsa/wiki/index.php/Local_realignment_around_indels">Local realignment around indels</a> with GATK: <a href="https://github.com/chapmanb/bcbb/blob/master/nextgen/bcbio/variation/realign.py">source code</a>:</li>
+<li>Variant calling (SNPs and indels) using the <a href="http://www.broadinstitute.org/gsa/wiki/index.php/Unified_genotyper">GATK Unified Genotyper</a>: <a href="https://github.com/chapmanb/bcbb/blob/master/nextgen/bcbio/variation/genotype.py">source code</a></li>
+<li>Variant effect estimation with <a href="http://snpeff.sourceforge.net/">snpEff</a>: <a href="https://github.com/chapmanb/bcbb/blob/master/nextgen/bcbio/variation/effects.py">source code</a></li>
+<li>Read coverage visualization with <a href="http://hgdownload.cse.ucsc.edu/admin/exe/">wigToBigWig</a>: <a href="https://github.com/chapmanb/bcbb/blob/master/nextgen/scripts/bam_to_wiggle.py">source code</a></li>
+</ul>
+<p>The pipeline framework design is general, allowing incorporation of alternative aligners or variant calling algorithms.</p>
+<p>We hope that in addition to being directly useful, this framework can fit within the work environments of other developers. The flexible toolkit used is: CloudBioLinux with open source bioinformatics libraries, CloudMan with a managed SGE cluster, Galaxy with a custom pipeline interface, and finally Python to parallelize and manage the processing. We invite you to fork and extend any of the different components. Thank you again to everyone for the amazing feedback on the analysis pipeline and CloudBioLinux.</p>

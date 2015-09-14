@@ -1,0 +1,107 @@
+---
+layout: post
+title: Summarizing next-gen sequencing variation statistics with Hadoop using Cascalog
+date: 2011-07-04 21:25:14.000000000 -04:00
+categories:
+- how-to
+tags:
+- how-to
+- clojure
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>Improvements in next-generation sequencing technology are leading to ever increasing amounts of sequencing data. With this additional throughput comes the demand for algorithms and approaches that can easily scale. <a href="http://hadoop.apache.org/">Hadoop</a> offers an open source framework for batch processing large files. This post describes using <a href="https://github.com/nathanmarz/cascalog">Cascalog</a>, a Hadoop query language written in <a href="http://clojure.org/">Clojure</a>, to investigate quality statistics for variant calling in deeply sequenced regions.</p>
+<div id="biological-question">
+<h3>Biological question</h3>
+<p>The goal is to improve a variation calling algorithm for next-generation sequencing data. We have a densely sequenced region, where each position has thousands of potential base calls. Each position may be a single base, or a mix of of majority and minority variants. We are filtering variants on 3 metrics of quality:</p>
+<ul>
+<li>Quality score -- The sequencing technology's assessment of the correctness of a base.</li>
+<li>K-mer score -- An estimate of the uniqueness of the region surrounding the base call position, built using <a href="https://github.com/ctb/khmer">khmer</a>. Unique regions are more likely to be sequencing artifacts, while common regions are more likely to be real.</li>
+<li>Mapping score -- The aligner's estimate of the reliability of the read alignment.</li>
+</ul>
+<p>Each read and position is in a <a href="https://github.com/hbc/projects/blob/master/snp-assess/test/data/raw_variations.tsv">tab delimited file</a> that looks like:</p>
+<pre><code>951     G       31      0.0515130211584 198</code></pre>
+<p>
+<p>The <a href="https://github.com/hbc/projects/blob/master/snp-assess/test/positions/pos_to_examine.tsv">training data</a> has a set of known variable positions, and details about how the current variant calling algorithm did at each position:</p>
+<pre><code>951     T       false_positive  0.7
+953     A       true_positive   4.0
+</code></pre>
+<p>
+<p>We wanted to generate summary statistics at each position of interest, and look for additional criteria that could be built into the calling algorithm.</p>
+</div>
+<div id="writing-cascalog-queries">
+<h3>Writing cascalog queries</h3>
+<p>Cascalog is based on the <a href="http://en.wikipedia.org/wiki/Datalog">Datalog</a> rule language, a subset of Prolog. You describe the rules of a system and the query optimizer figures out how best to satisfy them; it requires a change of mindset from the more standard approach that you need to write detailed instructions about what to do.</p>
+<p>Cascalog provides a high level of abstraction over Hadoop and Map-Reduce, so you focus entirely on writing the query. <a href="http://blog.piccolboni.info/2011/04/looking-for-map-reduce-language.html">This post from Antonio Piccolboni</a> compares several Hadoop languages; the post provides a nice side-by-side example of the brevity you can achieve with Cascalog.</p>
+<p>The main query defines the outputs, retrieves input data from the <code>snpdata</code> and location <code>target</code> files described above, provides a count of reads at each position and base of interest, then averages the kmer, quality and mapping score metrics described earlier:</p>
+<p>[sourcecode language="clojure"]<br />
+(defn calc-snpdata-stats [snpdata targets]<br />
+  (??&lt;- [?chr ?pos ?base ?count ?avg-score ?avg-kmer-pct<br />
+         ?avg-qual ?avg-map ?type]<br />
+        (snpdata ?chr ?pos ?base ?qual ?kmer-pct ?map-score)<br />
+        (targets ?chr ?pos ?base ?type)<br />
+        (ops/count ?count)<br />
+        (ops/avg ?kmer-pct :&gt; ?avg-kmer-pct)<br />
+        (ops/avg ?qual :&gt; ?avg-qual)<br />
+        (ops/avg ?map-score :&gt; ?avg-map)<br />
+        (combine-score ?kmer-pct ?qual ?map-score :&gt; ?score)<br />
+        (ops/avg ?score :&gt; ?avg-score)))<br />
+[/sourcecode]</p>
+<p>A big advantage of Cascalog is that it is just Clojure, so you can write custom queries in a full-featured language. The last two lines of the query define a custom score and its average at a position. The custom score is a linear combination of the <a href="http://wiki.answers.com/Q/What_is_min-max_normalization">min-max normalized</a> scores:</p>
+<p>[sourcecode language="clojure"]<br />
+(defn min-max-norm [score minv maxv]<br />
+  (let [trunc-score-max (if (&lt; score maxv) score maxv)<br />
+        trunc-score (if (&gt; trunc-score-max minv) trunc-score-max minv)]<br />
+    (/ (- trunc-score minv) (- maxv minv))))</p>
+<p>(defmapop combine-score [kmer-pct qual map-score]<br />
+  (+ (min-max-norm kmer-pct 1e-5 0.10)<br />
+     (min-max-norm qual 4.0 35.0)<br />
+     (min-max-norm map-score 0.0 250.0)))<br />
+[/sourcecode]</p>
+<p>The final part of the code involves parsing the files and producing the <code>snpdata</code> and <code>targets</code> inputs to the query. That code splits each line in the input file and assigns the parts to the variables of interest:</p>
+<p>[sourcecode language="clojure"]<br />
+(defmapop parse-snpdata-line [line]<br />
+  (let [[space pos base qual kmer-pct map-score] (split line #&quot;\t&quot;)]<br />
+    [space (Integer/parseInt pos) base (Integer/parseInt qual)<br />
+     (Float/parseFloat kmer-pct) (Integer/parseInt map-score)]))</p>
+<p>(defn snpdata-from-hfs [dir]<br />
+  (let [source (hfs-textline dir)]<br />
+    (&lt;- [?chr ?pos ?base ?qual ?kmer-pct ?map-score]<br />
+        (source ?line)<br />
+        (parse-snpdata-line ?line :&gt; ?chr ?pos ?base ?qual<br />
+                                     ?kmer-pct ?map-score))))<br />
+[/sourcecode]</p>
+</div>
+<div id="running-on-hadoop">
+<h3>Running on Hadoop</h3>
+<p>The <a href="https://github.com/hbc/projects/tree/master/snp-assess">full project is available on GitHub</a>. To run on a <a href="https://ccp.cloudera.com/display/CDHDOC/CDH3+Installation">configured Hadoop system</a>, you build the code, copy your input files to HDFS, then run:</p>
+<pre><code>% lein deps
+% lein uberjar
+% hadoop fs -mkdir /tmp/snp-assess/data
+% hadoop fs -mkdir /tmp/snp-assess/positions
+% hadoop fs -put your_variation_data.tsv /tmp/snp-assess/data
+% hadoop fs -put positions_of_interest.tsv /tmp/snp-assess/positions
+% hadoop jar snp-assess-0.0.1-SNAPSHOT-standalone.jar
+             snp_assess.core /tmp/snp-assess/data /tmp/snp-assess/positions
+</code></pre>
+<p>
+<p>The same code can also run locally without Hadoop. This is extremely useful for testing and development, or for smaller datasets that do not require the distributed power of Hadoop:</p>
+<pre><code>% lein deps
+% lein run :snp-data /directory/of/varation/data /directory/of/positions
+</code></pre>
+<p>Both approaches generate tabular output with our positions, counts, scores and average metrics:</p>
+<pre><code>| 951 | T |  3 | 0.9 | 2.0e-04 | 24.7 | 55.7  | false_positive |
+| 953 | A | 10 | 1.5 | 1.6e-02 | 23.1 | 175.5 | true_positive  |
+</code></pre>
+</div>
+<p>
+<div id="overview-and-additional-projects">
+<h3>Overview and additional projects</h3>
+<p>Cascalog provided an easy to use abstraction on top of Hadoop, which enabled exploration of densely mapped next-generation sequencing reads for variant detection. The code is free of scaling specific details, and instead focuses purely on the data of interest.</p>
+<p>Another example of Cascalog in a biological setting is the answer I wrote to <a href="http://biostar.stackexchange.com/questions/8821/hadoop-genomic-segments-and-join">Pierre's question on BioStar</a>, dealing with overlapping genomic segments within Hadoop. The <a href="https://github.com/chapmanb/bcbb/tree/master/biostar/bed-hadoop">code is available from GitHub</a> as an additional starting point for getting oriented with Hadoop and Cascalog.</p>
+</div>

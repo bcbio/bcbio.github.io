@@ -1,0 +1,120 @@
+---
+layout: post
+title: Parallel upload to Amazon S3 with python, boto and multiprocessing
+date: 2011-04-10 13:27:10.000000000 -04:00
+categories:
+- analysis
+tags:
+- infrastructure
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  tagazine-media: a:7:{s:7:"primary";s:0:"";s:6:"images";a:0:{}s:6:"videos";a:0:{}s:11:"image_count";s:1:"0";s:6:"author";s:7:"6099765";s:7:"blog_id";s:7:"5850073";s:9:"mod_stamp";s:19:"2011-04-10
+    18:27:10";}
+  _oembed_2dd75935bd9d3245aeb955c9c3a47cb8: ! '{{unknown}}'
+  _oembed_cd41d7b3476b3ddf51d004767c279f58: ! '{{unknown}}'
+  _oembed_ae899057fba65107b97a43106b996605: ! '{{unknown}}'
+  _oembed_9956fe6e67d9a277bb8197dbedad4ea0: ! '{{unknown}}'
+  _oembed_9dbe95a24550b82b2e7e568aea98eb83: ! '{{unknown}}'
+  _oembed_1f4b49cb6c905b7aa69ecea78afedfba: ! '{{unknown}}'
+  _oembed_95067a0b708da80ea45afe668b6e12c6: ! '{{unknown}}'
+  _oembed_d826d054275053726ae8854acf60400a: ! '{{unknown}}'
+  _oembed_77020a59a763a0d5fe40c7cddd2c4bad: ! '{{unknown}}'
+  _oembed_7cb6a48283e3ff20894655b547bb332d: ! '{{unknown}}'
+  _oembed_5d9382424444de3f97d7250b6870de8e: ! '{{unknown}}'
+  _oembed_394bf555af07edd46635d6d9b0c29b3f: ! '{{unknown}}'
+  _oembed_bf6dc7be7e1ec7b7c0d09695939ba021: ! '{{unknown}}'
+  _oembed_2da47b7d241034ccb89fd7028f22863a: ! '{{unknown}}'
+  _oembed_ab9912592fef0a89d1650a36e83e5653: ! '{{unknown}}'
+  _oembed_7dc0047bd0983eda99732b674c99f8e2: ! '{{unknown}}'
+  _oembed_bbf96f8eb976fcb06671c7f2f9880b76: ! '{{unknown}}'
+  _oembed_a1c29812752aef8d19879aee3a7f0540: ! '{{unknown}}'
+  _oembed_7e7c6b533f97df5627912a33eb4bb489: ! '{{unknown}}'
+  _oembed_aa7fb73cf6decd0e716c8fc8bdeb2679: ! '{{unknown}}'
+  _oembed_e215b147f92c06cb3181b54bf0b060b9: ! '{{unknown}}'
+  _oembed_41847648aa8481d5e7bb6ebe6e48c20d: ! '{{unknown}}'
+  _oembed_5469ae6f6591068083547f84f895f5b8: ! '{{unknown}}'
+  _oembed_96d442234286d528b1193df6896c0f3e: ! '{{unknown}}'
+  _oembed_1033316739ab3c730fbb9c5c392c4ede: ! '{{unknown}}'
+  _oembed_b259e86377ea9e5f65e89e312dfa45e6: ! '{{unknown}}'
+  _oembed_a986501930ad595a5ea8e122c0f09f4b: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>One challenge with moving analysis pipelines to cloud resources like <a href="http://aws.amazon.com/ec2/">Amazon EC2</a> is figuring out the logistics of transferring files. Biological data is big; with the rapid adoption of new machines like the <a href="http://www.illumina.com/systems/hiseq_2000.ilmn">HiSeq</a> and decreasing <a href="http://www.genome.gov/sequencingcosts/">sequencing costs</a>, the data transfer question isn't going away soon. The use of Amazon in bioinformatics was brought up during a recent <a href="http://biostar.stackexchange.com/questions/7143/is-amazons-ec2-commonly-used-for-bioinformatics">discussion on the BioStar question answer site</a>. <a href="http://mndoci.github.com/">Deepak's</a> answer highlighted the role of parallelizing uploads and downloads to ease this transfer burden. Here I describe a method to improve upload speed by splitting over multiple processing cores.</p>
+<p><a href="http://aws.amazon.com/s3/faqs/#What_is_Amazon_S3">Amazon Simple Storage System (S3)</a> provides relatively inexpensive cloud storage with their <a href="http://aws.amazon.com/s3/faqs/#What_is_RRS">reduced redundancy storage</a> option. S3, and all of Amazon's cloud services, are accessible directly from Python using <a href="http://code.google.com/p/boto/">boto</a>. By using <a href="http://www.elastician.com/2010/12/s3-multipart-upload-in-boto.html">boto's multipart upload support</a>, coupled with Python's built in <a href="http://docs.python.org/library/multiprocessing.html">multiprocessing</a> module, I'll demonstrate maximizing transfer speeds to make uploading data less painful. The <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/utils/s3_multipart_upload.py">script is available from GitHub</a> and requires <a href="https://github.com/boto/boto">the latest boto from GitHub (2.0b5 or better)</a>.</p>
+<div id="parallel-upload-with-multiprocessing">
+<h2>Parallel upload with multiprocessing</h2>
+<p>The overall process uses boto to connect to an S3 upload bucket, initialize a multipart transfer, split the file into multiple pieces, and then upload these pieces in parallel over multiple cores. Each processing core is passed a set of credentials to identify the transfer: the multipart upload identifier (<code>mp.id</code>), the S3 file key name (<code>mp.key_name</code>) and the S3 bucket name (<code>mp.bucket_name</code>).</p>
+<p>[sourcecode language="python"]<br />
+import boto</p>
+<p>conn = boto.connect_s3()<br />
+bucket = conn.lookup(bucket_name)<br />
+mp = bucket.initiate_multipart_upload(s3_key_name, reduced_redundancy=use_rr)<br />
+with multimap(cores) as pmap:<br />
+    for _ in pmap(transfer_part, ((mp.id, mp.key_name, mp.bucket_name, i, part)<br />
+                                  for (i, part) in<br />
+                                  enumerate(split_file(tarball, mb_size, cores)))):<br />
+        pass<br />
+mp.complete_upload()<br />
+[/sourcecode]</p>
+<p>The <code>split_file</code> function uses the unix split command to divide the file into sections, each of which will be uploaded separately.</p>
+<p>[sourcecode language="python"]<br />
+def split_file(in_file, mb_size, split_num=5):<br />
+    prefix = os.path.join(os.path.dirname(in_file),<br />
+                          &quot;%sS3PART&quot; % (os.path.basename(s3_key_name)))<br />
+    split_size = int(min(mb_size / (split_num * 2.0), 250))<br />
+    if not os.path.exists(&quot;%saa&quot; % prefix):<br />
+        cl = [&quot;split&quot;, &quot;-b%sm&quot; % split_size, in_file, prefix]<br />
+        subprocess.check_call(cl)<br />
+    return sorted(glob.glob(&quot;%s*&quot; % prefix))<br />
+[/sourcecode]</p>
+<p>The multiprocessing aspect is managed using a <a href="http://docs.python.org/library/contextlib.html">contextmanager</a>. The initial multiprocessing pool is setup, using a specified number of cores, and configured to allow keyboard interrupts. We then return a lazy map function (<a href="http://docs.python.org/library/itertools.html#itertools.imap">imap</a>) which can be used just like Python's standard <code>map</code>. This transparently divides the function calls for each file part over all available cores. Finally, the pool is cleaned up when the map is finished running.</p>
+<p>[sourcecode language="python"]<br />
+@contextlib.contextmanager<br />
+def multimap(cores=None):<br />
+    if cores is None:<br />
+        cores = max(multiprocessing.cpu_count() - 1, 1)<br />
+    def wrapper(func):<br />
+        def wrap(self, timeout=None):<br />
+            return func(self, timeout=timeout if timeout is not None else 1e100)<br />
+        return wrap<br />
+    IMapIterator.next = wrapper(IMapIterator.next)<br />
+    pool = multiprocessing.Pool(cores)<br />
+    yield pool.imap<br />
+    pool.terminate()<br />
+[/sourcecode]</p>
+<p>The actual work of transferring each portion of the file is done using two functions. The helper function, <code>mp_from_ids</code>, uses the id information about the bucket, file key and multipart upload id to reconstitute a multipart upload object:</p>
+<p>[sourcecode language="python"]<br />
+def mp_from_ids(mp_id, mp_keyname, mp_bucketname):<br />
+    conn = boto.connect_s3()<br />
+    bucket = conn.lookup(mp_bucketname)<br />
+    mp = boto.s3.multipart.MultiPartUpload(bucket)<br />
+    mp.key_name = mp_keyname<br />
+    mp.id = mp_id<br />
+    return mp<br />
+[/sourcecode]</p>
+<p>This object, together with the number of the file part and the file itself, are used to transfer that section of the file. The file part is removed after successful upload.</p>
+<p>[sourcecode language="python"]<br />
+@map_wrap<br />
+def transfer_part(mp_id, mp_keyname, mp_bucketname, i, part):<br />
+    mp = mp_from_ids(mp_id, mp_keyname, mp_bucketname)<br />
+    print &quot; Transferring&quot;, i, part<br />
+    with open(part) as t_handle:<br />
+        mp.upload_part_from_file(t_handle, i+1)<br />
+    os.remove(part)<br />
+[/sourcecode]</p>
+<p>When all sections, distributed over all processors, are finished, the multipart upload is signaled complete and Amazon finishes the process. Your file is now available on S3.</p>
+</div>
+<div id="parallel-download">
+<h2>Parallel download</h2>
+<p>Download speeds can be maximized by utilizing several existing parallelized accelerators:</p>
+<ul>
+<li><a href="http://axel.alioth.debian.org/">axel</a></li>
+<li><a href="http://aria2.sourceforge.net/">aria2</a></li>
+<li><a href="http://lftp.yar.ru/">lftp</a></li>
+</ul>
+<p>Combine these with the uploader to build up a cloud analysis workflow: move your data to S3, run a complex analysis pipeline on EC2, push the results back to S3, and then download them to local machines. Please share other tips and tricks you use to deal with Amazon file transfer in the comments.</p>
+</div>

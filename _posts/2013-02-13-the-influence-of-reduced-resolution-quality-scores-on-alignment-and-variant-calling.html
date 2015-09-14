@@ -1,0 +1,154 @@
+---
+layout: post
+title: The influence of reduced resolution quality scores on alignment and variant
+  calling
+date: 2013-02-13 05:49:00.000000000 -05:00
+categories:
+- variation
+tags:
+- small-variants
+- germline
+- validation
+status: publish
+type: post
+published: true
+meta:
+  draftfeedback_requests: a:1:{s:13:"511a370abd96c";a:3:{s:3:"key";s:13:"511a370abd96c";s:4:"time";s:10:"1360672522";s:7:"user_id";s:7:"6099765";}}
+  draft_feedback: ! "a:1:{s:13:\"511a370abd96c\";a:1:{i:0;a:2:{s:4:\"time\";s:10:\"1360677967\";s:7:\"content\";s:418:\"
+    Nice one, as always ;-) \n\nThe alignment differences: are those a generic delta?
+    I.e., are differences reads that no longer map after binning, map elsewhere, additional
+    reads that now map, or a combination of these?\n\nVariants: I never quite get
+    these tables. If this is the comparison of the post-binned data to the unbinned
+    data, why are there discordant SNPs in two directions (40-q discordant, 8-q discordant)...\n\n\n\";}}}"
+  _edit_last: '6099765'
+  _publicize_pending: '1'
+  _oembed_4cb1da4922faa9d3246095ae72176094: ! '{{unknown}}'
+  _oembed_f261f363bb40bf69f0c63fb3524f5fdb: ! '{{unknown}}'
+  _oembed_278f1f4f471e08fdf618a02e4380dc79: ! '{{unknown}}'
+  _oembed_544dc2a5fa39130521b0d905c0763f04: ! '{{unknown}}'
+  _oembed_9146cd33b3ffc0d78da9aeae749c2c0d: ! '{{unknown}}'
+  _oembed_fd9cea06873a7ca01aee25dab079e6a5: ! '{{unknown}}'
+  _oembed_19f7950601ac06b36d641690785dc1cc: ! '{{unknown}}'
+  _oembed_bf5db6daff58d8da8cb6da8c48497d4e: ! '{{unknown}}'
+  _oembed_bf8a6181aa37c99cf0b309b7ea52b078: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1">BAM file size reduction and quality score binning</h2>
+<div class="outline-text-2" id="text-1">
+<p> We have a large upcoming whole genome sequencing project with <a href="http://www.illumina.com/">Illumina</a>, and they approached us about delivering BAM files with reduced resolution base quality scores. They have a <a href="http://www.illumina.com/Documents/products/whitepapers/whitepaper_datacompression.pdf">white paper</a> describing the approach, which involves binning scores to reduce resolution.  This reduces the number of scores describing the quality of a base from 40 down to 8. </p>
+<p> The advantage of this approach is a significant reduction in file size. BAM files use <a href="http://blastedbio.blogspot.ie/2011/11/bgzf-blocked-bigger-better-gzip.html">BGZF compression</a>, and the underlying <a href="http://www.chipestimate.com/tech-talks/2010/03/23/Altior-Unzipping-the-GZIP-compression-protocol">gzip DEFLATE algorithm</a> compresses based on shared text regions.  Reducing the number of quality values increases shared blocks and improves compression. This reduces BAM file sizes by 25-35%: an exome BAM file reduced from 5.7Gb to 3.7Gb after quality binning. </p>
+<p> The potential downside is that the reduction in quality resolution may impact alignment and variant calling approaches that rely on base quality scores. To assess this, I implemented quality score binning as part of the <a href="https://github.com/chapmanb/bcbio-nextgen">bcbio-nextgen analysis pipeline</a> using the <a href="http://www.ebi.ac.uk/ena/about/cram_toolkit/">CRAM toolkit</a> and ran alignment, recalibration, realignment and variant calling on: </p>
+<ul>
+<li>The original unbinned 40-resolution base quality BAM from an   NA12878 exome. </li>
+<li>The BAM binned into 8-resolution base qualities before   alignment. </li>
+<li>The BAM binned into 8-resolution base qualities before alignment and   binned again following <a href="http://gatkforums.broadinstitute.org/discussion/44/base-quality-score-recalibration-bqsr">base quality score recalibration</a>. </li>
+</ul>
+<p> A comparison of alignment and variant calls from the three approaches indicates that binning has nearly no impact on alignment and a small impact on variant calls, primarily in low depth regions. </p>
+</p></div>
+</p></div>
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">Alignment differences</h2>
+<div class="outline-text-2" id="text-2">
+<p> We aligned 100bp paired end reads with <a href="http://www.novocraft.com/main/index.php">Novoalign</a>, a quality aware aligner. Comparison of mapped reads showed nearly no impact on total mapped reads. The plot below shows a generic delta of changes in mapped reads across the 22 autosomes alongside the increase in unmapped pairs. Out of 73 million total reads, the changes account for ~0.003% of the total reads. There also did not appear to be any worrisome patterns of loss for specific chromosomes. Overall, there is a minimal impact of quality score binning on the ability to align the reads. </p>
+<p> <img src="http://bcbio.files.wordpress.com/2013/02/wpid-qualbin-alignment-changes.png" alt="Alignment changes following quality binning" width="600" /> </p>
+</p></div>
+</p></div>
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">Variant call differences</h2>
+<div class="outline-text-2" id="text-3">
+<p> We called variants using the <a href="http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_genotyper_UnifiedGenotyper.html">GATK Unified Genotyper</a> following the <a href="http://gatkforums.broadinstitute.org/discussion/1186/best-practice-variant-detection-with-the-gatk-v4-for-release-2-0">best practice recommendations for exomes</a> and then compared calls from original and binned quality scores. Both approaches for binning -- pre-binning, and pre-binning plus post-quality recalibration binning -- showed similar levels of concordance to non-binned quality scores: 99.81 and 99.78, respectively. Since the additional binning after recalibration provides a smaller prepared BAM file for storage and has a similar impact to pre-binning only, we used this for additional analysis of discordant variants. </p>
+<p> The table below shows the discordant differences between the 40 quality score resolution and binned, 8 quality score resolution BAMs. 40 quality discordant variants are those called with full quality score resolution but not called, or called differently, after binning to 8 quality score resolution. Conversely, the 8-quality discordants are those called uniquely after quality binning: </p>
+<table border="1" cellspacing="0" cellpadding="6" rules="all" style="width:250px;margin:10px;">
+<caption></caption>
+<col class="left" />
+<col class="right" />
+<tbody>
+<tr>
+<td class="left">Overall genotype concordance</td>
+<td class="right">99.78</td>
+</tr>
+<tr>
+<td class="left">concordant: total</td>
+<td class="right">117887</td>
+</tr>
+<tr>
+<td class="left">concordant: SNPs</td>
+<td class="right">109144</td>
+</tr>
+<tr>
+<td class="left">concordant: indels</td>
+<td class="right">8743</td>
+</tr>
+<tr>
+<td class="left">40-quality discordant: total</td>
+<td class="right">821</td>
+</tr>
+<tr>
+<td class="left">40-quality discordant: SNPs</td>
+<td class="right">759</td>
+</tr>
+<tr>
+<td class="left">40-quality discordant: indels</td>
+<td class="right">62</td>
+</tr>
+<tr>
+<td class="left">8-quality discordant: total</td>
+<td class="right">1289</td>
+</tr>
+<tr>
+<td class="left">8-quality discordant: SNPs</td>
+<td class="right">1240</td>
+</tr>
+<tr>
+<td class="left">8-quality discordant: indels</td>
+<td class="right">49</td>
+</tr>
+<tr>
+<td class="left">het/hom discordant</td>
+<td class="right">259</td>
+</tr>
+</tbody>
+</table>
+<p> We investigated the discordant variants further since 1.5%  of the total variant calls change as a result of binning, Of the 1851 unique discordant variants, approximately half (928) fall into reproducible variants  <a href="http://bcbio.wordpress.com/2013/02/06/an-automated-ensemble-method-for-combining-and-evaluating-genomic-variants-from-multiple-callers/">identified by looking at ensemble combinations of replicates</a>. Of these potentially problematic discordant variants more than half are in low coverage regions with less than 10 reads: </p>
+<p> <img src="http://bcbio.files.wordpress.com/2013/02/wpid-qualbin-variant-changes.png" alt="Variant changes following quality binning" width="600" /> </p>
+<p> The major influence of quality score binning is resolution of variants in low coverage regions. This manifests as differences in heterozygote and homozygote calling, indel representation and filtering differences related to quality and mappability. To assess the potential impact,  we looked at the loss in callable bases on a 30x whole genome sequence  when moving from a minimum of 5 reads to a minimum of 10, using  <a href="http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_coverage_CallableLoci.html">GATK's CallableLoci tool</a>. Regions with read coverage of 5 to 9 make up 4.7 million genome positions, 0.17% of the  total callable bases. </p>
+<table border="1" cellspacing="0" cellpadding="6" rules="all" style="width:400px;margin:10px;">
+<caption></caption>
+<col class="left" />
+<col class="left" />
+<col class="left" />
+<thead>
+<tr>
+<th scope="col" class="left"></th>
+<th scope="col" class="left">5 read minimum</th>
+<th scope="col" class="left">10 read minimum</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="left">Callable bases</td>
+<td class="left">2,775,871,235</td>
+<td class="left">2,771,109,000</td>
+</tr>
+<tr>
+<td class="left">Percent callable</td>
+<td class="left">96.90%</td>
+<td class="left">96.73%</td>
+</tr>
+<tr>
+<td class="left">Low coverage</td>
+<td class="left">17,641,980</td>
+<td class="left">22,404,215</td>
+</tr>
+<tr>
+<td class="left">No coverage/ poor mapping</td>
+<td class="left">71,272,008</td>
+<td class="left">71,272,008</td>
+</tr>
+</tbody>
+</table>
+<p> In conclusion, quality score binning provides a useful reduction in input file sizes with minimal impact on alignment. For variant calling, use additional caution in low coverage regions with less than 10 supporting reads. Given the rapid increases in read throughput that are driving the need for file size reduction, quality score binning is a worthwhile tradeoff for high-coverage recalling work. </p>
+</p></div>
+</p></div>

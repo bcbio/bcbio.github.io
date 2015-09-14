@@ -1,0 +1,44 @@
+---
+layout: post
+title: Parsing GoPubMed RDF with Sparta
+date: 2008-12-21 01:38:28.000000000 -05:00
+categories:
+- how-to
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  _oembed_5ed17a6ff1c92416b293c1454a507855: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p><a href="http://gopubmed.org/">GoPubMed</a> provides a semantic layer on top of PubMed articles, linking them to GO and other ontologies and providing this metadata as RDF.</p>
+<p>Starting out with RDF can be a bit hairy when dealing with the namespaces that prefix many of the URIs. <a href="http://www.mnot.net/sw/sparta/">Sparta</a> is a python library that sits on top of <a href="http://rdflib.net/">rdflib</a> providing nice shortcuts for accessing terms. For instance, if you have the following RDF namespace and term:</p>
+<p>[sourcecode language="xml"]<br />
+<rdf:rdf xmlns:dc="http://purl.org/dc/elements/1.1/"><br />
+</rdf:rdf><br />
+<dc:title>Example</dc:title><br />
+[/sourcecode]<br /></p>
+<p>
+Instead of having to access this attribute with <code>http://purl.org/dc/elements/1.1/title</code> in rdflib, sparta allows you to do so with the shortcut <code>dc_title</code>. Here is a short example with GoPubMed which prints out a PubMed record and its title:</p>
+<p>[sourcecode language="python"]<br />
+import urllib<br />
+from rdflib import ConjunctiveGraph as Graph<br />
+import sparta</p>
+<p>url = 'http://www.gopubmed.org/GoMeshPubMed/gomeshpubmed/Search/' + \<br />
+      'RDF?q=18463287&amp;type=RdfExportAll'<br />
+gopubmed_handle = urllib.urlopen(url)<br />
+graph = Graph()<br />
+graph.parse(gopubmed_handle)<br />
+gopubmed_handle.close()</p>
+<p>graph_subjects = list(set(graph.subjects()))<br />
+sparta_factory = sparta.ThingFactory(graph)<br />
+for subject in graph_subjects:<br />
+    sparta_graph = sparta_factory(subject)<br />
+    print subject, [unicode(t) for t in sparta_graph.dc_title][0]<br />
+[/sourcecode]</p>
+<p>
+The Sparta library had not yet been updated to work with rdflib version 2.4, and also needed a few smaller fixes in matching URIs to attribute names. These are fixed in an updated version available <a href="http://github.com/chapmanb/bcbb/raw/master/biosql_ontologies/sparta.py">here</a>.</p>

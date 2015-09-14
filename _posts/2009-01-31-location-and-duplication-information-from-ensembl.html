@@ -1,0 +1,108 @@
+---
+layout: post
+title: Location and duplication information from Ensembl
+date: 2009-01-31 15:11:22.000000000 -05:00
+categories:
+- information retrieval
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta: {}
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+Understanding the evolutionary history of a gene family may provide some insight into the mechanisms of its activity. Here we will look at two characteristics for a list of eukaryotic genes of interest:</p>
+<ul>
+<li> Groups that are co-located on a chromosome.</li>
+<li> Groups evolutionarily related through duplication (<a href="http://homepage.usask.ca/~ctl271/857/def_homolog.shtml">paralogs</a>).
+</li>
+</ul>
+<p>
+By expanding on work done in an <a href="http://bcbio.wordpress.com/2008/12/28/comparative-genomics-information-retrieval-from-ensembl/">earlier post</a>, we will identify co-located and duplicated genes using information from the <a href="http://www.ensembl.org/">Ensembl</a> genome browser.</p>
+<p>
+Using our previous method of screen scraping with <a href="http://www.crummy.com/software/BeautifulSoup/">Beautiful Soup</a>, we extend our Ensembl REST-like class to include two new functions. Location is represented as a list of chromosome name, start and end, and parsed from the Gene Summary page:</p>
+<p>[sourcecode language="python"]<br />
+def location(self, organism, gene_id):<br />
+    with self._get_open_handle("Gene", "Summary",<br />
+            organism, gene_id) as in_handle:<br />
+        soup = BeautifulSoup(in_handle)<br />
+        loc_tab = soup.find("dd", id="tab_location")<br />
+        link = loc_tab.find("a")<br />
+        path, attrs = urllib2.splitattr(link["href"])<br />
+        for attr in attrs:<br />
+            if attr.find("r=") == 0:<br />
+                key, val = attr.split("=")<br />
+                chrom, location = val.split(":")<br />
+                start, end = location.split("-")<br />
+                return chrom, int(start), int(end)<br />
+        raise ValueError("Did not find location: %s" % link)<br />
+[/sourcecode]</p>
+<p>
+Similarly, we can retrieve the details on paralogs from the Ensembl Comparative pages for the genes. With these two functions, a list of the protein IDs of interest, and a dictionary containing species and Ensembl ID references, we collect all of the location and duplication information into python dictionaries. At the same time we maintain a backwards mapping of Ensembl IDs to our original ID:</p>
+<p>[sourcecode language="python"]<br />
+ensembl_retriever = EnsemblComparaRest(cache_dir)<br />
+loc_info = dict()<br />
+dup_info = dict()<br />
+ensembl_to_uniprot = dict()<br />
+for cur_id in all_ids:<br />
+    cur_rec = db[cur_id]<br />
+    cur_ensembl_org = cur_rec["org_scientific_name"].replace(" ", "_")<br />
+    for ensembl_id in cur_rec.get("db_refs_ensembl", []):<br />
+        paralogs = ensembl_retriever.paralogs(cur_ensembl_org, ensembl_id)<br />
+        chromosome, start, end = ensembl_retriever.location(<br />
+                cur_ensembl_org, ensembl_id)<br />
+        dup_info[ensembl_id] = paralogs<br />
+        loc_info[ensembl_id] = (cur_rec["org_scientific_name"],<br />
+            chromosome, start, end)<br />
+        ensembl_to_uniprot[ensembl_id] = cur_id<br />
+[/sourcecode]</p>
+<p>
+Now we want to flatten the paralog dictionary into a list of groups associated by duplication. This is done by using python sets; any groups with shared genes are combined and the resulting unique list is returned:</p>
+<p>[sourcecode language="python"]<br />
+def examine_paralogs(dup_info, ensembl_to_uniprot):<br />
+    cur_groups = []<br />
+    all_base = dup_info.keys()<br />
+    for base_id, dup_ids in dup_info.items():<br />
+        overlap = set(dup_ids) & set(all_base)<br />
+        if len(overlap) > 0:<br />
+            new_group = set([ensembl_to_uniprot[x] for x in overlap |<br />
+                set([base_id])])<br />
+            is_unique = True<br />
+            for exist_i, exist_group in enumerate(cur_groups):<br />
+                if len(new_group & exist_group) > 0:<br />
+                    update_group = new_group & exist_group<br />
+                    cur_groups[exist_i] = update_group<br />
+                    is_unique = False<br />
+                    break<br />
+            if is_unique:<br />
+                cur_groups.append(new_group)<br />
+    return [list(g) for g in cur_groups]<br />
+[/sourcecode]</p>
+<p>
+We use two functions to similarly group together genes by location. The first function calculates the actual distance given the previously retrieved location information list of <code>(organism, chromosome, start, end)</code>. Two items in different organisms or on different chromosomes are placed maximally far apart since they can't be co-located.</p>
+<p>[sourcecode language="python"]<br />
+def location_distance(loc_one, loc_two):<br />
+    if loc_one[:2] != loc_two[:2] or loc_one == loc_two:<br />
+        return sys.maxint<br />
+    else:<br />
+        return max(abs(loc_one[3] - loc_two[2]),<br />
+                   abs(loc_two[3] - loc_one[2]))<br />
+[/sourcecode]</p>
+<p>
+The next function creates a dictionary of genes co-located based on our threshold, and then uses the <code>examine_paralogs</code> flattening function we defined above to generate groups from this dictionary. The variable <code>distance_thresh</code> defines the distance in which two genes are considered co-located. For the example script, 1 megabase is used, but this can be adjusted according to your own personal definition of close.</p>
+<p>[sourcecode language="python"]<br />
+def examine_location(loc_info, ensembl_to_uniprot, distance_thresh):<br />
+    loc_close = collections.defaultdict(lambda: [])<br />
+    for uniprot_id, loc_one in loc_info.items():<br />
+        for cmp_id, loc_two in loc_info.items():<br />
+            if location_distance(loc_one, loc_two) <= distance_thresh:<br />
+                loc_close[uniprot_id].append(cmp_id)<br />
+    return examine_paralogs(loc_close, ensembl_to_uniprot)<br />
+[/sourcecode]</p>
+<p>
+The <a href="http://github.com/chapmanb/bcbb/blob/507cbb02c3531dddef67fd25087b3954f51e9d25/classify/loc_dup_cluster.py">full script</a> takes a file input with each line being a uniprot ID and gene name, and also requires a UniProt shelve database like we <a href="http://bcbio.wordpress.com/2009/01/10/extracting-protein-characteristics-for-an-interpro-domain/">developed earlier</a>. This shelve database provides the base ID to ensembl ID mappings and organism information, which can be parsed from UniProt XML files.</p>
+<p>
+The resulting co-location and duplication groups are sets of genes which may share an intriguing evolutionary history. The paralogs have been computationally determined to be evolutionarily related based on sequence similarity and the composition of their <a href="http://www.ensembl.org/info/docs/compara/homology_method.html">gene family tree</a>. The co-located genes may be co-selected during evolution, be the result of localized gene duplication obscured by extensive sequence change, or simply be close together based on chance. Further examination of your gene family in light of this information can help determine which of these hypotheses to favor.</p>

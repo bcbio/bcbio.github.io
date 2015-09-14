@@ -1,0 +1,108 @@
+---
+layout: post
+title: Next generation sequencing information management and analysis system for Galaxy
+date: 2011-01-11 10:05:56.000000000 -05:00
+categories:
+- OpenBio
+tags:
+- infrastructure
+- galaxy
+- lims
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  twitter_cards_summary_img_size: a:6:{i:0;i:1128;i:1;i:447;i:2;i:3;i:3;s:25:"width="1128"
+    height="447"";s:4:"bits";i:16;s:4:"mime";s:9:"image/png";}
+  _oembed_1ec712b1c9990420b0f2ae98ec10e76a: ! '{{unknown}}'
+  _oembed_fb62a18043fafde4b28aea320f2ce672: ! '{{unknown}}'
+  _oembed_bc8efffb0148bdac871044c8f38d5437: ! '{{unknown}}'
+  _oembed_104015577bbdb42a62d7bfa23010b915: ! '{{unknown}}'
+  _oembed_c4fbb58493adc0da5548ff2afb136892: ! '{{unknown}}'
+  _oembed_c3eddf92a6ff458e94c5825a5029a480: ! '{{unknown}}'
+  _oembed_bafa8c25bc3187b47582a98bf67f3a6a: ! '{{unknown}}'
+  _oembed_a53cf5349b0887f18634b570ee476a61: ! '{{unknown}}'
+  _oembed_c3d28f02f27a9f4ebd2882c66b9194e0: ! '{{unknown}}'
+  _oembed_e8c142613e06477fae4c4950b671bbd4: ! '{{unknown}}'
+  _oembed_8559cc155df1ae5c8653503bc3c8dcd1: ! '{{unknown}}'
+  _oembed_89d9361d36c7d0fdc16756c4c5c1910a: ! '{{unknown}}'
+  _oembed_41e4dfabba3eaa44bc78cb0c7f938a9b: ! '{{unknown}}'
+  _oembed_b680b945c7c8ceb965fbec13be41a16b: ! '{{unknown}}'
+  _oembed_67ac43ffd7a2ba24cd92151df43f08a2: ! '{{unknown}}'
+  _oembed_0942f2e658217d64ac5b7d61fc8574d8: ! '{{unknown}}'
+  _oembed_e9719dc5689c42420abf7f90b034ba78: ! '{{unknown}}'
+  _oembed_2b22bc871ec8a028cf301f8673863d77: ! '{{unknown}}'
+  _oembed_b9fd2c1169509c1b7ccff03663d539e5: ! '{{unknown}}'
+  _oembed_b5061a0898aa8cc6fa2349043cbb5705: ! '{{unknown}}'
+  _oembed_1ca0e55c0e539b3c1c49573415547f1f: ! '{{unknown}}'
+  _oembed_0362f43d9efb0372879d2148f95eddaf: ! '{{unknown}}'
+  _oembed_dd19bf59d5eb95d39a697435c95d7052: ! '{{unknown}}'
+  _oembed_75ec61c07d2b5ca3a335354748012a1f: ! '{{unknown}}'
+  _oembed_b460ea817b32287709461c22f2ca5361: ! '{{unknown}}'
+  _oembed_a7cb3c22326a601e073fb4efe76eb2cc: ! '{{unknown}}'
+  _oembed_602a621881f7da9746d625de3bee12eb: ! '{{unknown}}'
+  _oembed_9e6dba34baabeb857aa0e1e442fa96ac: ! '{{unknown}}'
+  _oembed_ffa2195b8304cbea2378de2079dd8f4e: ! '{{unknown}}'
+  _oembed_7b6e1b356c3ecd7cb61a96dbc5a847f4: ! '{{unknown}}'
+  _oembed_58341a3922d8510990c43b0300c8f203: ! '{{unknown}}'
+  _oembed_893b8504691c139dc68c73f6c2162e84: ! '{{unknown}}'
+  _oembed_beaf95b414d8c84ef9f7f6cccf374801: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>Next generation sequencing technologies like <a href="http://www.illumina.com/technology/sequencing_technology.ilmn">Illumina</a>, <a href="http://solid.appliedbiosystems.com/">SOLiD</a> and <a href="http://www.454.com/">454</a> have provided core facilities with the ability to produce large amounts of sequence data. Along with this increased output comes the challenge of managing requests and samples, tracking sequencing runs, and automating downstream analyses.</p>
+<p>Our group at <a href="http://genetics.mgh.harvard.edu/bioinformatics/">Massachusetts General Hospital</a> approached these challenges by developing a sample submission and tracking interface on top of the web-based <a href="http://bitbucket.org/galaxy/galaxy-central/wiki/Home">Galaxy</a> data integration platform. It provides a front end for biologists to enter their sample details and monitor the status of a project. For lab technicians doing the sample preparation and sequencing work, the system tracks sample states via a set of progressive queues providing data entry points at each step of the process. On the back end, an automated analysis pipeline processes data as it arrives off the sequencer, uploading the results back into Galaxy.</p>
+<p>This post will show videos of the interface in action, describe installation and extension of the system, and detail the implementation architecture.</p>
+<div id="front-end-usage">
+<h2>Front-end usage</h2>
+<div id="researcher-sample-entry">
+<h3>Researcher sample entry</h3>
+<p>Biologists use a local Galaxy server as an entry point to submit samples for sequencing. This provides a familiar interface and central location for both entering sample information and retrieving and analyzing the sequencing data.</p>
+<p>Practically, a user begins by browsing to the sample submission page. There they are presented with a wizard interface which guides them through entry of sample details. Multiplexed samples are supported through a drag and drop interface.</p>
+<p>[youtube=http://www.youtube.com/watch?v=HGhNMeEAFV0]</p>
+<p>When all samples are entered, the user submits them as a sequencing project. This includes billing information and a project name to facilitate communication between the researcher and the core group about submissions. Users are able to view their submissions grouped as projects and track the state of constructs. Since we support a number of services in addition to sequencing -- like library construction, quantitation and validation -- this is a valuable way for users to track and organize their requests.</p>
+<p>[youtube=http://www.youtube.com/watch?v=DtQG9IzpoCU]</p>
+</div>
+<div id="sequencing-tracking-and-management">
+<h3>Sequencing tracking and management</h3>
+<p>Administrators and sequencing technicians have access to additional functionality to help manage the internal sample preparation and sequencing workflow. The main sample tracking interface centers around a set of queues; each queue represents a state that a sample can be in. Samples move through the queues as they are processed, with additional information being added to the sample at each step. For instance, a sample in the 'Pre-sequencing quantitation' queue moves to the 'Sequencing' queue once it has been fully quantitated, with that quantitation information entered by the sequencing technician during the transition.</p>
+<p>Assigning samples to flow cells occurs using a drag and drop <a href="http://jqueryui.com/">jQueryUI</a> interface. The design is flexible to allow for placing samples across multiple lanes or multiplexing multiple barcoded samples into a single lane.</p>
+<p>[youtube=http://www.youtube.com/watch?v=Sjt6y1lbzVI]</p>
+</div>
+<div id="viewing-sequencing-results">
+<h3>Viewing sequencing results</h3>
+<p>Running a sequencing machine requires careful monitoring of results and our interface provides several ways to view this data. Raw cluster and read counts are linked to a list of runs. For higher level analyses, interactive plots are available for viewing reads over time and pass rates compared to read density. These allow adjustment of experimental procedures to maximize useful reads based on current machine chemistry.</p>
+<p>[youtube=http://www.youtube.com/watch?v=4xrtPXE7Oe8]</p>
+</div>
+</div>
+<div id="analysis-pipeline">
+<h2>Analysis pipeline</h2>
+<p>Utilizing a front end that organizes requests allows sequencing results to be processed through a fully automated analysis pipeline on the back end. The pipeline detects runs coming off of a sequencer, transfers files to storage and analysis machines and manages a number of processing steps:</p>
+<ul>
+<li>Alignment with <a href="http://bowtie-bio.sourceforge.net/">bowtie</a> or <a href="http://bio-bwa.sourceforge.net/">bwa</a>.</li>
+<li>Generation of alignment and read statistics with <a href="http://picard.sourceforge.net/">Picard</a>, the <a href="http://hannonlab.cshl.edu/fastx_toolkit/">fastx toolkit</a> and <a href="http://solexaqa.sourceforge.net/">SolexaQA</a>.</li>
+<li>Preparation of a <a href="http://bcbio.files.wordpress.com/2011/01/example-summary.pdf">summary PDF</a> with detailed statistics about the run and alignment.</li>
+</ul>
+<p>In addition to the default analysis, a full SNP calling pipeline is included with:</p>
+<ul>
+<li><a href="http://www.broadinstitute.org/gsa/wiki/index.php/The_Genome_Analysis_Toolkit">GATK</a> <a href="http://www.broadinstitute.org/gsa/wiki/index.php/Base_quality_score_recalibration">recalibration</a> and <a href="http://www.broadinstitute.org/gsa/wiki/index.php/Local_realignment_around_indels">realignment</a></li>
+<li>SNP identification with GATK's <a href="http://www.broadinstitute.org/gsa/wiki/index.php/Unified_genotyper">unified genotyper</a></li>
+<li>Variant effect prediction with <a href="http://sourceforge.net/projects/snpeff/">snpEff</a>.</li>
+</ul>
+<p>Fastq reads, alignments files, summary PDFs and other associated files are uploaded back into into Galaxy Data Libraries organized by sample names. Users can download results for offline work, or import them directly into their Galaxy history for further analysis or display.</p>
+<p><a href="http://bcbio.files.wordpress.com/2011/01/data_library_results.png"><img src="http://bcbio.files.wordpress.com/2011/01/data_library_results.png?h=300" alt="Uploaded analysis files in data library" /></a></p>
+</div>
+<div id="installing-and-extending">
+<h2>Installing and extending</h2>
+<p>The code base is maintained as a <a href="http://bitbucket.org/chapmanb/galaxy-central">Bitbucket repository</a> that tracks the main <a href="http://bitbucket.org/galaxy/galaxy-central/src">galaxy-central</a> distribution. It is updated from the main site regularly to maintain compatibility, with the future goal of integrating a generalized version into the main source tree. <a href="https://bitbucket.org/galaxy/galaxy-central/wiki/LIMS/nglims">Detailed installation instructions</a> are available for setting up the front-end client.</p>
+<p>The analysis pipeline is written in Python and drives a number of open source programs; it is available as a <a href="https://github.com/chapmanb/bcbb/tree/master/nextgen">GitHub repository</a> with documentation and installation instructions.</p>
+<p>We are using the current system in production and continue to develop and add features based on user feedback. We would like to generalize this for other research cores with additional instruments and services, and would be happy to hear from developers working on this type of system for their facilities.</p>
+</div>
+<div id="implementation-details">
+<h2>Implementation details</h2>
+<p>This work would not have been possible without the great open source toolkits and frameworks that it builds on. Galaxy provides not only an analysis framework, but also a ready to use database structure for managing samples and requests. The front end builds off existing <a href="http://main.g2.bx.psu.edu/u/rkchak/p/sts">Galaxy sample tracking</a> work, and requires only two new database storage tables.</p>
+<p>The main change from the existing sample tracking framework is a generalization of the sample and request relationships. Requests can both contain samples, and be a part of samples so that a sequenced sample is organized as:</p>
+<p><a href="http://bcbio.files.wordpress.com/2010/03/request_samples.png"><img src="http://bcbio.files.wordpress.com/2010/03/request_samples.png?h=300" alt="Request sample database architecture" /></a></p>
+<p>By reusing and expanding the great work of the Galaxy team, we hope to eventually integrate useful parts of this work into the Galaxy codebase.</p>
+</div>

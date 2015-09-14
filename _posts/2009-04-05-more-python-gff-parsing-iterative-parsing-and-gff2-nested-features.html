@@ -1,0 +1,67 @@
+---
+layout: post
+title: More python GFF parsing -- iterative parsing and GFF2 nested features
+date: 2009-04-05 19:49:12.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta: {}
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+Work on the python generic feature format (GFF) parser continues to push forward; many thanks to those who have provided feedback in helping to refine the functionality. Previously, we discussed <a href="http://bcbio.wordpress.com/2009/03/08/initial-gff-parser-for-biopython/">the initial implementation</a>, introduced <a href="http://bcbio.wordpress.com/2009/03/22/mapreduce-implementation-of-gff-parsing-for-biopython/">MapReduce parsing for parallelization</a>, and discussed <a href="http://bcbio.wordpress.com/2009/03/29/python-gff-parser-update-parallel-parsing-and-gff2/">deploying on a cluster and GFF2 parsing</a>. This week describes an interface for iterator based parsing of GFF files and nested features for GFF2 files.</p>
+<h3><b>Iterative parsing of GFF</b></h3>
+<p>
+GFF files are line-based and related features can be located anywhere in the file. To guarantee all features are parsed and combined correctly, the entire file needs to be scanned and loaded. For large files, we require strategies to load the data without abusing all available memory.</p>
+<p>
+In some cases, it is known that parsing the file in chunks will not result in any information being lost. <a href="http://solidsoftwaretools.com/gf/project/matogff/">GFF files produced by SOLiD for short read alignments</a> are one common case. These are read based, non-nested, and quite large. To tackle these files, the parser now has an iterator based interface that can be used to iterate over sections of the file:</p>
+<p>[sourcecode language="python"]<br />
+from BCBio.GFF.GFFParser import GFFAddingIterator</p>
+<p>gff_iterator = GFFAddingIterator()<br />
+for rec_dict in gff_iterator.get_features(gff_file, target_lines=3000000):<br />
+    for rec in rec_dict.values():<br />
+        # deal with rec.features<br />
+[/sourcecode]</p>
+<p>
+This parses a file into ~350MB sized pieces, returning a dictionary of Biopython <code>SeqRecord</code> objects keyed by their names. Each <code>SeqRecord</code> contains all of the features added from that chunk of the file. These can be persisted to a database or otherwise analyzed before proceeding on to the next chunk, keeping memory requirements more reasonable.</p>
+<p>
+The file can still be filtered by feature type, allowing extraction of only features of interest. This example uses the Biopython <a href="http://www.biopython.org/wiki/SeqIO">SeqIO</a> interface to parse an initial FASTA file with our sequences, and then adds coding sequences on chromosome one to it in chunks of 1 million lines:</p>
+<p>[sourcecode language="python"]<br />
+from BCBio.GFF.GFFParser import GFFAddingIterator<br />
+from Bio import SeqIO</p>
+<p>with open(seq_file) as seq_handle:<br />
+    seq_dict = SeqIO.to_dict(SeqIO.parse(seq_handle, "fasta"))<br />
+gff_iterator = GFFAddingIterator(seq_dict)<br />
+cds_limit_info = dict(<br />
+        gff_types = [('Coding_transcript', 'gene'),<br />
+                     ('Coding_transcript', 'mRNA'),<br />
+                     ('Coding_transcript', 'CDS')],<br />
+        gff_id = ['I']<br />
+        )<br />
+for rec_dict in gff_iterator.get_features(gff_file,<br />
+        limit_info=cds_limit_info, target_lines=1000000):<br />
+    for rec in rec_dict.values():<br />
+        # deal with rec.features<br />
+[/sourcecode]</p>
+<p>
+To avoid missing nested features, the iterator makes smart decisions about when to break the file. It is broken at points where all child features have their parents and can be expected to be nested correctly.</p>
+<h3><b>Nested features for GFF2</b></h3>
+<p>
+Nesting of features is handled nicely in the new <a href="http://www.sequenceontology.org/gff3.shtml">GFF3 format</a>. However, many sources provide information in the older GFF2 (also called GTF) format, which has a variety of nesting schemes. The test examples for the parser contain some examples of these from different online repositories:</p>
+<ul>
+<li><a href="http://github.com/chapmanb/bcbb/blob/master/gff/Tests/GFF/ensembl_gtf.txt">Ensembl GFF2</a> -- recognizes child features by a <code>transcript_id</code> attribute, and does not provide a parent feature
+  </li>
+<li><a href="http://github.com/chapmanb/bcbb/blob/master/gff/Tests/GFF/wormbase_gff2.txt">WormBase GFF2</a> -- child features have a <code>Transcript</code> attribute for certain feature types; a parent feature is present, also with a <code>Transcript</code> attribute
+  </li>
+<li><a href="http://github.com/chapmanb/bcbb/blob/master/gff/Tests/GFF/jgi_gff2.txt">JGI GFF2</a> -- child features have a <code>TranscriptId</code> or <code>ProteinId</code> attribute and no parent feature
+</li>
+</ul>
+<p>
+The updated parser handles all these styles of nesting, building a top level feature for those files where this parent is not present. This mimics the new GFF3 behavior to ease the transition to those files. Where parent features are missing, a new feature is created of type <code>inferred_parent</code> which spans the distance of all child features. These child features are available from the <code>sub_features</code> attribute of the parent.</p>
+<p>
+These new updates improve parsing for older GFF2 files which are still widely used, and opens up parsing to new GFF files produced from SOLiD machines. The code is available from <a href="http://github.com/chapmanb/bcbb/tree/master/gff">the standard github location</a>. Please continue to pass along bug reports and suggestions.</p>

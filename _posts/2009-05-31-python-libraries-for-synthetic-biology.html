@@ -1,0 +1,44 @@
+---
+layout: post
+title: Python libraries for synthetic biology
+date: 2009-05-31 21:28:39.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- synthetic-biology
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  _oembed_b2f1e02aa9e2eacb7e9e8fe48cbcc274: ! '{{unknown}}'
+  _oembed_655f10983b662b34c53d325332daf85e: ! '{{unknown}}'
+  _oembed_d11a559629a217316e77dfb2eaee03fd: ! '{{unknown}}'
+  _oembed_bc6a78a2414ef777476d074023c3d9dc: ! '{{unknown}}'
+  _oembed_445f8f57650045a7ccb3406764fd2adf: ! '{{unknown}}'
+  _oembed_30540513384dd39e05c1807757f554fb: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+Researchers today are empowered with the ability to devise DNA sequences and order these designs for fabrication. Starting with known pieces from biological systems, variations can be conceptualized and explored with increasing ease. As a result, the field of <a href="http://en.wikipedia.org/wiki/Synthetic_biology">synthetic biology</a> has expanded along with techniques used to provide larger pieces of synthesized DNA. Companies such as <a href="https://www.dna20.com/">DNA 2.0</a> and <a href="http://www.geneart.com/">GENEART</a> provide on-demand synthesis services. Additionally, many researchers design, optimize and generate custom DNA sequences in their own lab.</p>
+<p>
+My previous job was at a synthetic biology start up working on the software side of their fabrication and design services. The company was unfortunately a recent victim of the economy. The learning from five years of in the trenches synthesis work will be very useful to others tackling similar projects. With that in mind, the Python libraries used for construction, sequencing verification, and many other synthetic biology related tasks are being made available on <a href="http://bitbucket.org/chapmanb/synbio/wiki/Home">Bitbucket</a>.</p>
+<p>
+Some highlights of the library:</p>
+<ul>
+<li><a href="http://bitbucket.org/chapmanb/synbio/src/tip/SynBio/OligoSequences/">Oligo synthesis</a> -- assemble sequences from oligo sized pieces, ordered from a vendor such as <a href="http://www.idtdna.com">IDT</a>; this includes PCR and ligation based assembly methods.
+  </li>
+<li><a href="http://bitbucket.org/chapmanb/synbio/src/tip/SynBio/Cloning/">Cloning synthesis</a> -- combine synthesized pieces into larger assemblies.
+  </li>
+<li><a href="http://bitbucket.org/chapmanb/synbio/src/tip/SynBio/Codons/">Codon optimization</a> -- optimize coding sequences using a <a href="http://omicsomics.blogspot.com/2009/04/is-codon-optimization-bunk.html">codon sampling</a> strategy.
+  </li>
+<li><a href="http://bitbucket.org/chapmanb/synbio/src/tip/SynBio/Sequencing/">Sequencing analysis</a> -- verify synthesized constructs match the expected sequence.
+  </li>
+<li><a href="http://bitbucket.org/chapmanb/synbio/src/tip/SynBio/MeltingTemp/">Calculation of melting temperatures</a>
+  </li>
+<li><a href="http://bitbucket.org/chapmanb/synbio/src/tip/SynBio/Blackwatch/">Blackwatch</a> -- check sequences for known pathogens
+</li>
+</ul>
+<p>
+The code in this library was integrated as part of an automated synthesis platform. As a result, it does not feature ready to run scripts. Rather, the code can serve as a source for developing these type of tools. I would love to see the most useful parts refactored and integrated into existing software communities like <a href="http://biopython.org/">Biopython</a>. Please drop a note if you have any interest in collaborating on such a project.</p>

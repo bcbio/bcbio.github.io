@@ -1,0 +1,116 @@
+---
+layout: post
+title: Trimming adaptors from short read sequences
+date: 2009-08-09 20:18:18.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  _oembed_de48e332d303faa75ec8e484a130816f: ! '{{unknown}}'
+  _oembed_e12746ce9440d37a540f5409ab759519: ! '{{unknown}}'
+  _oembed_8fba093cfa4dcc4db8a91182d98f9f80: ! '{{unknown}}'
+  _oembed_6e2ba088bae2d93da738c23d8d3e095f: ! '{{unknown}}'
+  _oembed_1dbb73d118ba18b752bf3ac1245fdc5f: ! '{{unknown}}'
+  _oembed_0d0fbbcaf8bc9e487ee236fed60009a0: ! '{{unknown}}'
+  _oembed_1a0da94a602eba6cbf3008a219b83db9: ! '{{unknown}}'
+  _oembed_e7af4ba7ae92c41ef5b2b120d3d70357: ! '{{unknown}}'
+  _oembed_59ab56b132c7ab9781c4e4bd07cf18c5: ! '{{unknown}}'
+  _oembed_256a27a1eacb4f056237993a4ac63224: ! '{{unknown}}'
+  _oembed_55be7fdd24913037f688b98c3458fbfd: ! '{{unknown}}'
+  _oembed_ebe54ce6fcfb44e59cb4fba64e3003cf: ! '{{unknown}}'
+  _oembed_64f316109de23ba6698055da605235eb: ! '{{unknown}}'
+  _oembed_960bedd1085e8902d23bcea5b78f455a: ! '{{unknown}}'
+  _oembed_e0faa376df9882501577e83d69be859f: ! '{{unknown}}'
+  _oembed_33370de985143e25373f5c79d7eeee93: ! '{{unknown}}'
+  _oembed_5f292bb8e5f17a4ba6ed5baf94e9ec82: ! '{{unknown}}'
+  _oembed_d7ff9c08fccdd653b0a4b81bb007a240: ! '{{unknown}}'
+  _oembed_c0fddb5165c82c74ca560fc102be6686: ! '{{unknown}}'
+  _oembed_6b471d0225db8dd037be9329bea3b31e: ! '{{unknown}}'
+  _oembed_4a45e060848f7543a5d42c27154d0a29: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+One common post processing step for next generation, or short read, sequencing is to remove adaptor sequences. Sample preparation for sequencing often involves selection of a particular fraction of interest like expressed genes, microRNAs, or copy number variant regions. Selecting, amplifying, and sequencing these regions can result in read sequences containing a common tag that needs to be identified and removed before continuing with other analysis steps like alignment to the genome. This is often the case when the reads of interest are small like in short RNAs or small sequence tags.</p>
+<p>
+We start with a short known sequence (the adaptor) that will be present in our sequences of interest. For each read, we want to determine the position of this adaptor and remove it. Additionally, reads may contain the adaptor but differ by one or more bases; these differences are likely due to sequencing errors. So our solution needs to allow some fuzzy matching of the adaptor to the read sequences.</p>
+<p>
+My first attempt involved using fuzzy string matching. In Python, several libraries exist to tackle this problem. The normal use case is in identifying misspelled words in text. For instance, you can calculate <a href="http://code.google.com/p/pylevenshtein/">Levenshtein (edit) distance</a> or use <a href="http://docs.python.org/library/difflib.html">difflib</a> in the standard library; Stack Overflow has a <a href="http://stackoverflow.com/questions/682367/good-python-modules-for-fuzzy-string-comparison">nice discussion</a> of the different modules. Ultimately this approach proved to be a dead end; the properties that make English words similar do not overlap well with those differentiate DNA sequences.</p>
+<p>
+That realization led me to tackle the problem by computing <a href="http://en.wikipedia.org/wiki/Sequence_alignment">local alignments</a> of the adaptor to each sequence. This effectively captures the biological intuition you need to trim a sequence with less than a specified number of errors. The downside to this rigorous approach is that it will be slower than purely string based methods.</p>
+<p>
+The <a href="http://biopython.org">Biopython</a> library contains a Python local alignment function suitable for quick alignment of short regions. We use this to align an adaptor region to a sequence and calculate the number of differences in the aligned region. To handle a common case where we can find the exact adaptor sequence, we first do an string match. This avoids the alignment overhead in many cases:</p>
+<p>[sourcecode language="python"]<br />
+from Bio import pairwise2</p>
+<p>def trim_adaptor(seq, adaptor, num_errors, right_side=True):<br />
+    gap_char = '-'<br />
+    exact_pos = str(seq).find(adaptor)<br />
+    if exact_pos &gt;= 0:<br />
+        seq_region = str(seq[exact_pos:exact_pos+len(adaptor)])<br />
+        adapt_region = adaptor<br />
+    else:<br />
+        seq_a, adaptor_a, score, start, end = pairwise2.align.localms(str(seq),<br />
+                str(adaptor), 5.0, -4.0, -9.0, -0.5,<br />
+                one_alignment_only=True, gap_char=gap_char)[0]<br />
+        adapt_region = adaptor_a[start:end]<br />
+        seq_region = seq_a[start:end]<br />
+    matches = sum((1 if s == adapt_region[i] else 0) for i, s in<br />
+            enumerate(seq_region))<br />
+    # too many errors -- no trimming<br />
+    if (len(adaptor) - matches) &gt; num_errors:<br />
+        return seq<br />
+    # remove the adaptor sequence and return the result<br />
+    else:<br />
+        return _remove_adaptor(seq, seq_region.replace(gap_char, ""),<br />
+                right_side)<br />
+[/sourcecode]</p>
+<p>
+If the alignment contains fewer than the specified number of errors we've found an adaptor and remove it, returning the trimmed sequence. The attribute <code>right_side</code> allows us to specify whether the trimming should be done on the right (3' end) or the left (5' end):</p>
+<p>[sourcecode language="python"]<br />
+def _remove_adaptor(seq, region, right_side=True):<br />
+    """Remove an adaptor region and all sequence to the right or left.<br />
+    """<br />
+    if right_side:<br />
+        try:<br />
+            pos = seq.find(region)<br />
+        # handle Biopython SeqRecords<br />
+        except AttributeError:<br />
+            pos = seq.seq.find(region)<br />
+        return seq[:pos]<br />
+    else:<br />
+        try:<br />
+            pos = seq.rfind(region)<br />
+        # handle Biopython SeqRecords<br />
+        except AttributeError:<br />
+            pos = seq.seq.rfind(region)<br />
+        return seq[pos+len(region):]<br />
+[/sourcecode]</p>
+<p>
+Here is an example script using this function along with Biopython to trim reads from a <a href="http://en.wikipedia.org/wiki/FASTQ_format">FASTQ format</a> file.Each read is analyzed to determine if it contains the adaptor, with up to 2 errors. If the adaptor is identified and trimmed, the final useful read is written to a FASTA format output file.</p>
+<p>[sourcecode language="python"]<br />
+from __future__ import with_statement<br />
+import sys<br />
+import os</p>
+<p>from Bio import SeqIO</p>
+<p>from adaptor_trim import trim_adaptor</p>
+<p>def main(in_file):<br />
+    adaptor_seq = "TCGTATGCCGTCTTCTGC"<br />
+    num_errors = 2<br />
+    base, ext = os.path.splitext(in_file)<br />
+    out_file = "%s-trimmed.fa" % (base)</p>
+<p>    with open(in_file) as in_handle:<br />
+        with open(out_file, "w") as out_handle:<br />
+            for rec in SeqIO.parse(in_handle, "fastq"):<br />
+                trim = trim_adaptor(rec.seq, adaptor_seq, num_errors)<br />
+                if len(trim) &gt; 0 and len(trim) &lt; len(rec):<br />
+                    rec.letter_annotations = {}<br />
+                    rec.seq = trim<br />
+                    SeqIO.write([rec], out_handle, &quot;fasta&quot;)<br />
+[/sourcecode]</p>
+<p>
+You can get the <a href="http://github.com/chapmanb/bcbb/blob/master/align/adaptor_trim.py">full trimming code</a>, along with tests, from GitHub. The script takes about a half hour to process 15 million 36bp reads. Other current trimming approaches are often integrated into the aligners themselves: for instance, <a href="http://www.novocraft.com/products.html#novoalign">NovoAlign</a> appears to have similar alignment based <a href="http://www.novocraft.com/wiki/tiki-index.php?page=3+Prime+Adapter+Stripping">trimming capabilities</a>.</p>

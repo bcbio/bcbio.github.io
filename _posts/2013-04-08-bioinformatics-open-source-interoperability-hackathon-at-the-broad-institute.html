@@ -1,0 +1,45 @@
+---
+layout: post
+title: Bioinformatics open source interoperability Hackathon at the Broad Institute
+date: 2013-04-08 15:25:00.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- open-source
+status: publish
+type: post
+published: true
+meta:
+  draftfeedback_requests: a:1:{s:13:"5162e0ebdce63";a:3:{s:3:"key";s:13:"5162e0ebdce63";s:4:"time";s:10:"1365434603";s:7:"user_id";s:7:"6099765";}}
+  _edit_last: '6099765'
+  _publicize_pending: '1'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1">Interoperability Hackathon</h2>
+<div class="outline-text-2" id="text-1">
+<p> On April 7th and 8th, a group of biologists and programmers gathered at the <a href="http://www.broadinstitute.org/">Broad Institute</a> to work on improving interoperability of open-source bioinformatics tools. Organized by the <a href="http://www.open-bio.org/wiki/Main_Page">Open Bioinformatics Foundation</a> and <a href="http://www.genomespace.org/">GenomeSpace team</a>, this was part of the lead up to the <a href="http://www.open-bio.org/wiki/BOSC_2013">Bioinformatics Open Source Conference (BOSC)</a> in July in Berlin. The event is part of an ongoing series of coding sessions (Codefests or Hackathons) organized by the open bioinformatics community, which give programmers who typically work together remotely a chance to code and discuss in the same place for two days. These have been successful in both producing new code and in building connections which help sustain development of these community projects. </p>
+</p></div>
+</p></div>
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">Goals and outcomes</h2>
+<div class="outline-text-2" id="text-2">
+<p> One major challenge in analyzing biological data is interfacing multiple bioinformatics tools. Tools often work independently, and where general architectures like plugins or API exist they are often project specific. This results in isolated islands of data exchange, but transferring data or resources between tools requires work that is often rate-limiting or insurmountable. </p>
+<p> Our goal at the hackathon was to provide simple APIs and implementations that help facilitate transfers between multiple islands of functionality. <a href="http://www.genomespace.org/">GenomeSpace</a> does this by providing a central hub and API to push and pull from tools. We wanted to generalize this to support multiple tools, and build client implementations that demonstrate this in practice. The long term goal is to encourage tool developers to provide server side APIs compatible with the more general library, making extension of the connector toolkit easier. For developers, the client API would allow them to easily transfer files between multiple tools without needing to learn and implement the specific transfer APIs of each tool. </p>
+<p> We called this high level client library Genome Connector (gcon, for short) and took a practical approach by implementing client libraries that provide a common interface to multiple tools: GenomeSpace, <a href="http://wiki.galaxyproject.org/Learn/API">Galaxy</a>, <a href="https://developer.basespace.illumina.com/">BaseSpace</a>, <a href="https://api.23andme.com/">23andMe</a> and  <a href="http://www.jclouds.org/">general key-value stores through jClouds.</a> To identify a reasonable amount of work for two days, we focused on file transfer: authentication, finding files, getting and putting files to remote analysis platforms. In addition we defined some critical components for doing biological work: </p>
+<ul>
+<li>File metadata: We need to be able to store arbitrary key/value   on objects to assign essential biological information necessary to   interpret it, like organisms and genome build. In addition, metadata   allows provenance and tracking of files by enabling annotation of   files with history and processing steps.  </li>
+<li>Filesets: Large biological files have secondary files with indexes,   allowing indexed retrieval of data (for example: read bam and bai,   variant vcf and idx, tabix gz and tbi). To avoid expensive   reindexing, we want to group and transfer these together. </li>
+</ul>
+<p> We also identified other useful extensions that would help improve interoperability and facilitate building connected tools, like providing <a href="https://en.wikipedia.org/wiki/Publish/subscribe">Publish/subscribe</a> hooks to avoid having to poll servers for updates, and smarter approaches to sending data to avoid duplication and unnecessary transfer of data. </p>
+<p> The output of our discussion and coding are common Genome Connector implementations in multiple languages. GitHub repositories are available for in-progress <a href="https://github.com/heuermh/java-gcon/">Java</a>, <a href="https://github.com/roryk/python-gcon">Python</a> and <a href="https://github.com/chapmanb/clj-gcon">Clojure</a> implementations. These wrap multiple diverse tools and expose them through a common top level API, allowing developers to push and pull data from multiple tools. </p>
+<p> I'm immensely grateful to the incredible <a href="https://docs.google.com/spreadsheet/ccc?key=0Agxg-o4ZmoZ4dFBpVllXX0s5OFJ1WFVPN2pzb29tWlE#gid=0">participants</a> who generously donated their time and expertise to help with these projects. For anyone interested we also have <a href="https://docs.google.com/document/d/1k71Wpm9_MMmLxKOeX_76TJyCaSGRZdsVgPgheL3eTLQ/edit">detailed documentation</a> on discussions during the hackathon. </p>
+</p></div>
+</p></div>
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">Bioinformatics Open Source Conference</h2>
+<div class="outline-text-2" id="text-3">
+<p> If you're a bioinformatics programmers interested in open source coding and helping answer biological questions by improving usability and connectivity of tools, you're welcome to join the OpenBio and BOSC communities. We've created a <a href="http://groups.google.com/group/biointerop">biological interoperability mailing list</a> for additional discussion. The next <a href="http://www.open-bio.org/wiki/BOSC_2013">BOSC conference</a> is July 19th and 20th in Berlin, Germany as part of the ISMB conference. There will also be another two day <a href="http://www.open-bio.org/wiki/Codefest_2013">Codefest</a> proceeding BOSC on July 17th and 18th. <a href="http://www.open-bio.org/wiki/BOSC_2013#Session_Topics">Abstracts for talks at BOSC</a> are due this Friday, April 12th. Looking forward to seeing everyone at future BOSC and coding events. </p>
+</p></div>
+</p></div>

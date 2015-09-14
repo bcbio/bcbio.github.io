@@ -1,0 +1,122 @@
+---
+layout: post
+title: Automated protein conservation display from BLAST alignments
+date: 2009-02-07 17:18:25.000000000 -05:00
+categories:
+- visualization
+tags:
+- how-to
+- visualization
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  _oembed_6face3013fdcc463d3d9579d8fda481b: ! '{{unknown}}'
+  _oembed_fe30acdda2ca78e431c2de6d45083b75: ! '{{unknown}}'
+  _oembed_cc4efbf87ebe72fa398b7b09f0821752: ! '{{unknown}}'
+  _oembed_8f8f49f5025ecdacbe72027ddc1da72f: ! '{{unknown}}'
+  _oembed_fbcb9415cb89f4a27082185b9f2b8046: ! '{{unknown}}'
+  _oembed_92d9a0ca5c137a08b0b547d4c0b296c8: ! '{{unknown}}'
+  _oembed_41d97eb9e2805e742b08e2d235fa894a: ! '{{unknown}}'
+  _oembed_c92295477caa3565cd4f6b66e5b34db3: ! '{{unknown}}'
+  _oembed_79ed8f79a43d5177dd72216a899f8df0: ! '{{unknown}}'
+  _oembed_3940617634a5af3d534f733ddcb9c757: ! '{{unknown}}'
+  _oembed_7f9076f5126dde8ae132b5a49421b9c6: ! '{{unknown}}'
+  _oembed_279911c46a5793c422060840510c0156: ! '{{unknown}}'
+  _oembed_752bcc861cb47c4e7dd2af252289abb7: ! '{{unknown}}'
+  _oembed_c474f5a0b1427927883da34d420ad230: ! '{{unknown}}'
+  _oembed_af0f82ec71fb7f13b6e8ef307a90503c: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+Pawel at <a href="http://freelancingscience.com">Freelancing Science</a> had an <a href="http://freelancingscience.com/2009/02/03/structure-prediction-visual-inspection-of-blast-results/">excellent post</a> about making structural predictions from visual analysis of BLAST alignments. This concept inspired me to put together an automated solution to visualize protein conservation. Starting with a protein of interest it will retrieve the relevant identifier from NCBI, do a remote BLAST, examine the alignments to related divergent proteins, calculate conservation and display a plot of the results.</p>
+<p>
+With a protein identifier like a GenBank accession number or <a href="http://www.uniprot.org/">UniProt</a> ID, we first need to find the standard <a href="http://www.ncbi.nlm.nih.gov/Sitemap/sequenceIDs.html">NCBI GI number</a>. Using <a href="http://biopython.org/DIST/docs/tutorial/Tutorial.html">Biopython's</a> Entrez module:</p>
+<p>[sourcecode language="python"]<br />
+def search_for_gi(self, uniprot_id, db_name):<br />
+    handle = Entrez.esearch(db=db_name, term=uniprot_id)<br />
+    record = Entrez.read(handle)<br />
+    ids = record["IdList"]<br />
+    if len(ids) == 0:<br />
+        raise ValueError("Not found in NCBI: %s" % ids)<br />
+    return ids[0]<br />
+[/sourcecode]</p>
+<p>
+Given the GI, a remote BLAST is performed and the XML result is parsed into a record object. This is again done using Biopython libraries, with the BLAST result cached in case of re-runs. If you were using this code for many queries or on a web page presented to scientists, it would make sense to use a local BLAST for speed purposes. This could easily be plugged in, again using Biopython. Here is the remote version:</p>
+<p>[sourcecode language="python"]<br />
+def remote_blast(self, search_gi, blast_method):<br />
+    out_file = os.path.join(self._cache_dir, "%s_%s_blo.xml" % (blast_method,<br />
+        search_gi))<br />
+    if not os.path.exists(out_file):<br />
+        blast_handle = NCBIWWW.qblast(blast_method, "nr", search_gi)<br />
+        with open(out_file, 'w') as out_handle:<br />
+            for line in blast_handle:<br />
+                out_handle.write(line)<br />
+        blast_handle.close()<br />
+    with open(out_file) as in_handle:<br />
+        rec_it = NCBIXML.parse(in_handle)<br />
+        return rec_it.next()<br />
+[/sourcecode]</p>
+<p>
+With the parsed record, the next step is to loop over the alignments to calculate conservation across the protein. To provide quantitative results, a protein <a href="http://en.wikipedia.org/wiki/Substitution_matrix">substitution matrix</a> provides a score for each BLAST alignment character pair. Higher scores indicate a more conserved alignment, with exact matches being the highest scores. We use the <a href="ftp://selab.janelia.org/pub/publications/Eddy-ATG2/Eddy-ATG2-reprint.pdf">BLOSUM62</a> matrix here, although a wide variety are supported by Biopython. The class below loops through all of the alignments and high scoring pairs (HSP, in BLAST nomenclature), notes the position, and uses the alignment pairs and matrix to assign conservation scores at each position:</p>
+<p>[sourcecode language="python"]<br />
+class BlastConservationCalculator:<br />
+    def __init__(self, matrix_name="blosum62"):<br />
+        self._subs_mat = getattr(MatrixInfo, matrix_name)<br />
+        self._no_use_thresh = 0.95</p>
+<p>    def conservation_dict(self, blast_rec):<br />
+        cons_dict = {}<br />
+        rec_size = int(blast_rec.query_letters)<br />
+        for base_index in range(rec_size):<br />
+            cons_dict[base_index] = []<br />
+        for align in blast_rec.alignments:<br />
+            for hsp in align.hsps:<br />
+                if (float(hsp.identities) / float(rec_size) <=<br />
+                        self._no_use_thresh):<br />
+                    cons_dict = self._add_hsp_conservation(hsp, cons_dict)<br />
+        return cons_dict</p>
+<p>    def _add_hsp_conservation(self, hsp, cons_dict):<br />
+        start_index = int(hsp.query_start) - 1<br />
+        hsp_index = 0<br />
+        for q_index in range(len(hsp.query)):<br />
+            if (hsp.query[q_index] != '-'):<br />
+                if (hsp.sbjct[q_index] != '-'):<br />
+                    try:<br />
+                        sub_val = self._subs_mat[(hsp.query[q_index],<br />
+                                                  hsp.sbjct[q_index])]<br />
+                    except KeyError:<br />
+                        sub_val = self._subs_mat[(hsp.sbjct[q_index],<br />
+                                                  hsp.query[q_index])]<br />
+                    cons_dict[start_index + hsp_index].append(sub_val)<br />
+                hsp_index += 1<br />
+        return cons_dict<br />
+[/sourcecode]</p>
+<p>
+The result of this work is a dictionary of score conservation at each position. If you plot the average of these scores directly, it results in a very choppy graph which is hard to interpret. Luckily, Andrew Dalke has tackled this problem and presented a detailed writeup of <a href="http://www.dalkescientific.com/writings/NBN/plotting.html">smoothing scores for plotting</a>. Using the Savitzky-Golay technique described there, the smoothed average of the results are plotted using <a href="http://matplotlib.sourceforge.net/">matplotlib</a>:</p>
+<p>[sourcecode language="python"]<br />
+window_size = 29<br />
+data_smoother = SavitzkyGolayDataSmoother(window_size)<br />
+pos_data = []<br />
+cons_data = []<br />
+for pos in indexes:<br />
+    pos_data.append(pos + 1)<br />
+    if len(cons_dict[pos]) > 0:<br />
+        cons_data.append(numpy.median(cons_dict[pos]))<br />
+    else:<br />
+        cons_dict.append(0)<br />
+smooth_data = data_smoother.smooth_values(cons_data)<br />
+smooth_pos_data = pos_data[data_smoother.half_window():<br />
+        len(pos_data) - data_smoother.half_window()]<br />
+pylab.plot(smooth_pos_data, smooth_data)<br />
+pylab.axis(xmin=min(pos_data), xmax=max(pos_data))<br />
+pylab.xlabel("Amino acid position")<br />
+pylab.ylabel("Conservation")<br />
+pylab.savefig('%s_conservation.png' % accession.replace(".", "_"))<br />
+[/sourcecode]</p>
+<p>
+The resulting plot was prepared for the example from Pawel's post that inspired all this and is shown below. We can see the 4 regions of less conservation noted by Pawel by inspection of the alignment, along with the 3 intervening peaks of conservation:</p>
+<p>[caption id="attachment_65" align="alignnone" width="400" caption=""]<img src="http://bcbio.files.wordpress.com/2009/02/baa36600_1_conservation.png?w=300" alt="Example conservation plot" title="baa36600_1_conservation" width="400" height="300" class="size-medium wp-image-65" />[/caption]<br /></p>
+<p>
+The <a href="http://github.com/chapmanb/bcbb/blob/4b071bae975da92da56d8f0df0f1a987444e57d4/visualize/blast_conservation_plot.py">full script</a> puts all of these parts together into a working version that could be used for your own proteins of interest. These plots are useful for getting a quick overview of protein conservation when working with a new protein. They could be used to compare with known regions like domains, to identify likely regions of importance for protein deletion studies, or to make structure evaluations. The intriguing aspect of the plots is the opportunity to quickly evaluate and make predictions for experimental study.</p>

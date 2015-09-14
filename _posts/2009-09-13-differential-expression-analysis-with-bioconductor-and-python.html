@@ -1,0 +1,121 @@
+---
+layout: post
+title: Differential expression analysis with Bioconductor and Python
+date: 2009-09-13 20:28:19.000000000 -04:00
+categories:
+- analysis
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  _oembed_5737d903a07f897a78fc17c32de865ee: ! '{{unknown}}'
+  _oembed_046d5f989aef76f10e9522f335a47f53: ! '{{unknown}}'
+  _oembed_9e17ae2733005f43827b2f48570c2b52: ! '{{unknown}}'
+  _oembed_5711d9b41629b0657e354c0648ec6703: ! '{{unknown}}'
+  _oembed_2f3e9adb3f6ea8455f61d937d79988dd: ! '{{unknown}}'
+  _oembed_cdcd94d6f0b0aba6a4e193b87b551409: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+This post demonstrates performing differential expression analysis of short read sequencing data using a combination of Python and the <a href="http://www.r-project.org/">R statistical language</a>. Python is used a glue language to manipulate and prepare count data from short read sequencing. R and the <a href="http://www.bioconductor.org/">Bioconductor</a> package are used to perform the statistical analysis. The excellent <a href="http://rpy.sourceforge.net/rpy2.html">rpy2</a> package connection Python and R.</p>
+<p>
+Scientists often need to compare expression results from multiple experimental conditions. This can be done with <a href="http://en.wikipedia.org/wiki/DNA_microarray">microarray analysis</a> and the wide variety of associated <a href="http://www.bioconductor.org/packages/devel/Microarray.htm">statistical tests</a>, but many researchers are now utilizing short read sequencing. Experiments identify transcript prevalence through <a href="http://www.illumina.com/pages.ilmn?ID=278">digital gene expression</a> under multiple conditions, and we are interested in extracting statistically meaningful differences from the results. Similarly, we may be interested in differences resulting from <a href="http://www.illumina.com/pages.ilmn?ID=277">short RNA discovery</a> or other next generation sequencing applications.</p>
+<p>
+Short read differential expression analysis differs from microarray analyses as it is based on counts instead of intensity scores. The <a href="http://www.bioconductor.org/packages/devel/bioc/html/edgeR.html">edgeR</a> package in Bioconductor fits count data to a statistical model considering sample to sample variation, and performs <a href="http://en.wikipedia.org/wiki/Fisher's_exact_test">Fisher's exact test</a> to provide p-values associated with changes in expression between samples.</p>
+<p>
+Here we will consider the case of a two experiment analysis. A simple <a href="http://github.com/chapmanb/bcbb/blob/master/stats/diffexp_example.csv">Example CSV file</a> has counts for 5 different genes under 2 conditions and total count information for the full experiment. We read the file into a dictionary of counts keyed by each condition and the gene name:</p>
+<p>[sourcecode language="python"]<br />
+import csv<br />
+import collections</p>
+<p>def read_count_file(in_file):<br />
+    """Read count information from a simple CSV file into a dictionary.<br />
+    """<br />
+    counts = collections.defaultdict(dict)<br />
+    with open(in_file) as in_handle:<br />
+        reader = csv.reader(in_handle)<br />
+        header = reader.next()<br />
+        conditions = header[1:]<br />
+        for parts in reader:<br />
+            region_name = parts[0]<br />
+            region_counts = [float(x) for x in parts[1:]]<br />
+            for ci, condition in enumerate(conditions):<br />
+                counts[condition][region_name] = region_counts[ci]<br />
+    return dict(counts)<br />
+[/sourcecode]</p>
+<p>
+The dictionary is organized into <a href="http://numpy.scipy.org/">NumPy</a> matrices; NumPy is a powerful numerical package for Python which integrates smoothly with our rpy2 interface to import directly into R. Here we organize our conditions and genes and then push the count data into a matrix where the columns are conditions and the rows are genes; each item is a count value. This is returned along with associated data:</p>
+<ul>
+<li>groups -- A list of experimental groups, which can be used to analyze replicates. Here, two groups with a single replicate each are defined.
+  </li>
+<li>sizes -- The total number of counts for each experiment. This is extracted from the "Total" row of the CSV count file, and will be used for normalization of during the statistical analysis.
+</li>
+</ul>
+<p>[sourcecode language="python"]<br />
+import numpy</p>
+<p>def get_conditions_and_genes(work_counts):<br />
+    conditions = work_counts.keys()<br />
+    conditions.sort()<br />
+    all_genes = []<br />
+    for c in conditions:<br />
+        all_genes.extend(work_counts[c].keys())<br />
+    all_genes = list(set(all_genes))<br />
+    all_genes.sort()<br />
+    sizes = [work_counts[c]["Total"] for c in conditions]<br />
+    all_genes.remove("Total")<br />
+    return conditions, all_genes, sizes</p>
+<p>def edger_matrices(work_counts):<br />
+    conditions, all_genes, sizes = get_conditions_and_genes(work_counts)<br />
+    assert len(sizes) == 2<br />
+    groups = [1, 2]<br />
+    data = []<br />
+    final_genes = []<br />
+    for g in all_genes:<br />
+        cur_row = [int(work_counts[c][g]) for c in conditions]<br />
+        if sum(cur_row) > 0:<br />
+            data.append(cur_row)<br />
+            final_genes.append(g)<br />
+    return (numpy.array(data), numpy.array(groups), numpy.array(sizes),<br />
+            conditions, final_genes)<br />
+[/sourcecode]</p>
+<p>
+The organized data is now ready to be pushed directly into an edgeR Bioconductor analysis using the rpy2 interface. Three R functions are called: the data matrices are organized into a <code>DGEList</code> object, this object is passed to <code>deDGE</code> which does the actual digital gene expression analysis, and finally <code>topTags</code> is called to retrieve a vector of differential expression p-values. The vector is translated into a Python object from which we extract the p-values and re-organize them by the initial gene indexes. The ordered p-values are then returned.</p>
+<p>[sourcecode language="python"]<br />
+import rpy2.robjects as robjects<br />
+import rpy2.robjects.numpy2ri</p>
+<p>def run_edger(data, groups, sizes, genes):<br />
+    robjects.r('''<br />
+        library(edgeR)<br />
+    ''')<br />
+    params = {'group' : groups, 'lib.size' : sizes}<br />
+    dgelist = robjects.r.DGEList(data, **params)<br />
+    ms = robjects.r.deDGE(dgelist, doPoisson=True)<br />
+    tags = robjects.r.topTags(ms, pair=groups, n=len(genes))<br />
+    indexes = [int(t) - 1 for t in tags.rownames()]<br />
+    pvals = list(tags.r['adj.P.Val'][0])<br />
+    assert len(indexes) == len(pvals)<br />
+    pvals_w_index = zip(indexes, pvals)<br />
+    pvals_w_index.sort()<br />
+    assert len(pvals_w_index) == len(indexes)<br />
+    return [p for i,p in pvals_w_index]<br />
+[/sourcecode]</p>
+<p>
+The final results are written to a CSV file with our ordered genes, conditions and p-value probabilities. Each gene is associated with the initial count data and p-values, the genes are sorted by p-value with the most differentially expressed genes placed first, and the ordered information is written out:</p>
+<p>[sourcecode language="python"]<br />
+def write_outfile(outfile, genes, conditions, work_counts, probs):<br />
+    with open(outfile, "w") as out_handle:<br />
+        writer = csv.writer(out_handle)<br />
+        writer.writerow(["Region"] +<br />
+                ["%s count" % c for c in conditions] + ["edgeR p-value"])<br />
+        out_info = []<br />
+        for i, gene in enumerate(genes):<br />
+            counts = [int(work_counts[c][gene]) for c in conditions]<br />
+            out_info.append((probs[i], [gene] + counts))<br />
+        out_info.sort()<br />
+        [writer.writerow(start + [prob]) for prob, start in out_info]<br />
+[/sourcecode]</p>
+<p>
+Our <a href="http://github.com/chapmanb/bcbb/blob/master/stats/diffexp_example-diffs.csv">example output file</a> shows the results. The <a href="http://github.com/chapmanb/bcbb/blob/master/stats/count_diffexp.py">full script</a> is available for you to use and customize for your own analyses. This example demonstrates the power of the rpy2 interface. Input and output data is happily manipulated in a familiar language such as Python, and can be seamlessly integrated with excellent statistical computation in Bioconductor and other specialized R packages.</p>

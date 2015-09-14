@@ -1,0 +1,73 @@
+---
+layout: post
+title: Talking at BOSC 2009 about publishing biological data on the web
+date: 2009-06-11 07:41:40.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- open-source
+status: publish
+type: post
+published: true
+meta:
+  tagazine-media: a:7:{s:7:"primary";s:0:"";s:6:"images";a:0:{}s:6:"videos";a:0:{}s:11:"image_count";s:1:"0";s:6:"author";s:7:"6099765";s:7:"blog_id";s:7:"5850073";s:9:"mod_stamp";s:19:"2009-06-11
+    12:47:49";}
+  _oembed_a81769379187dc64b6750f030b8baf22: ! '{{unknown}}'
+  _oembed_e246f67c2a7e73710123820a3e1d6c6b: ! '{{unknown}}'
+  _oembed_67a74e52a58a217f44473728c1081612: ! '{{unknown}}'
+  _oembed_fc9461c8340822802e5afb7cefe374e7: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+The <a href="http://open-bio.org/wiki/BOSC_2009">Bioinformatics Open Source Conference (BOSC)</a> is taking place later this month in Stockholm, Sweden. I will be attending for the first time in a few years, and giving a short and sweet 10 minute talk about ideas for publishing biological data on the web. BOSC provides a chance to meet and talk with many of the great people involved in open source bioinformatics; <a href="http://open-bio.org/wiki/BOSC_2009_Schedule">the schedule</a> this year looks fantastic. The talk will be held in conjunction with <a href="http://dam-sig.org/">The Data and Analysis Management special interest group</a>, also full of interesting talks.</p>
+<p>
+The talk will promote development of reusable web based interface libraries layered on top of existing open source projects. The <a href="http://open-bio.org/w/images/2/2b/Bosc2009_submission_14.pdf">PDF abstract</a> provides the full description and motivation; below is a more detailed outline based on some brainstorming and organization:</p>
+<ul>
+<li>Motivation: rapidly organize and display biological data in a web accessible format.
+</li>
+</ul>
+<ul>
+<li>Current state: reusable bioinformatics libraries targeted at programmers -- <a href="http://biopython.org/">Biopython</a>, <a href="http://bitbucket.org/james_taylor/bx-python/wiki/Home">bx-python</a>, <a href="http://code.google.com/p/pygr/"> pygr</a>, <a href="http://sourceforge.net/projects/pycogent">PyCogent</a>
+  </li>
+<li>Current state: back end databases for storing biological data -- <a href="http://www.biosql.org/wiki/Main_Page">BioSQL</a>, <a href="http://gmod.org/wiki/GMOD">GMOD</a>
+  </li>
+<li>Current state: full featured web applications targeted at users -- <a href="http://galaxy.psu.edu/">Galaxy</a>, <a href="http://gmod.org/wiki/Ggb/">GBrowse</a>
+</li>
+</ul>
+<ul>
+<li>My situation: biologist and developer with organized data that needs analysis and presentation, internally with collaborators and externally with larger community.
+</li>
+</ul>
+<ul>
+<li>Proposal: integrate bioinformatics libraries, database schemas, and open source web development frameworks to provide re-usable components that can serve as a base for custom data presentation.
+</li>
+</ul>
+<ul>
+<li>Framework: utilize cloud infrastructure for reliable deployment -- <a href="http://code.google.com/appengine/">Google App Engine</a>, <a href="http://aws.amazon.com/ec2/">Amazon EC2</a>
+  </li>
+<li>Framework: make use of front end javascript frameworks -- <a href="http://jquery.com/">jQuery</a>, <a href="http://extjs.com/">ExtJS</a>.
+  </li>
+<li>Framework: make use of back end web frameworks -- <a href="http://pylonshq.com/">Pylons</a>
+</li>
+</ul>
+<ul>
+<li>Implementation: <a href="http://biosqlweb.appspot.com">Demo server</a> for displaying sequences plus annotations
+  </li>
+<li>Implementation: Utilizes BioSQL schema, ported to object oriented data store; Google App engine backend or <a href="http://www.10gen.com/blog/2009/3/use-mongodb-with-googles-appengine-sdk">MongoDB backend</a>
+  </li>
+<li>Implementation: Data import/export with Biopython libraries -- GenBank in and GFF out
+  </li>
+<li>Implementation: Additional screenshots from internal web displays.
+</li>
+</ul>
+<ul>
+<li>Challenges: Generalizing and organizing display and retrieval code without having to buy into a large framework.
+  </li>
+<li>Challenges: Re-usable components for cross-language functionality; javascript front end displays for multi-language back ends.
+  </li>
+<li>Challenges: Build a community that thinks of reusing and sharing display code as much as parsing and pipeline development code.
+</li>
+</ul>
+<p>
+I would be happy to hear comments or suggestions about the talk. If you're going to BOSC and want to meet up, definitely drop me a line.</p>

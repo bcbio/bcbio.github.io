@@ -1,0 +1,199 @@
+---
+layout: post
+title: An automated ensemble method for combining and evaluating genomic variants
+  from multiple callers
+date: 2013-02-06 07:25:00.000000000 -05:00
+categories:
+- xprize
+tags:
+- germline
+- small-variants
+- validation
+- xprize
+status: publish
+type: post
+published: true
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<div id="outline-container-1" class="outline-2">
+<h2 id="sec-1">Overview</h2>
+<div class="outline-text-2" id="text-1">
+<p> A key goal of the <a href="http://genomics.xprize.org/">Archon Genomics X Prize</a> infrastructure is development of a set of highly accurate reference genome variants. I've described our work <a href="http://bcbio.wordpress.com/2012/09/17/genomics-x-prize-public-phase-update-variant-classification-and-de-novo-calling/">preparing these reference genomes</a>, and specifically defined the challenges behind merging genomic variant calls from multiple technologies and calling methods. Comparing calls from two different calling methods, for example <a href="http://www.broadinstitute.org/gatk/">GATK</a> and <a href="http://samtools.sourceforge.net/mpileup.shtml">samtools mpileup</a>, produces a large number of differing variants which need reconciliation. Taking the overlapping subset from multiple callers is too conservative and will miss real variations, while including all calls is too liberal and introduces false positives. </p>
+<p> Here I'll describe a fully automated approach for preparing an accurate set of combined variant calls. <a href="https://en.wikipedia.org/wiki/Ensemble_learning">Ensemble machine learning methods</a> are a powerful way to incorporate inputs from multiple models. We use a heuristic and <a href="https://en.wikipedia.org/wiki/Support_vector_machine">support vector machine (SVM)</a> algorithm to consolidate variants, producing a final set of calls with better sensitivity and specificity than current best practice methods. The approach is open source, fully automated and generalizable to both  human diploid sequencing as well as X Prize haploid reference fosmids. </p>
+<p> We use a pair of replicates from <a href="http://www.edgebio.com/">EdgeBio's</a> clinical exome sequencing pipeline to prepare ensemble variant calls in the  <a href="http://ccr.coriell.org/Sections/Search/Sample_Detail.aspx?Ref=GM12878">widely studied HapMap NA12878 genome</a>. Compared to variants from a single calling method, the ensemble method produced more concordant  variants when comparing the replicates, with fewer discordants. The finalized ensemble calls also provide a useful method to compare strengths and weaknesses of individual calling methods. The implementation is freely available and I'll discuss how to get it running on your  data so you can use, critique and extend the methods. This work is a collaboration between <a href="http://compbio.sph.harvard.edu/chb/">Harvard School of Public Health</a>, <a href="http://www.edgebio.com/">EdgeBio</a> and <a href="http://genomeinabottle.org/">NIST</a>. </p>
+</p></div>
+</p></div>
+<div id="outline-container-2" class="outline-2">
+<h2 id="sec-2">Comparison materials and algorithm</h2>
+<div class="outline-text-2" id="text-2">
+<p> A difficult aspect of evaluating variant calling methods is establishing a reference set of calls. For X Prize we use three established methods, each of which comes with tradeoffs. Metrics like  <a href="http://genome.sph.umich.edu/wiki/SNP_Call_Set_Properties">transition/transversion ratios or dbSNP overlap</a> provide a global picture of calling but are not fine grained enough to distinguish improvements over best practices. Sanger validation restricts you to a manageable subset of calls. Comparisons against public resources like <a href="http://www.1000genomes.org/">1000 genomes</a> bias results towards technologies and callers used in preparing those variant callsets. </p>
+<p> Here we employ a fourth method by comparing replicates from EdgeBio's clinical exome sequencing pipeline. These are NA12878 samples independently prepared using <a href="http://www.nimblegen.com/products/seqcap/ez/v3/index.html">Nimblegen's version 3.0 kit</a> and sequenced on an <a href="http://www.illumina.com/systems/hiseq_2500_1500.ilmn">Illumina HiSeq</a>. By comparing the replicates in regions with 4 or more reads in both samples, we identify the ability of variant calling algorithms to call identical variations with differing coverage and error profiles. </p>
+<p> We aligned reads with <a href="http://www.novocraft.com/main/index.php">novoalign</a> and performed deduplication, base recalibration and realignment using <a href="http://gatkforums.broadinstitute.org/discussion/1186/best-practice-variant-detection-with-the-gatk-v4-for-release-2-0">GATK best practices</a>. With these prepared reads, we called variants with five approaches: </p>
+<ul>
+<li><a href="http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_genotyper_UnifiedGenotyper.html">GATK UnifiedGenotyper</a> &ndash; Bayesian approach to call SNPs and indels,   treating each position independently. </li>
+<li><a href="http://www.broadinstitute.org/gatk/gatkdocs/org_broadinstitute_sting_gatk_walkers_haplotypecaller_HaplotypeCaller.html">GATK HaplotypeCaller</a> &ndash; Performs local de-novo assembly to call SNPs   and indels on individual haplotypes. </li>
+<li><a href="https://github.com/ekg/freebayes">FreeBayes</a> &ndash; Bayesian calling approach that handles simultaneous   SNPs and indel calling via assessment of regional haplotypes. </li>
+<li><a href="http://samtools.sourceforge.net/mpileup.shtml">samtools mpileup</a> &ndash; Uses an approach similar to GATK's   UnifiedGenotyper for SNP and indel calling. </li>
+<li><a href="http://varscan.sourceforge.net/">VarScan</a> &ndash; Calls variants using a heuristic/statistic approach   eliminating common sources of bias. </li>
+</ul>
+<p> We took a combined heuristic and machine learning approach to consolidate these five sets of variant calls into a final ensemble callset. The first step is to prepare the union of all variant calls from the input callers, identifying calling methods that support each variant. Secondly, we annotate each variant with metrics including strand bias, allele balance, regional sequence entropy, position of calls within reads, regional base quality and overall genotype likelihoods. We then filter this prepared set of all possible variants to produce a final set of trusted calls. </p>
+<p> The first filtering step is to heuristically identify trusted variants based on the number of callers supporting them. This configurable parameter allow you to make an initial conservative cutoff for including variants in the final calls: I trust variants supported by N or more callers. </p>
+<p> For the remaining calls that fall below the trusted support cutoff, we distinguish true and false positives using a support vector machine (SVM). The annotated metrics described above are the input parameters and we prepare true and false positives for the classifier using a multi-step process: </p>
+<ul>
+<li>Use variants found in all callers as the true positive set, and   variants found in a single caller as false positives. Use these   training variants to identify an initial set of below-cutoff   variants to include and exclude.  </li>
+<li>With this initial set of below-cutoff true/false variants, re-train    multiple classifiers stratified based on variant characteristics:   variant type (indels vs SNPs), zygosity (heterozygous vs   homozygous) and regional sequence complexity.  </li>
+<li>Use these final classifiers to identify included and excluded variants   falling below the trusted calling support cutoff. </li>
+</ul>
+<p> The final set of calls includes the trusted variants and those that pass the SVM filtering. An input configuration file for variant preparation and assessment allows adjustment of the trusted threshold as well as defining which metrics to use for building the SVM classifiers. </p>
+</p></div>
+</p></div>
+<div id="outline-container-3" class="outline-2">
+<h2 id="sec-3">Ensemble calling improvements</h2>
+<div class="outline-text-2" id="text-3">
+<p> We assess calling sensitivity and specificity by comparing concordant and discordant variant calls between the replicates. To provide a consistent method to measure both SNP and indel correctness, we use the <a href="https://en.wikipedia.org/wiki/Positive_predictive_value">positive predictive value</a> as the percentage of concordant calls between duplicates (concordant variants / (concordant variants + discordant variants)). This is different than the overall concordance rate, which also includes non-variant regions where both replicates do not call a variation. As a result these percentages will be lower if  you expect the 99% values that result when including reference calls. The advantage of this metric is that it's easily interpreted as the percentage of concordant called variants. It also allows individual comparisons of SNPs and indels, since the overall number of indels are low compared to the total bases considered.  <a href="http://gatkforums.broadinstitute.org/discussion/48/using-varianteval">GATK's VariantEval documentation</a> has a nice discussion of alternative metrics to genotype concordance. </p>
+<p> As a baseline we used calls from GATK's UnifiedGenotyper to represent a current best practice approach. GATK calls 117079 SNPs, 86.6% of which are concordant. It also calls 14966 indels, with 64.6% concordant. Here are the full concordant and discordant numbers, broken down by variant type and replicate: </p>
+<table border="1" cellspacing="0" cellpadding="6" rules="all" style="width:250px;">
+<caption></caption>
+<col class="left" />
+<col class="right" />
+<tbody>
+<tr>
+<td class="left">concordant: total</td>
+<td class="right">111159</td>
+</tr>
+<tr>
+<td class="left">concordant: SNPs</td>
+<td class="right">101495</td>
+</tr>
+<tr>
+<td class="left">concordant: indels</td>
+<td class="right">9664</td>
+</tr>
+<tr>
+<td class="left">rep1 discordant: total</td>
+<td class="right">9857</td>
+</tr>
+<tr>
+<td class="left">rep1 discordant: SNPs</td>
+<td class="right">7514</td>
+</tr>
+<tr>
+<td class="left">rep1 discordant: indels</td>
+<td class="right">2343</td>
+</tr>
+<tr>
+<td class="left">rep2 discordant: total</td>
+<td class="right">11029</td>
+</tr>
+<tr>
+<td class="left">rep2 discordant: SNPs</td>
+<td class="right">8070</td>
+</tr>
+<tr>
+<td class="left">rep2 discordant: indels</td>
+<td class="right">2959</td>
+</tr>
+<tr>
+<td class="left">het/hom discordant</td>
+<td class="right">4181</td>
+</tr>
+</tbody>
+</table>
+<p> Our ensemble method produces improvements in both total concordant variants detected and the ratio of concordant to discordants. For SNPs, the ensemble calls add 5345 additional variants to a total of 122424, with an increase in concordance to 87.4%. For indels the major improvement is in removal of discordants: We identify 14184 indels with 67.2% concordant. Here is the equivalent table for the ensemble method: </p>
+<table border="1" cellspacing="0" cellpadding="6" rules="all" style="width:250px;">
+<caption></caption>
+<col class="left" />
+<col class="right" />
+<tbody>
+<tr>
+<td class="left">concordant: total</td>
+<td class="right">116608</td>
+</tr>
+<tr>
+<td class="left">concordant: SNPs</td>
+<td class="right">107063</td>
+</tr>
+<tr>
+<td class="left">concordant: indels</td>
+<td class="right">9545</td>
+</tr>
+<tr>
+<td class="left">rep1 discordant: total</td>
+<td class="right">9555</td>
+</tr>
+<tr>
+<td class="left">rep1 discordant: SNPs</td>
+<td class="right">7581</td>
+</tr>
+<tr>
+<td class="left">rep1 discordant: indels</td>
+<td class="right">1974</td>
+</tr>
+<tr>
+<td class="left">rep2 discordant: total</td>
+<td class="right">10445</td>
+</tr>
+<tr>
+<td class="left">rep2 discordant: SNPs</td>
+<td class="right">7780</td>
+</tr>
+<tr>
+<td class="left">rep2 discordant: indels</td>
+<td class="right">2665</td>
+</tr>
+<tr>
+<td class="left">het/hom discordant</td>
+<td class="right">3975</td>
+</tr>
+</tbody>
+</table>
+<p> For scientists who have worked to increase sensitivity and specificity of individual variant callers, it's exciting to be able to improve both simultaneously. As mentioned above, you can also tune the method to increase specificity or sensitivity by adjusting the support needed for including trusted variants. </p>
+<p> The final ensemble callsets from both replicates are available as VCF files from <a href="http://www.genomespace.org/">GenomeSpace</a> in the <code>xprize/NA12878-exome-v_03</code> folder: </p>
+<ul>
+<li>NA12878 exome ensemble calls, replicate 1 &ndash; <a href="https://dm.genomespace.org/datamanager/file/Home/chapmanb/xprize/NA12878-exome-v0_3/NA12878-NGv3-LAB1360-A-ensemble.vcf">Variants (VCF)</a>,   <a href="https://dm.genomespace.org/datamanager/file/Home/chapmanb/xprize/NA12878-exome-v0_3/NA12878-NGv3-LAB1360-A-regions.bed">Callable regions (BED)</a> </li>
+<li>NA12878 exome ensemble calls, replicate 2 &ndash; <a href="https://dm.genomespace.org/datamanager/file/Home/chapmanb/xprize/NA12878-exome-v0_3/NA12878-NGv3-LAB1363-A-ensemble.vcf">Variants (VCF)</a>,   <a href="https://dm.genomespace.org/datamanager/file/Home/chapmanb/xprize/NA12878-exome-v0_3/NA12878-NGv3-LAB1363-A-regions.bed">Callable regions (BED)</a> </li>
+</ul></div>
+</p></div>
+<div id="outline-container-4" class="outline-2">
+<h2 id="sec-4">Comparison of calling methods</h2>
+<div class="outline-text-2" id="text-4">
+<p> Calling the same samples with multiple callers allows direct comparisons between calling methods. The advantage of producing an accurate final set of ensemble calls is that this provides a baseline to evaluate the strengths and weaknesses of different calling methods. The figure below compares concordant, missing variants and additional variants called by each of the 5 methods in comparison with the consolidated ensemble calls: </p>
+<p> <img src="http://bcbio.files.wordpress.com/2013/01/wpid-na12878-ngv3-lab1360-a-callers.png" alt="Concordance/discordance for calling methods" width="600" /> </p>
+<ul>
+<li>GATK UnifiedGenotyper provides the best SNP calling, followed   closely by samtools mpileup.  </li>
+<li>For indel calling, the GATK HaplotypeCaller produces the most   concordant calls followed by UnifiedGenotyper and FreeBayes.   UnifiedGenotyper does good as well, but is conservative and has the   fewest additional indels. FreeBayes and GATK HaplotypeCaller both   provide resolution of individual haplotypes which helps in regions   with heterozygous indels or closely spaced SNPs and indels.  </li>
+<li>If you want to use a single variant caller, GATK UnifiedGenotyper   does the best overall job.   </li>
+<li>If you wanted to choose free open-source tools for calling, I would   recommend samtools for SNP calling and FreeBayes for indel calling. </li>
+</ul>
+<p> Variant calling methods with recommendations for both calling and filtering provide the best out of the box performance. An advantage of GATK and samtools is they provide calling, variant quality metrics, and filtering. On the other side, FreeBayes is a good example of a powerful tool that takes some time to learn to filter optimally. One potential source of bias in producing the individual calls is that I personally have more experience with GATK tools so may have room to improve with the other callers. </p>
+</p></div>
+</p></div>
+<div id="outline-container-5" class="outline-2">
+<h2 id="sec-5">Availability and usage</h2>
+<div class="outline-text-2" id="text-5">
+<p> Combining multiple calling approaches improves both sensitivity and specificity of the final set of variants. The downside is the need to run and coordinate calls from all of the different callers. To mitigate this, we developed an automated pipeline that ties together multiple open-source tools using two custom components: </p>
+<ul>
+<li><a href="https://github.com/chapmanb/bcbio-nextgen">bcbio-nextgen</a> &ndash; A Python framework to run a full sequencing   analysis pipeline from input fastq files to consolidated ensemble   variant calls. It supports multiple aligners and variant callers,   and enables distributed work over multiple cores on a large machine   or multiple machines in a cluster environment.  </li>
+<li><a href="https://github.com/chapmanb/bcbio.variation">bcbio.variation</a> &ndash; A Clojure toolkit build on top of GATK's variant   API that provides ensemble call preparation as well as more general   functionality for normalizing and comparing variants produced by   multiple callers. </li>
+</ul>
+<p> bcbio-nextgen has a script, built on functionality in the <a href="http://cloudbiolinux.org">CloudBioLinux</a> project, that automates installation of associated variant callers and data dependencies: </p>
+<pre class="example">wget https://raw.github.com/chapmanb/bcbio-nextgen/master/scripts/bcbio_nextgen_install.py
+python bcbio_nextgen_install.py install_directory data_directory
+</pre>
+<p>
+<p> With the dependencies installed, you describe the input files and analysis with a <a href="https://en.wikipedia.org/wiki/YAML">YAML</a> formatted input file. The  <a href="https://github.com/chapmanb/bcbio-nextgen/blob/master/config/examples/NA12878-ensemble.yaml">NA12878 ensemble configuration file</a> used for this analysis provides a useful starting point. Run the analysis, distributed on multiple cores, with: </p>
+<pre class="example">bcbio_nextgen.py bcbio_system.yaml ensemble_sample.yaml -n 8
+</pre>
+<p>
+<p> The <a href="https://bcbio-nextgen.readthedocs.org/en/latest/">bcbio-nextgen documentation</a> provides additional details about configuration inputs and distributed processing. The framework generally handles the automation and processing involved with high throughput sequencing analysis. </p>
+<p><a href="http://www.edgebio.com/">EdgeBio</a> kindly made the NA12878 datasets used in this analysis publicly available:</p>
+<ul>
+<li><a href="https://dm.genomespace.org/datamanager/v1.0/file/Home/EdgeBio/CLIA_Examples/NA12878-NGv3-LAB1360-A">NA12878-NGv3-LAB1360-A (replicate 1)</a>
+</li>
+<li><a href="https://dm.genomespace.org/datamanager/v1.0/file/Home/EdgeBio/CLIA_Examples/NA12878-NGv3-LAB1363-A">NA12878-NGv3-LAB1363-A (replicate 2)</a>
+</li>
+</ul>
+<p> I welcome feedback on the approach, data or tools and am actively working to extend this and make it easier to use. As re-sequencing becomes increasingly important for human health applications it is critical that we develop open, shared best-practice workflows to handle the data processing. This allows us to focus back on the fun and difficult work of understanding the biology. </p>
+</p></div>
+</p></div>

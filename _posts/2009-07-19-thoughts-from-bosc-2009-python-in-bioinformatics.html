@@ -1,0 +1,38 @@
+---
+layout: post
+title: Thoughts from BOSC 2009; Python in bioinformatics
+date: 2009-07-19 20:13:17.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- open-source
+status: publish
+type: post
+published: true
+meta:
+  _oembed_7345a532886389b4f157fb51b6a00f0d: ! '{{unknown}}'
+  _oembed_57e589975cb7596f9c531e2a195068d3: ! '{{unknown}}'
+  _oembed_9290b4c2b5f21b8f0d9039e4b534136c: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+I'd like to share my thoughts on two major themes that emerged from my trip to Sweden for the 2009 <a href="http://open-bio.org/wiki/BOSC_2009">Bioinformatics Open Source Conference (BOSC)</a>. I talked briefly on publishing biological data on the web; you can check out the <a href="http://www.slideshare.net/chapmanb/lowering-barriers-to-publishing-biological-data-on-the-web">slides on Slideshare</a>. This lead to discussion with several folks from the open source and Python bioinformatics communities. The major themes of these conversations were: organization within the Python bioinformatics community and growth of a platform for developing web enabled applications.</p>
+<h3><b>Python in Bioinformatics</b></h3>
+<p>
+One of the unique elements of the Python bioinformatics community is that the work is distributed amongst several different packages. Unlike Perl, where many programmers regularly consolidate their code into the <a href="http://www.bioperl.org">BioPerl</a> project, the Python community has settled on a few different packages: <a href="http://biopython.org/">Biopython</a>, <a href="http://bitbucket.org/james_taylor/bx-python/wiki/Home">bx-python</a>, <a href="http://code.google.com/p/pygr/"> pygr</a> and <a href="http://sourceforge.net/projects/pycogent">PyCogent</a> are a few popular ones. Instead of working with a monolithic code base, users can pick functionality amongst several choices.</p>
+<p>
+This distinctive organization is not a bad thing. It avoids creating an unwieldy package which can be hard to maintain and re-factor. It allows programmers to explore solutions in ways better suited to their particular problems. Finally, it provides individual recognition for the hard work researchers put into building and maintaining reusable code.</p>
+<p>
+What the distribution does mean is that the Python bioinformatics community needs to work harder at communication and coordination. One great idea was to write a grant to help bring Python biology programmers together for a conference and hacking session, ideally alongside a conference like BOSC or <a href="http://conference.scipy.org/">SciPy</a>. This would provide an impetus for contributors to learn and discuss each others platforms. Beyond goodwill and community, the deliverables would be documentation and code contributing to integration between projects. This would enable scientists by lowering the learning curves to producing useful biology related code in Python.</p>
+<h3><b>Galaxy</b></h3>
+<p>
+My talk focused on developing small, reusable presentation and backend components for building web enabled applications. One really insightful question asked whether the community should focus on building a platform these components could be plugged into, or if components themselves would eventually evolve towards a larger structure. The first idea was taken very successfully by the Firefox browser with their <a href="https://addons.mozilla.org/">plugin architecture</a>, which allows end users to build amazing web interfacing applications within the browser. The second approach is the one I am more used to taking: build relatively smaller things that work, with an eye towards integration.</p>
+<p>
+A discussion with <a href="http://bx.mathcs.emory.edu/">James Taylor</a> convinced me that it was worthwhile to take a longer look at the <a href="http://galaxyproject.org/">Galaxy project</a>. Galaxy is an excellent web based front end to many bioinformatics programs and scripts, allowing biologists to put together analysis pipelines. They have a <a href="http://www.usegalaxy.org">powerful public site</a> which means using Galaxy requires no installation for many use cases.</p>
+<p>
+The code is also publicly available and you can run your own local Galaxy instances, plugging in custom programs through their <a href="http://g2.trac.bx.psu.edu/wiki/AddToolTutorial">XML based tool interface</a>. The architecture of the system is remarkably similar to the one I converged on for my work. It features a <a href="http://pylonshq.com/">Pylons</a> like backend, <a href="http://www.sqlalchemy.org/">SQLAlchemy</a> for databases interactivity, and <a href="http://jquery.com/">jQuery</a> for the javascript interface. Deployment to cloud infrastructure can be done on <a href="http://www.cassj.co.uk/blog/?p=359">Amazon EC2</a>.</p>
+<p>
+We have installed Galaxy locally and are taking it for a spin for our data presentation tasks. The tool plugin interface works as described and we have had good luck integrating it with custom input types. I will be trying more complex integrations with custom display and more Python code on the backend and hopefully have future posts covering that. Generally, I hope Galaxy can serve as a platform in which custom presentation code can be built, distributed, and reused.</p>
+<p>
+I'd be happy to hear your thoughts about either the biology Python community or Galaxy as a platform for web presentation work.</p>

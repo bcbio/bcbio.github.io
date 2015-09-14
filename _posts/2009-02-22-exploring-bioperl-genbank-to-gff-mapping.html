@@ -1,0 +1,161 @@
+---
+layout: post
+title: Exploring BioPerl GenBank to GFF mapping
+date: 2009-02-22 15:56:02.000000000 -05:00
+categories:
+- OpenBio
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+A mailing list message from Peter about <a href="http://lists.open-bio.org/pipermail/biosql-l/2009-February/001492.html">importing GFF files to BioSQL</a> inspired me to take a look at how <a href="http://www.bioperl.org/wiki/Main_Page">BioPerl</a> treats GFF files. <a href="http://www.sequenceontology.org/gff3.shtml">Generic Feature Format (GFF)</a> is a plain text file format used to represent annotations and features on biological sequences. It is a nice biological file format:</p>
+<ul>
+<li>Parsed relatively easily.
+  </li>
+<li>Human readable and editable in Excel.
+  </li>
+<li>Quickly understood at a basic level.
+  </li>
+<li>Flexible and adapting. GFF3, the current format, handles a number of incompatibility issues that arose in GFF2.
+  </li>
+<li>Widely used.
+</li>
+</ul>
+<p>
+<a href="http://www.biosql.org/wiki/Main_Page">BioSQL</a> is a relational database model that stores annotations and features on sequences. As Peter implies, having a general mapping between the two would facilitate plain text database dumps from BioSQL databases in GFF. Conversely, GFF formatted files could be loaded directly into BioSQL databases.</p>
+<p>
+The BioSQL object model maps very closely to the <a href="http://www.ncbi.nlm.nih.gov/Sitemap/samplerecord.html">GenBank file format</a>, so a good way to examine the BioPerl to BioSQL mapping is to produce GFF from a GenBank file. The BioPerl distribution contains a script to do exactly this:</p>
+<p><code><br />
+bp_genbank2gff3.pl -out stdout cbx8.gb &gt; cbx8.gff<br />
+</code></p>
+<p>
+Starting with <a href="http://www.ncbi.nlm.nih.gov/nuccore/118404259?ordinalpos=1&amp;itool=EntrezSystem2.PEntrez.Sequence.Sequence_ResultsPanel.Sequence_RVDocSum">this straightforward GenBank file</a>, the above command produces a GFF file that I will explore more below. GFF files are structured as tab delimited columns. The first 8 columns describe the exact sequence location and contain a <a href="http://www.sequenceontology.org/">Sequence Ontology</a> term describing the relationship between the annotation and the sequence region. The final column is a set of key-value pairs with the annotation data. For example, here is a line from our output file:</p>
+<pre>
+NM_001078975    GenBank gene    1       1847    .       +       .       
+ID=cbx8;Dbxref=GeneID:779897;Note=chromobox homolog 8;gene=cbx8;
+gene_synonym=MGC147589
+</pre>
+<p></p>
+<p>
+This maps directly to the corresponding feature in the original GenBank table:</p>
+<pre>
+     gene            1..1847
+                     /gene="cbx8"
+                     /gene_synonym="MGC147589"
+                     /note="chromobox homolog 8"
+                     /db_xref="GeneID:779897"
+</pre>
+<p></p>
+<p>
+This is a nice one-to-one mapping of the GenBank feature table. The ontology for mapping feature keys to the sequence ontology terms was discussed in more detail in an earlier <a href="http://bcbio.wordpress.com/2008/12/14/standard-ontologies-in-biosql/">post on BioSQL ontologies</a>. Here, the qualifier names map to uppercase standard keys where possible (Note, DBxref) and all lowercase names where they do not characterize a standard term. For BioSQL, these GFF lines would map directly into the <code>seqfeature</code> table, with a dictionary to provide the back and forth mapping between standard terms and qualifier names.</p>
+<p>
+The less straightforward part of the mapping involves the high level annotations which describe the entire sequence. This corresponds to the header section in the GenBank file and maps to several specialized tables in the BioSQL schema. Here is a summary of the current mappings in BioPerl GFF:</p>
+<table border="1">
+<tr>
+<th>GenBank</th>
+<th>BioSQL table</th>
+<th>Current BioPerl GFF</th>
+<th>Proposed GFF key/value</th>
+</tr>
+<tr>
+<td>LOCUS; identifier ACCESSION</td>
+<td>
+<pre>bioentry</pre>
+<p> name</td>
+<td>ID</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>LOCUS; Molecule type</td>
+<td>
+<pre>biosequence</pre>
+<p> alphabet</td>
+<td>mol_type</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>LOCUS; division</td>
+<td>
+<pre>bioentry</pre>
+<p> division</td>
+<td>&nbsp;</td>
+<td>division</td>
+</tr>
+<tr>
+<td>LOCUS; date</td>
+<td>
+<pre>bioentry_qualifer_value</pre>
+<p> term date_changed</td>
+<td>date</td>
+<td>&nbsp;</td>
+</tr>
+<tr>
+<td>DEFINITION</td>
+<td>
+<pre>bioentry</pre>
+<p> description</td>
+<td>Note, but combined with COMMENT</td>
+<td>description</td>
+</tr>
+<tr>
+<td>VERSION</td>
+<td>
+<pre>bioentry</pre>
+<p> accession and version</td>
+<td>&nbsp;</td>
+<td>hasVersion</td>
+</tr>
+<tr>
+<td>GI</td>
+<td>
+<pre>bioentry</pre>
+<p> identifier</td>
+<td>&nbsp;</td>
+<td>identifier</td>
+</tr>
+<tr>
+<td>KEYWORDS</td>
+<td>
+<pre>bioentry_qualifer_value</pre>
+<p> term keywords</td>
+<td>&nbsp;</td>
+<td>subject</td>
+</tr>
+<tr>
+<td>SOURCE and ORGANISM</td>
+<td>
+<pre>taxon</pre>
+</td>
+<td>organism and Dbxref to taxon ID</td>
+<td>Full lineage needs representation as well</td>
+</tr>
+<tr>
+<td>REFERENCE</td>
+<td>
+<pre>reference</pre>
+</td>
+<td>&nbsp;</td>
+<td>Dbxref for PubMed IDs; need to store full reference information as well</td>
+</tr>
+<tr>
+<td>COMMENT</td>
+<td>
+<pre>comment</pre>
+</td>
+<td>comment1 and Note, combined with DEFINITION</td>
+<td>comment1 only</td>
+</tr>
+</table>
+<p></p>
+<p>
+Most of the major mappings are in place, with some naming refinement needed. The most complicated outstanding aspect would be storing the reference journal information. Someone more familiar with GFF may be able to offer a solution that has been used previously. My guess at this point is that each reference would be a separate GFF line item, with key/value pairs for the authors, title and other information.</p>
+<p>
+Overall, GFF offers a nice flat file output format for BioSQL databases. Much of the mapping from GFF to BioSQL is in place currently in BioPerl, with consensus needed for the missing parts. With that established, the other languages that support BioSQL can follow the BioPerl mapping. In my view, being able to round-trip between GFF flat files and the BioSQL relational database would help drive usage of both.</p>
+<p><b>Edit</b>: James Procter put together a <a href="http://www.biosql.org/wiki/Annotation_Mapping#GFF3">BioSQL wiki page</a> to help specify the mapping. Please help contribute there and ask questions on the <a href="http://lists.open-bio.org/mailman/listinfo/biosql-l">BioSQL mailing list</a>.</p>

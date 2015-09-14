@@ -1,0 +1,60 @@
+---
+layout: post
+title: ! 'CloudBioLinux: progress on bioinformatics cloud images and data'
+date: 2010-10-13 18:19:39.000000000 -04:00
+categories:
+- OpenBio
+tags:
+- cloudbiolinux
+- open-source
+- infrastructure
+status: publish
+type: post
+published: true
+meta:
+  tagazine-media: a:7:{s:7:"primary";s:0:"";s:6:"images";a:0:{}s:6:"videos";a:0:{}s:11:"image_count";s:1:"0";s:6:"author";s:7:"6099765";s:7:"blog_id";s:7:"5850073";s:9:"mod_stamp";s:19:"2011-01-11
+    15:08:55";}
+  _edit_last: '6099765'
+  _wp_old_slug: ''
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>My last post introduced a <a href="http://bcbio.wordpress.com/2010/05/08/automated-build-environment-for-bioinformatics-cloud-images/">framework for building bioinformatics cloud images</a>, which makes it easy to do biological computing work using <a href="http://aws.amazon.com/ec2/">Amazon EC2</a> and other on-demand computing providers. Since that initial announcement we've had amazing interest from the community and made great progress with:</p>
+<ul>
+<li>A permanent web site at <a href="http://cloudbiolinux.org/">cloudbiolinux.org</a></li>
+<li>Additional software and genomic data</li>
+<li>New user documentation</li>
+<li>A community coding session: <a href="http://www.open-bio.org/wiki/Codefest_2010">Codefest 2010</a></li>
+</ul>
+<div id="new-software-and-data">
+<h2>New software and data</h2>
+<p>The most exciting changes have been the rapid expansion of installed software and libraries. The goal is to provide an image that experienced developers will find as useful as their custom configured servers. A <a href="http://github.com/chapmanb/cloudbiolinux/tree/master/contributors.mkd">great group of contributors</a> have put together a large set of <a href="http://github.com/chapmanb/cloudbiolinux/tree/master/config/#readme">programs and libraries</a>; the configuration files have all the details on <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/config/packages.yaml">installed programs</a> as well as libraries for <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/config/python-libs.yaml">Python</a>, <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/config/perl-libs.yaml">Perl</a>, <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/config/ruby-libs.yaml">Ruby</a>, and <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/config/r-libs.yaml">R</a>. Another addition is support for <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/config/custom.yaml">non-packaged programs</a> which provides software not yet neatly wrapped in a package manger or library-specific install system: next-gen software packages like <a href="http://picard.sourceforge.net/">Picard</a>, <a href="http://www.broadinstitute.org/gsa/wiki/index.php/The_Genome_Analysis_Toolkit">GATK</a> and <a href="http://bowtie-bio.sourceforge.net/">Bowtie</a> are installed through custom scripts.</p>
+<p>To improve accessibility for developers who prefer a desktop experience, a <a href="http://freenx.berlios.de/">FreeNX server</a> was integrated with the provided images. Tim Booth from the <a href="http://nebc.nerc.ac.uk/tools/bio-linux">NEBC Bio-Linux</a> team headed up the integration of FreeNX, and the user experience looks very similar to a locally installed Bio-Linux desktop.</p>
+<p>In addition to the software image, a publicly available data volume is now available that contains:</p>
+<ul>
+<li>Genome sequences pre-indexed for search with next-gen aligners like <a href="http://bowtie-bio.sourceforge.net/">Bowtie</a>, <a href="http://www.novocraft.com/main/page.php?s=novoalign">Novoalign</a>, and <a href="http://bio-bwa.sourceforge.net/">BWA</a>.</li>
+<li><a href="http://genome.ucsc.edu/cgi-bin/hgLiftOver">LiftOver</a> files for mapping between sequence coordinates.</li>
+<li><a href="http://www.ebi.ac.uk/uniref/">UniRef</a> protein databases, indexed for searching with <a href="http://blast.ncbi.nlm.nih.gov/Blast.cgi?CMD=Web&amp;PAGE_TYPE=BlastDocs&amp;DOC_TYPE=Download">BLAST+</a>.</li>
+</ul>
+<p>Coupled with the software images, this volume makes it easy to do next-gen analyses. Start up an Amazon AMI, attach the genome data volume, transfer your fastq file to the instance, and kick off the analysis. The overhead of software installation and genome indexing is completely removed. Thanks to the work of Enis Afgan and James Taylor of <a href="http://galaxyproject.org">Galaxy</a>, the data volume plugs directly into <a href="http://bitbucket.org/galaxy/galaxy-central/wiki/cloud">Galaxy's ready to use cloud image</a>. Coupling the data and software with Galaxy provides a familiar web interface for running tools and developing biological workflows.</p>
+<p>The data volume preparation is fully automated via a <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/data_fabfile.py">fabric install script</a>, similar to the <a href="https://github.com/chapmanb/cloudbiolinux/blob/master/fabfile.py">software install script</a>. Additional data sources are easily integrated, and we hope to expand the available datasets based on feedback from the community.</p>
+</div>
+<div id="documentation-and-presentations">
+<h2>Documentation and presentations</h2>
+<p>The software and data volumes are only as good as the documentation which helps people use them:</p>
+<ul>
+<li>Bela Tiwari of the NEBC Bio-Linux team has written an <a href="http://bazaar.launchpad.net/%7Ebt27uk/cloud-bl-tutorials/trunk/download/head%3A/gettingstarted_cloud-20100913135735-ilr1gse4kxo9ylx6-1/gettingStarted_CloudBioLinux.pdf">excellent introduction to Amazon EC2 and CloudBioLinux</a>. This breaks down the process of signing up for an account, creating a software image, associating data volumes and setting up a graphical server. It's a great place to get started with CloudBioLinux.</li>
+<li>Ntino Krampis, from the <a href="http://www.jcvi.org/cms/research/projects/jcvi-cloud-biolinux/overview/">JCVI Cloud Bio-Linux</a> project, gave a <a href="http://www.slideshare.net/agbiotec/chi-next-genntinokrampis">presentation on CloudBioLinux</a> explaining the motivation behind the project and providing usage examples.</li>
+<li>My presentation on <a href="http://www.slideshare.net/chapmanb/chapman-opensource-cloud">the open source community behind CloudBioLinux</a> from <a href="http://aws.amazon.com/genomics_workshop/">Amazon's Genomic Data workshop</a>. This details the project goals and automated code organization.</li>
+</ul>
+</div>
+<div id="community:-codefest-2010">
+<h2>Community: Codefest 2010</h2>
+<p>The CloudBioLinux community had a chance to work together for two days in July at <a href="http://www.open-bio.org/wiki/Codefest_2010">Codefest 2010</a>. In conjunction with the <a href="http://www.open-bio.org/wiki/BOSC_2010">Bioinformatics Open Source Conference (BOSC)</a> in Boston, this was a free to attend coding session hosted at <a href="http://www.hsph.harvard.edu/research/bioinfocore/">Harvard School of Public Health</a> and <a href="http://www.mgh.harvard.edu/">Massachusetts General Hospital</a>. Over 30 developers donated two days of their time to working on CloudBioLinux and other bioinformatics open source projects.</p>
+<p>Many of the advances in CloudBioLinux detailed above were made possible through this session: the FreeNX graphical client integration, documentation, Galaxy interoperability, and many library and data improvements were started during the two days of coding and discussions. Additionally, the relationships developed are the foundation for better communication amongst open source projects, which is something we need to be continually striving for in the scientific computing world.</p>
+<p>It was amazing and inspiring to get such positive feedback from so many members of the bioinformatics community. We're planning another session next year in Vienna, again just before <a href="http://www.iscb.org/ismbeccb2011">BOSC and ISMB 2011</a>; and again, everyone is welcome.</p>
+</div>
+<div id="summary">
+<h2>Summary</h2>
+<p>Go to the <a href="http://cloudbiolinux.org/">CloudBioLinux website</a> for the latest publicly available images and data volumes, which are ready to use on Amazon EC2. With <a href="http://aws.amazon.com/about-aws/whats-new/2010/09/09/announcing-micro-instances-for-amazon-ec2/">Amazon's new micro-images</a> you can start analyzing data for only a few cents an hour. It's an easy way to explore if cloud resources will help with computational demands in your work. We're very interested in feedback and happy to have other developers helping out; please get in touch on the <a href="http://groups.google.com/group/cloudbiolinux">CloudBioLinux mailing list</a>.</p>
+</div>

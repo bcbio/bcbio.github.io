@@ -1,0 +1,95 @@
+---
+layout: post
+title: Finding and displaying short reads clustered in the genome
+date: 2009-04-29 16:55:06.000000000 -04:00
+categories:
+- visualization
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  twitter_cards_summary_img_size: a:6:{i:0;i:800;i:1;i:600;i:2;i:3;i:3;s:24:"width="800"
+    height="600"";s:4:"bits";i:8;s:4:"mime";s:9:"image/png";}
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+<a href="http://en.wikipedia.org/wiki/Next-generation_sequencing#New_sequencing_methods">Short read, or next-generation, sequencing</a> is becoming increasingly prevalent in the day-to-day lives of bioinformatics researchers. Programs such as <a href="http://bowtie-bio.sourceforge.net/index.shtml">Bowtie</a>, <a href="http://apps.sourceforge.net/mediawiki/cloudburst-bio/index.php?title=CloudBurst">CloudBurst</a>, <a href="http://maq.sourceforge.net/">Maq</a>, and <a href="http://www.broad.mit.edu/crd/wiki/index.php/Arachne">Arachne</a> are available to align short reads to a reference genome. Once you have these alignments, the data analysis work begins. During a recent project, I was interested in looking at overlapping read groups across a genome; this post describes a method for collecting and visualizing those groups.</p>
+<p>
+Starting with a file from an alignment program, the first step is to write a <a href="http://www.python.org/dev/peps/pep-0255/">Python generator</a> that returns information about the alignments. Since there are many different aligners, below is some Python pseudocode which describes the function:</p>
+<p>[sourcecode language="python"]<br />
+def parse_alignment(align_file, errors_allowed=0):<br />
+    with open(align_file) as align_handle:<br />
+        for (read_id, match_id, match_start, match_end, errors) in \<br />
+                your_parser.read_iterator(align_handle):<br />
+            if (errors &lt;= errors_allowed):<br />
+                yield read_id, match_id, match_start, match_end<br />
+[/sourcecode]</p>
+<p>
+It parses a line, checks if it has an acceptable number of alignment errors, and yields a unique id for the read, an id for the match like a chromosome or contig name, and the start and end coordinates of the match. We can use this generator to build our representation of overlapping reads with the help of the excellent <a href="http://bitbucket.org/james_taylor/bx-python/wiki/Home">bx-python</a> library. bx-python contains a Python and C implementation of clustered <a href="http://hackmap.blogspot.com/2008/11/python-interval-tree.html">interval trees</a>. The function below uses the interface to generate <code>ClusterTree</code> objects for each chromosome/contig in your alignment:</p>
+<p>[sourcecode language="python"]<br />
+import collections<br />
+from bx.intervals.cluster import ClusterTree</p>
+<p>def build_cluster_trees(align_generator, cluster_distance):<br />
+    # arguments to ClusterTree are:<br />
+    # - Distance in basepairs for two reads to be in the same cluster;<br />
+    #   for instance 20 would group all reads with 20bp of each other<br />
+    # - Number of reads necessary for a group to be considered a cluster;<br />
+    #   2 returns all groups with 2 or more overlapping reads<br />
+    cluster_trees = collections.defaultdict(lambda:<br />
+            ClusterTree(cluster_distance, 2))<br />
+    for read_id, match_id, start, end in align_generator:<br />
+        cluster_trees[match_id].insert(start, end, read_id)<br />
+    return dict(cluster_trees)<br />
+[/sourcecode]</p>
+<p>
+The generated trees will readily provide a list of start and end coordinates for a clustered region, along with all of the reads that map to that region:</p>
+<p>[sourcecode language="python"]<br />
+for chrom, cluster_tree in cluster_trees.items():<br />
+    for start, end, read_ids in cluster_tree.getregions():<br />
+        # do something with your read cluster<br />
+[/sourcecode]</p>
+<p>
+My interest was in visualizing the reads in these clusters along with the frequency of each read. To do so, I generated two python dictionaries which map the <code>read_id</code> identifiers, used in the grouping, to the chromosome location of the read (<code>location_db</code>) and the number of times a read was found in the raw short read results (<code>freq_db</code>). Practically, these are implemented as <a href="http://www.jcea.es/programacion/pybsddb.htm">BerkeleyDB</a> key value stores, to avoid having to keep all of the read information in memory.</p>
+<p>
+With this information, we can use <a href="http://matplotlib.sourceforge.net/">matplotlib</a> to visualize the reads. Frequencies are represented using a <a href="http://www.astro.princeton.edu/~msshin/science/code/matplotlib_cm/">color map</a>. Each read in a group is plotted using horizontal bar graphs:</p>
+<p>[sourcecode language="python"]<br />
+import pylab</p>
+<p>def plot_reads(cluster_name, read_ids, location_db, freq_db):<br />
+    read_info = []<br />
+    for read_id in read_ids:<br />
+        start, end = location_db[read_id]<br />
+        freq = freq_db[read_id]<br />
+        read_info.append((start, end, freq))<br />
+    read_info.sort(reverse=True)<br />
+    min_freq = min(l[2] for l in read_info)<br />
+    max_freq = max(l[2] for l in read_info)<br />
+    freq_cmap = pylab.get_cmap('Blues')<br />
+    pylab.clf()<br />
+    for rindex, (start, end, freq) in enumerate(read_info):<br />
+        freq_percent = float(freq - min_freq) / float(max_freq - min_freq)<br />
+        color = freq_cmap(freq_percent)<br />
+        if freq in [min_freq, max_freq]:<br />
+            label = "Frequency: %s" % (freq)<br />
+        else:<br />
+            label = None<br />
+        if label and label not in labels_done:<br />
+            labels_done.append(label)<br />
+        else:<br />
+            label = None<br />
+        pylab.barh(rindex, end - start, left=start, height=0.8, color=color,<br />
+                label=label)<br />
+    pylab.title(cluster_name)<br />
+    pylab.xlabel("Coordinates")<br />
+    pylab.ylabel("Reads")<br />
+    pylab.legend(loc='upper right')<br />
+    pylab.yticks(())<br />
+    out_file = "%s.png" % (cluster_name)<br />
+    pylab.savefig(out_file)<br />
+[/sourcecode]</p>
+<p>
+The resulting graph for an example region provides a quick visual summary of read coverage, overlap, and reliability:</p>
+<p>[caption id="attachment_95" align="alignnone" width="400" caption=""]<img src="http://bcbio.files.wordpress.com/2009/04/5_5429173_5429347-freq.png?w=300" alt="Example coverage plot" title="5_5429173_5429347-freq" width="400" height="300" class="size-medium wp-image-65" />[/caption]<br /></p>

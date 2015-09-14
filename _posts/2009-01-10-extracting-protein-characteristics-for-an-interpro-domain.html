@@ -1,0 +1,78 @@
+---
+layout: post
+title: Extracting protein characteristics for an InterPro domain
+date: 2009-01-10 16:22:58.000000000 -05:00
+categories:
+- how-to
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _oembed_b50aeb36c1b527b666cd220a07947250: ! '{{unknown}}'
+  _oembed_4611f91c4fb1bddc6bafbd736873b071: ! '{{unknown}}'
+  _oembed_f639849b78b97f6bbc5b7f60e1295206: ! '{{unknown}}'
+  _oembed_02285e1cad16e70d587f926ad00b6379: ! '{{unknown}}'
+  _oembed_22b21997896af08e1d5004cb2cd598f6: ! '{{unknown}}'
+  _oembed_e3aa452250398b38d36dde3e02c29122: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+The <a href="http://www.ebi.ac.uk/interpro/">InterPro</a> database provides a common language and organization for characterized <a href="http://en.wikipedia.org/wiki/Protein_domain">protein domains</a>. Here, the goal is to extract all proteins containing a domain of interest, limit these proteins to those in the animal (<a href="http://en.wikipedia.org/wiki/Metazoa">Metazoa</a>) kingdom, and extract information about the resulting proteins. Protein information will be retrieved from the <a href="http://www.uniprot.org/">UniProt</a> database.</p>
+<p>
+The first step is identifying the proteins of interest with a given domain. An example is the chromo domain motif with InterPro identifier <a href="http://www.ebi.ac.uk/interpro/IEntry?ac=IPR000953">IPR000953</a>. InterPro provides a useful REST interface, allowing us to download the full list of related proteins in <a href="http://en.wikipedia.org/wiki/Fasta_format">FASTA</a> format and parse them using the <a href="http://www.biopython.org/wiki/SeqIO">Biopython SeqIO</a> interface. For our example, this provides over 2500 records; here is a snippet of the class function that does this work.</p>
+<p>[sourcecode language="python"]<br />
+def get_interpro_records(self, ipr_number):<br />
+    url_base = "%s/interpro/ISpy?ipr=%s&mode=fasta"<br />
+    full_url = url_base % (self._server, ipr_number)<br />
+    recs = []<br />
+    with self._get_open_handle(full_url) as in_handle:<br />
+        for rec in SeqIO.parse(in_handle, "fasta"):<br />
+            recs.append(rec)<br />
+    return recs<br />
+[/sourcecode]</p>
+<p>
+UniProt provides an excellent <a href="http://www.uniprot.org/faq/28">REST interface</a> and <a href="http://www.uniprot.org/docs/?query=schema">XML format</a> which help simplify the retrieval process. Parsing the XML records with the python <a href="http://effbot.org/zone/element-index.htm">ElementTree</a> parser allows us to quickly pull out the organism name and evolutionary lineage.</p>
+<p>[sourcecode language="python"]<br />
+import xml.etree.ElementTree as ET</p>
+<p>def get_xml_metadata(self, uniprot_id):<br />
+    url_base = "%s/uniprot/%s.xml"<br />
+    full_url = url_base % (self._server, uniprot_id)<br />
+    metadata = {}<br />
+    with self._get_open_handle(full_url) as in_handle:<br />
+        root = ET.parse(in_handle).getroot()<br />
+        org = root.find("%sentry/%sorganism" % (self._xml_ns, self._xml_ns))<br />
+        for org_node in org:<br />
+            if org_node.tag == "%sname" % self._xml_ns:<br />
+                if org_node.attrib["type"] == "scientific":<br />
+                    metadata["org_scientific_name"] = org_node.text<br />
+                elif org_node.attrib["type"] == "common":<br />
+                    metadata["org_common_name"] = org_node.text<br />
+            elif org_node.tag == "%slineage" % self._xml_ns:<br />
+                metadata["org_lineage"] = [n.text for n in org_node]<br />
+    return metadata<br />
+[/sourcecode]</p>
+<p>
+Putting all the parts together, we loop over the list of Biopython sequence record objects, extract the UniProt ID, retrieve the metadata from UniProt, and store this in a local python <a href="http://docs.python.org/library/shelve.html">shelve</a> database:</p>
+<p>[sourcecode language="python"]<br />
+cache_dir = os.path.join(os.getcwd(), "cache")<br />
+db_dir = os.path.join(os.getcwd(), "db")<br />
+interpro_retriever = InterproRestRetrieval(cache_dir)<br />
+uniprot_retriever = UniprotRestRetrieval(cache_dir)<br />
+cur_db = shelve.open(os.path.join(db_dir, ipr_number))<br />
+seq_recs = interpro_retriever.get_interpro_records(ipr_number)<br />
+for seq_rec in seq_recs:<br />
+    uniprot_id = seq_rec.id.split("|")[0]<br />
+    metadata = uniprot_retriever.get_xml_metadata(uniprot_id)<br />
+    if (metadata.has_key("org_lineage") and<br />
+            "Metazoa" in metadata["org_lineage"]):<br />
+        metadata["seq"] = seq_rec.seq.data<br />
+        cur_db[uniprot_id] = metadata<br />
+cur_db.close()<br />
+[/sourcecode]</p>
+<p>
+The data is stored as a dictionary attached to the individual UniProt identifiers. This is modeled after the <a href="http://code.google.com/p/boto/wiki/SimpleDbIntro">boto SimpleDB</a> library, which provides a python interface to storage in Amazon's <a href="http://aws.amazon.com/simpledb/">SimpleDB</a>.</p>
+<p>
+All of these code snippets in action can be found in this <a href="http://github.com/chapmanb/bcbb/tree/master/rest_apis/interpro_domain_summary.py">example script</a>, which helps place the code sections above in context. In future weeks, we will try and pull some interesting information from the protein domain families.</p>

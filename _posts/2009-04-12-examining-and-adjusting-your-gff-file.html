@@ -1,0 +1,125 @@
+---
+layout: post
+title: Examining and adjusting your GFF file
+date: 2009-04-12 20:55:06.000000000 -04:00
+categories:
+- how-to
+tags:
+- how-to
+status: publish
+type: post
+published: true
+meta:
+  _edit_last: '6099765'
+  _oembed_b837ac4c7b3f578283a4a3a0a106c068: ! '{{unknown}}'
+  _oembed_353e04488091c26a604773c0e21df893: ! '{{unknown}}'
+  _oembed_95181c13288444566dadecd12f6d9a81: ! '{{unknown}}'
+  _oembed_cdd84da7d3fae13505d3c20622e05597: ! '{{unknown}}'
+author: brad_chapman
+excerpt: !ruby/object:Hpricot::Doc
+---
+<p>
+<a href="http://www.sequenceontology.org/gff3.shtml">Generic Feature Format (GFF)</a> defines a standard template for representing biological features. Within this template, however, is room for flexibility. Different GFF producers may decide to format their data in slightly different ways. While parsing these files is not a problem, correctly interpreting and utilizing the data can be. The in-development <a href="http://github.com/chapmanb/bcbb/tree/master/gff">Biopython GFF parser</a> provides utilities to get a high level summary of the elements of a GFF file, and to adjust line items in the file during parsing.</p>
+<h3><b>Examining a GFF file</b></h3>
+<p>
+When downloading a new GFF file, the first step is getting an overview of the file contents. The GFF parser provides a <code>GFFExaminer</code> class to help with this. The first function of interest is <code>available_limits</code>:</p>
+<p>[sourcecode language="python"]<br />
+import pprint<br />
+from BCBio.GFF.GFFParser import GFFExaminer<br />
+gff_examiner = GFFExaminer()<br />
+possible_limits = gff_examiner.available_limits(gff_file)<br />
+pprint.pprint(possible_limits)<br />
+[/sourcecode]</p>
+<p>
+It returns a dictionary defining various ways to limit your parsing of the GFF file, along with the count of each item. As an example, here is a trimmed dump from one of the test files. This has features on two different record ids -- chromosomes 'I' and 'X', with 159 and 6 items, respectively. Also listed are the combination of the 2nd source column and 3rd type column, and the type column by itself:</p>
+<pre>
+{'gff_id': {('I',): 159,
+            ('X',): 6},
+ 'gff_source_type': {('Coding_transcript', 'CDS'): 27,
+                     ('Coding_transcript', 'exon'): 33,
+                     ('Coding_transcript', 'five_prime_UTR'): 4,
+                     ('Coding_transcript', 'gene'): 2,
+                     ('Coding_transcript', 'intron'): 29,
+                     ('Coding_transcript', 'mRNA'): 4,
+                     ('Coding_transcript', 'three_prime_UTR'): 3,
+                     ('mass_spec_genome', 'translated_nucleotide_match'): 7},
+ 'gff_type': {('CDS',): 57,
+              ('exon',): 33,
+              ('five_prime_UTR',): 4,
+              ('gene',): 2,
+              ('intron',): 29,
+              ('mRNA',): 4,
+              ('three_prime_UTR',): 3,
+              ('translated_nucleotide_match',): 7}}
+</pre>
+<p></p>
+<p>
+In addition to the overview of file contents, nested relationships are another important component of the file to understand. A summary of these is available through the <code>parent_child_map</code> function:</p>
+<p>[sourcecode language="python"]<br />
+import pprint<br />
+from BCBio.GFF.GFFParser import GFFExaminer<br />
+gff_examiner = GFFExaminer()<br />
+pc_map = gff_examiner.parent_child_map(gff_file)<br />
+pprint.pprint(pc_map)<br />
+[/sourcecode]</p>
+<p>
+Again, a dictionary is returned. The keys in the dictionary are parent source and type elements in the file, while the values are children of those elements. For instance, here is the dictionary for a three tiered relationship where genes have mRNAs, and each mRNA can have coding regions, exons, introns, and 5' and 3' untranslated regions:</p>
+<pre>
+{('Coding_transcript', 'gene'): [('Coding_transcript', 'mRNA')],
+ ('Coding_transcript', 'mRNA'): [('Coding_transcript', 'CDS'),
+                                 ('Coding_transcript', 'exon'),
+                                 ('Coding_transcript', 'five_prime_UTR'),
+                                 ('Coding_transcript', 'intron'),
+                                 ('Coding_transcript', 'three_prime_UTR')]}
+</pre>
+<p></p>
+<h3><b>Adjusting GFF lines during parsing</b></h3>
+<p>
+Occasionally you may run into a file format that you can comprehend, but that does not match your expectations for where items should be. <a href="http://solidsoftwaretools.com/gf/project/matogff/">SOLiD GFF files</a> are one example; many thanks are due to David Schruth, who has been patiently working with me on the parsing of these files. They have the read name in the first column, which is normally used for the record ID the feature maps to. The actual record ID is contained as an attribute, <code>i=1</code>, where the 1 corresponds to the index of record it maps to in the original FASTA alignment file:</p>
+<pre>
+3_336_815_F3    solid   read    55409   55428   10.4    +       .       i=1
+</pre>
+<p></p>
+<p>
+The <code>GFFAddingIterator</code> has an optional attribute, <code>line_adjust_fn</code>, which can be used to solve this problem. The function is called each time a line is read and passed a parsed dictionary representing the line. The dictionary for the above line is:</p>
+<pre>
+{'id': '',
+ 'is_gff2': False,
+ 'location': [55408, 55428],
+ 'quals': {
+           'i': ['1'],
+           'score': ['10.4'],
+           'source': ['solid']},
+ 'rec_id': '3_336_815_F3',
+ 'strand': 1,
+ 'type': 'read'}
+</pre>
+<p></p>
+<p>
+The function takes this item as an argument and returns the dictionary, but with any adjustments that need to be made. In our example, we look up the name of the record corresponding to the <code>i=1</code> index. This name is swapped in for the <code>rec_id</code>, while that information moves to an attribute named <code>read_name</code>:</p>
+<p>[sourcecode language="python"]<br />
+from Bio import SeqIO<br />
+from BCBio.GFF.GFFParser import GFFAddingIterator</p>
+<p>class SolidFastaRemap:<br />
+    def __init__(self, initial_fasta):<br />
+        self._in_map = self._get_index_map(initial_fasta)</p>
+<p>    def _get_index_map(self, in_file):<br />
+        in_map = dict()<br />
+        in_handle = open(in_file)<br />
+        for index, rec in enumerate(SeqIO.parse(in_handle, "fasta")):<br />
+            in_map[index] = rec.id<br />
+        in_handle.close()<br />
+        return in_map</p>
+<p>    def adjust_fn(self, results):<br />
+        # 1-based indexes; convert to 0-based<br />
+        rec_index = int(results['quals']['i'][0]) - 1<br />
+        read_name = results['rec_id']<br />
+        results['quals']['read_name'] = [read_name]<br />
+        results['rec_id'] = self._in_map[rec_index]<br />
+        return results</p>
+<p>remapper = SolidFastaRemap(fasta_file)<br />
+gff_iterator = GFFAddingIterator(line_adjust_fn=remapper.adjust_fn)<br />
+rec_dict = gff_iterator.get_all_features(gff_file)<br />
+[/sourcecode]</p>
+<p>
+This allows you to fix the file during the parsing, saving multiple passes through the file. This general functionality can be used to cleanly deal with any other inconsistencies that crop up during your GFF parsing adventures.</p>
