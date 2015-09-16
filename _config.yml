@@ -2,11 +2,11 @@
 
 title: Blue Collar Bioinformatics
 locale: en_US
-description: Biological data analysis, validation and visualization
+description: Community built tools for biological data analysis
 logo:
 search: true
 comments: true
-url: http://bcbio.github.io
+url: http://bcb.io
 #url: http://localhost:4000
 
 # Jekyll configuration

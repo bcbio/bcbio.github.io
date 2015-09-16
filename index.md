@@ -13,7 +13,7 @@ space for open, collaborative work. It's the raw input to the important science
 we want to do: understand diverse populations, characterize disease mechanisms
 and contribute to treatments.
 
-This blog contains articles related to bcbio development, validation and the
+This blog contains articles related to bcbio development, tool validation and the
 open source bioinformatics community:
 
 - Validated variant calling for [germline populations]({{ site.url }}/tags/#germline) and
