@@ -9,6 +9,10 @@ comments: true
 url: http://bcb.io
 #url: http://localhost:4000
 
+# For Atom feed
+name: Blue Collar Bioinformatics
+author: Brad Chapman
+
 # Jekyll configuration
 
 permalink:   /:year/:month/:day/:title/
@@ -32,7 +36,6 @@ mathjax: true
 
 include: [".htaccess"]
 exclude: ["lib", "config.rb", "Capfile", "config", "log", "Rakefile", "Rakefile.rb", "tmp", "less", "*.sublime-project", "*.sublime-workspace", "test", "spec", "Gruntfile.js", "package.json", "node_modules", "Gemfile", "Gemfile.lock", "LICENSE", "README.md", "vendor"]
-
 
 # Site owner
 owner:
