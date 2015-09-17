@@ -6,8 +6,8 @@ description: Community built tools for biological data analysis
 logo:
 search: true
 comments: true
-url: http://bcb.io
-#url: http://localhost:4000
+#url: http://bcb.io
+url: http://localhost:4000
 
 # Jekyll configuration
 
@@ -19,6 +19,7 @@ sass:
   style: compressed
 gems:
   - jekyll-sitemap
+  - jekyll-feed
 
 kramdown:
   auto_ids: true
