@@ -1,6 +1,6 @@
 ---
 layout: post
-title: Low frequency filters for cancer variant calling using VarDict
+title: Developing low frequency filters for cancer variant calling using VarDict
 categories:
 - validation
 tags:
@@ -23,10 +23,11 @@ widely used, but lack detailed background on the underlying truth sets and
 methods used to derive them.
 
 As a result, some scientists treat variant calling and filtering as a solved
-problem. This creates a disconnect between researchers who work on the underlying
-algorithms and understand the filtering trade offs, and users who take
-filtered variants as inputs to downstream analysis. Additionally, there is often
-room for improvement in filters, even widely used ones. We recently
+problem. This creates a disconnect between researchers who work on the
+underlying algorithms and understand the filtering trade offs and imperfectness
+of our current analysis tools, and users who take variants as inputs to
+downstream analysis. Additionally, there is often room for improvement in
+filters, even widely used ones. We recently
 [tweaked mapping quality filters for GATK](http://imgur.com/a/oHRVB) from the
 defaults to provide an improvement in sensitivity without loss of precision.
 
@@ -34,7 +35,7 @@ To provide more clarity into work we do as part of
 [bcbio](https://github.com/chapmanb/bcbio-nextgen) development, this post describes
 improved filters for
 [VarDict tumor/normal cancer variant calling](https://github.com/AstraZeneca-NGS/VarDictJava).
-VarDict (v1.4.1) is a freely available small variant (SNP and insertions/deletions) caller from
+VarDict (v1.4.5) is a freely available small variant (SNP and insertions/deletions) caller from
 [Zhongwu Lai](https://twitter.com/ZhongwuL) and
 [Jonathan Dry's](https://twitter.com/DrySci) group in
 [AstraZeneca Oncology](http://www.astrazeneca.com/Home). The new set of filters
@@ -53,22 +54,54 @@ VarDict underperforming on SNP sensitivity and precision, relative to
 
 after adjustment with a new filtering strategy, VarDict is now on par with
 MuTect for SNP sensitivity and precision, and better than
-[Scalpel (v0.5.1)](http://scalpel.sourceforge.net/) on sensitivity for insertions and
-deletions:
+[Scalpel (v0.5.1)](http://scalpel.sourceforge.net/) on sensitivity for
+insertions and deletions. It also performs well in comparison with
+[VarScan (2.4.1)](http://dkoboldt.github.io/varscan/),
+[FreeBayes (v0.9.21-26)](https://github.com/ekg/freebayes) and
+[MuTect2 (3.5-0)](https://www.broadinstitute.org/gatk/guide/tooldocs/org_broadinstitute_gatk_tools_walkers_cancer_m2_MuTect2.php):
 
-![Final sensitivity and precision](http://imgur.com/S6K27fq.png)
+![Final sensitivity and precision](http://i.imgur.com/jFW45NO.png)
 
-The improvement in VarDict come from improved filtering of lower frequency mutations.
-Detecting these is critical to understanding tumor heterogeneity, but is also
-more challenging, analogous to the way that filters for germline calling often
-benefit discrimination of heterozygote calls.
+The improvement in VarDict come from improved filtering of lower frequency
+mutations. Detecting these is critical to understanding tumor heterogeneity, but
+is also more challenging, analogous to the way that filters for germline calling
+often primarily benefit discrimination of heterozygote calls. Cross-validation
+with a second evaluation shows that these are general improvements and
+provide similar benefits on other datasets.
 
 We'll walk through the new filters that led to the improvement, showing plots of
-distribution differences that identified the new linear combinations of
-filtering parameters. Finally we'll discuss the visual approach
-used here versus machine learning methods, and how we hope to avoid
-over-training and devise generally useful filters for detecting low frequency
-variants.
+that identified the new linear combinations of filtering parameters. Finally
+we'll discuss the visual approach used here versus machine learning methods, and
+how we hope to avoid over-training and devise generally useful filters for
+detecting low frequency variants.
+
+# Cross validation
+
+To avoid over-optimizing to the DREAM datasets, we also compared caller accuracy
+against a mixture of two [Genome in a Bottle](http://genomeinabottle.org/)
+datasets:
+[NA12878 and NA24385](https://github.com/genome-in-a-bottle/giab_data_indexes).
+Using a mixture of the two samples as the tumor and NA24385 alone as a normal
+allows
+[identification of NA12878 variants as somatic calls](https://github.com/hbc/projects/tree/master/giab_somatic).
+For an even mixture of the two samples, the expected allele frequencies are 25%
+for NA12878 heterozygotes not present in NA24385 and 50% for NA12878 homozygotes
+not in NA24385. While not a real tumor, this approach exercises many of the
+features of somatic callers.
+
+Our VarDict filter improvements carry over to this dataset and provide good
+resolution of both SNPs and Indels relative to the other callers:
+
+![GiaB mixture cross-validation](http://i.imgur.com/hPoFH14.png)
+
+While most callers have similar patterns of sensitivity and specificity in both
+the DREAM synthetic 4 and NA12878/NA24385 evaluations, MuTect2 (3.5-0) performs
+much differently between the two. MuTect2 had the best resolution of SNPs and
+Indels in the DREAM dataset, but performs the worst in the Genome in a Bottle
+mixture validation. This suggests that MuTect2, which is still under development
+at the [Broad Institute](https://www.broadinstitute.org/gatk/) and released as
+beta software for research use only, may be over optimized to features of the
+DREAM datasets.
 
 # Filter development
 
@@ -181,11 +214,13 @@ estimate when a filter was general versus over-trained. We'd ideally like to use
 a hybrid approach where we use machine learning to identify potentially useful
 linear combinations of metrics, then refine these with manual inspection.
 
-Our goal with using these DREAM synthetic truth sets is to discover generally
+Our goal with using the DREAM synthetic truth sets is to discover generally
 useful metrics, rather than performing well on this particular dataset. To avoid
 over-training we use our best intuition to select metrics based on depth and
-quality which will apply generally across other samples. The best test of
-generalizability will be cross-validations on other samples. A
+quality which will apply generally across other samples. By cross-validating
+against a second dataset, a mixture of two Genome in a Bottle samples, we show
+that the results do generalize across samples. Ideally, we'd also include a
+panel of additional test sets, including real tumors. A
 [recent paper from Malachi Griffith, Chris Miller and colloborators at the McDonnell Genome Institute](http://www.cell.com/cell-systems/abstract/S2405-4712%2815%2900113-1)
 has an [extensively characterized AML31 case](http://aml31.genome.wustl.edu/)
 with validated variants. We plan to cross-validate on this dataset to continue
