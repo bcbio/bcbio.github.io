@@ -7,7 +7,7 @@ tags:
 - cancer
 - small-variants
 - validation
-published: false
+published: true
 author: brad_chapman
 excerpt:
 ---
@@ -64,30 +64,31 @@ insertions and deletions. It also performs well in comparison with
 
 The improvement in VarDict come from improved filtering of lower frequency
 mutations. Detecting these is critical to understanding tumor heterogeneity, but
-is also more challenging, analogous to the way that filters for germline calling
-often primarily benefit discrimination of heterozygote calls. Cross-validation
-with a second evaluation shows that these are general improvements and
-provide similar benefits on other datasets.
+is also more challenging. This is analogous to the way that filters for germline
+calling often primarily benefit detection of heterozygote calls.
 
-We'll walk through the new filters that led to the improvement, showing plots of
-that identified the new linear combinations of filtering parameters. Finally
-we'll discuss the visual approach used here versus machine learning methods, and
-how we hope to avoid over-training and devise generally useful filters for
-detecting low frequency variants.
+We'll describe the new filters that led to the improvement, showing plots used
+to identify the new linear combinations of filtering parameters.
+Cross-validation with a second evaluation shows that these are general
+improvements and provide similar benefits on other datasets. We'll discuss the
+visual approach used here versus machine learning methods, and how we hope to
+avoid over-training and devise generally useful filters for detecting low
+frequency variants.
 
 # Cross validation
 
 To avoid over-optimizing to the DREAM datasets, we also compared caller accuracy
 against a mixture of two [Genome in a Bottle](http://genomeinabottle.org/)
-datasets:
-[NA12878 and NA24385](https://github.com/genome-in-a-bottle/giab_data_indexes).
+datasets,
+[NA12878 and NA24385](https://github.com/genome-in-a-bottle/giab_data_indexes),
+prepared by researchers at the [Hartwig Medical Foundation](http://www.hartwigmedicalfoundation.nl/en/).
 Using a mixture of the two samples as the tumor and NA24385 alone as a normal
 allows
 [identification of NA12878 variants as somatic calls](https://github.com/hbc/projects/tree/master/giab_somatic).
-For an even mixture of the two samples, the expected allele frequencies are 25%
-for NA12878 heterozygotes not present in NA24385 and 50% for NA12878 homozygotes
-not in NA24385. While not a real tumor, this approach exercises many of the
-features of somatic callers.
+For an mixture of the two samples with 30% NA12878 and 70% NA24385, the expected
+allele frequencies are 15% for NA12878 heterozygotes not present in NA24385 and
+30% for NA12878 homozygotes not in NA24385. While not a real tumor, this
+approach exercises many of the features of somatic callers.
 
 Our VarDict filter improvements carry over to this dataset and provide good
 resolution of both SNPs and Indels relative to the other callers:
@@ -100,8 +101,8 @@ much differently between the two. MuTect2 had the best resolution of SNPs and
 Indels in the DREAM dataset, but performs the worst in the Genome in a Bottle
 mixture validation. This suggests that MuTect2, which is still under development
 at the [Broad Institute](https://www.broadinstitute.org/gatk/) and released as
-beta software for research use only, may be over optimized to features of the
-DREAM datasets.
+beta software for research use only, may currently be over optimized to features
+of the DREAM datasets.
 
 # Filter development
 
@@ -115,12 +116,16 @@ sensitivity gains.
 
 ## Low frequency with low depth
 
-The first filter generalizes
-[the requirement for 13X coverage to accurately detect heterozygote calls](http://www.ncbi.nlm.nih.gov/pubmed/23773188).
-We apply a linear filter of multiple metrics that looks only at lower frequency (AF)
-and lower depth (DP) calls. Within this set of calls, we filter only variants
-failing one of 3 other criteria for mapping quality (MQ), number of read
-mismatches (NM), low depth (DP) or low quality (QUAL). In pseudo-code, the new filter is:
+The developed filter provides better discrimination of low frequency variants
+with low depth, starting with the
+[the recommendation of 13X coverage to accurately detect heterozygote calls](http://www.ncbi.nlm.nih.gov/pubmed/23773188).
+Generalizing heterozygote allele frequency (0.5) and depth (13) to any allele
+frequency gives us a recommended coverage where variant allele frequency times
+depth at a position is six or more. We apply the new filters only in lower
+frequency (AF) and lower depth (DP) calls that fail to meet this threshold.
+Within this set of calls, we filter variants failing one of 3 other criteria for
+mapping quality (MQ), number of read mismatches (NM), low depth (DP) or low
+quality (QUAL). In pseudo-code, the new filter is:
 
     ((AF * DP < 6) &&
      ((MQ < 55.0 && NM > 1.0) ||
@@ -128,11 +133,11 @@ mismatches (NM), low depth (DP) or low quality (QUAL). In pseudo-code, the new f
       (DP < 10) ||
       (QUAL < 45)))
 
-Breaking this down into each filtering criteria:
+Breaking this down into each component:
 
 - Remove variants supported by reads with low mapping quality and multiple
-  mismatches. The general idea is that poorly mapped reads with multiple errors
-  contribute to poor low frequency calls. VarDict reports two useful metrics:
+  mismatches. Poorly mapped reads with multiple errors contribute to
+  false positive low frequency calls. VarDict reports two useful metrics:
   the mean number of mismatches (NM) and mean mapping quality (MQ) for the reads
   covering a position in the genome. For bwa mapping qualities, we filter calls
   with (MQ < 55.0 and NM > 1.0 or MQ < 60.0 and NM > 2.0). Plotting the
@@ -154,8 +159,8 @@ Breaking this down into each filtering criteria:
   methods and associating poor mapping quality scores with genome mappability
   tracks.
 
-- Low depth (DP < 10) -- Low depth calls contain a disproportionate number of
-  false positives.
+- Low depth (DP < 10) -- Low depth calls, coupled with AF * DP < 6, contain a
+  disproportionate number of false positives.
 
 ![AFDP: low depth](http://i.imgur.com/OipIRil.png)
 
@@ -190,7 +195,7 @@ Breaking down the distribution differences for each of these filters.
 
 # Filter development
 
-The identification of filters involved manual inspection of metrics graphs. We
+We identified these filters by manual inspection of metrics graphs. We
 run automated calling and validation with bcbio, then plot metrics and look for
 differences that discriminate true and false positive calls. Practically, we
 extract metrics from VCF files into tables using
@@ -201,6 +206,25 @@ extract metrics from VCF files into tables using
 optimize single metric filters, we start with linear combinations of metrics,
 subsetting and re-plotting as we identify sets of filters that do a good job of
 separating signal and noise.
+
+The updated filters for VarDict improve sensitivity and precision on low
+frequency variants. SNP call rates are on par with MuTect, and VarDict is more
+sensitive and precise than Scalpel and other callers for insertions and
+deletions.
+
+Our goal with using the DREAM synthetic truth sets is to discover generally
+useful metrics, rather than performing well on this particular dataset. To avoid
+over-training we use our best intuition to select metrics based on depth and
+quality which will apply generally across other samples. By cross-validating
+against a second dataset, a mixture of two Genome in a Bottle samples, we show
+that the results do generalize. Ideally, we'd also include a panel of additional
+test sets, including real tumors. A
+[recent paper from Malachi Griffith, Chris Miller and colloborators at the McDonnell Genome Institute](http://www.cell.com/cell-systems/abstract/S2405-4712%2815%2900113-1)
+has an [extensively characterized AML31 case](http://aml31.genome.wustl.edu/)
+with validated variants. The ICGC also published
+[a well characterized set of validated calls on a high depth medulloblastoma sample](http://www.nature.com/ncomms/2015/151209/ncomms10001/full/ncomms10001.html).
+We plan to cross-validate on these datasets to continue
+to improve filtering approaches for heterogeneous, low frequency variants.
 
 This approach is analagous to applying machine learning tools to discriminate
 true and false positives on the training set, and we'd like to incorporate
@@ -213,33 +237,17 @@ underlying relationships in the filter, we didn't have a way to reliably
 estimate when a filter was general versus over-trained. We'd ideally like to use
 a hybrid approach where we use machine learning to identify potentially useful
 linear combinations of metrics, then refine these with manual inspection.
+We'd love feedback from others with experience doing this type of
+filtering, and would especially welcome suggestions for practical methods for
+apply machine learning methods to the initial metric selection steps.
 
-Our goal with using the DREAM synthetic truth sets is to discover generally
-useful metrics, rather than performing well on this particular dataset. To avoid
-over-training we use our best intuition to select metrics based on depth and
-quality which will apply generally across other samples. By cross-validating
-against a second dataset, a mixture of two Genome in a Bottle samples, we show
-that the results do generalize across samples. Ideally, we'd also include a
-panel of additional test sets, including real tumors. A
-[recent paper from Malachi Griffith, Chris Miller and colloborators at the McDonnell Genome Institute](http://www.cell.com/cell-systems/abstract/S2405-4712%2815%2900113-1)
-has an [extensively characterized AML31 case](http://aml31.genome.wustl.edu/)
-with validated variants. We plan to cross-validate on this dataset to continue
-to improve filtering approaches for heterogeneous, low frequency variants.
-
-The updated filters for VarDict improve sensitivity and precision on low
-frequency variants, achieving call rates on par with MuTect for SNPs and with
-more sensitive than Scalpel for insertions and deletions. We'd love feedback
-from others with experience doing this type of filtering, and would especially
-welcome suggestions for practical methods for apply machine learning methods to
-the initial metric selection steps.
-
-The filtering approach we took is general and can apply to other callers,
+This filter improvement methodology is general and can apply to other callers,
 although it's not always easy to derive metrics that will effectively separate
 true and false calls. For instance, we also wanted to improve MuTect and Scalpel
 calling on this dataset. MuTect doesn't offer quality or other annotation
 metrics to provide a way to build additional filters beyond their implemented
 heuristics. Scalpel does provide additional metrics and has additional true
-positive calls filtered by the default calling approach so could improve in
+positive calls filtered by the default calling approach, so we could improve in
 sensitivity. However,
 [we were unable to improve sensitivity without a large decrease in precision](http://imgur.com/a/7Dzd3).
 Unfortunately improving callers is still often a laborious process done on a
@@ -262,5 +270,5 @@ variant calling and validation, producing the validation graphs shown above. The
 synthetic 4 example includes alignments for both build 37 and 38 as well as
 structural variant calling, so is a full tumor characterization you can use as a
 template for calling on your cancer samples. By combining validation and
-analysis tools we provide a useful distribution for both improving algorithms
-and running real research samples.
+analysis tools we provide a integrated approach that both improves algorithms
+and runs real research samples.
